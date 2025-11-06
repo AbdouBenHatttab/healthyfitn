@@ -1,0 +1,61 @@
+<resources>
+    <string name="app_name">Virtual Doctor</string>
+
+    <!-- Splash Screen -->
+    <string name="app_tagline">Votre santé, notre priorité</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Bienvenue</string>
+    <string name="login_subtitle">Connectez-vous pour continuer</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Mot de passe</string>
+    <string name="forgot_password">Mot de passe oublié?</string>
+    <string name="login_button">Se connecter</string>
+    <string name="no_account">Pas encore de compte?</string>
+    <string name="register_link">Inscrivez-vous</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Créer un compte</string>
+    <string name="register_subtitle">Rejoignez-nous aujourd\'hui</string>
+    <string name="first_name_hint">Prénom</string>
+    <string name="last_name_hint">Nom</string>
+    <string name="phone_hint">Téléphone</string>
+    <string name="confirm_password_hint">Confirmer mot de passe</string>
+    <string name="user_type_label">Type de compte</string>
+    <string name="user_type_patient">Patient</string>
+    <string name="user_type_doctor">Médecin</string>
+    <string name="register_button">S\'inscrire</string>
+    <string name="already_have_account">Vous avez déjà un compte?</string>
+    <string name="login_link">Connectez-vous</string>
+    <string name="terms_accept">J\'accepte les conditions d\'utilisation</string>
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Your Virtual Doctor,\nAlways Available</string>
+    <string name="welcome_subtitle">Connect with healthcare professionals, track your health metrics, and get personalized recommendations.</string>
+    <string name="feature_bmi_title">BMI Calculator</string>
+    <string name="feature_bmi_desc">Track your body mass index easily</string>
+    <string name="feature_meal_title">Meal Analysis</string>
+    <string name="feature_meal_desc">Get nutritional insights instantly</string>
+    <string name="feature_ai_title">AI Health Assistant</string>
+    <string name="feature_ai_desc">24/7 health guidance and tips</string>
+    <string name="healthy_lifestyle_title">Healthy Lifestyle</string>
+    <string name="btn_get_started">Get Started</string>
+    <string name="btn_explore_dashboard">Explore Dashboard</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_register">Register</string>
+    <string name="already_member">Already a member?</string>
+    <string name="new_user">New user?</string>
+    <!-- Register Screen - Doctor Fields -->
+    <!-- Register Screen - Doctor Fields -->
+    <string name="specialization_hint">Spécialisation</string>
+    <string name="license_number_hint">Numéro de licence</string>
+    <string name="years_of_experience_hint">Années d\'expérience</string>
+    <string name="clinic_name_hint">Nom de la clinique/hôpital</string>
+    <string name="clinic_address_hint">Adresse de la clinique</string>
+    <string name="consultation_fee_hint">Frais de consultation (optionnel)</string>
+    <string name="bio_hint">Biographie professionnelle</string>
+    <string name="education_hint">Formation (ex: MD, PhD)</string>
+    <string name="languages_hint">Langues parlées (séparées par virgule)</string>
+    <string name="availability_label">Disponibilité</string>
+    <string name="online_consultations">Consultations en ligne</string>
+    <string name="in_person_consultations">Consultations en personne</string>
+</resources>

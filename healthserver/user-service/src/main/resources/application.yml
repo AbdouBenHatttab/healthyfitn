@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: user-service
+  main:
+    allow-bean-definition-overriding: true
+  
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/health_auth_db
+      database: health_auth_db
+      auto-index-creation: true
+  
+  cloud:
+    config:
+      enabled: false
+
+server:
+  port: 8085
+  error:
+    include-message: always
+    include-binding-errors: always
+
+app:
+  jwt:
+    secret: 21f4e176cd2f4b991bd27fd94a7acfa923a032015252f7f725cee7761503b6120d0f92dcda38390c619190e921833477ea8f32100e9d59bcd398073b1552c15e
+    # expiration: 900000  # 15 minutes
+    # refresh-token:
+    #   expiration: 604800000  # 7 jours
+    issuer: healthapp-auth-service          # ✅ ajoute cette ligne
+    access-token-expiration: 900000        # 15 minutes
+    refresh-token-expiration: 604800000 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.healthapp.user: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+eureka:
+  client:
+    enabled: false
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}

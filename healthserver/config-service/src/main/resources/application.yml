@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: config-service
+  
+  cloud:
+    config:
+      server:
+        git:
+          uri: file://${user.dir}/config-service/config-repo
+          default-label: main
+          
+server:
+  port: 8888
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}

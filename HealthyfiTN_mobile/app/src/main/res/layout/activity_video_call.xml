@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A1A">
+
+    <!-- Video Container -->
+    <FrameLayout
+        android:id="@+id/videoContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Remote Video (Doctor) -->
+        <View
+            android:id="@+id/remoteVideo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#2C2C2C" />
+
+        <!-- Placeholder for doctor when video not started -->
+        <LinearLayout
+            android:id="@+id/doctorPlaceholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="#2C2C2C">
+
+            <TextView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:text="👨‍⚕️"
+                android:textSize="64sp"
+                android:gravity="center"
+                android:background="@drawable/bg_gradient_primary" />
+
+            <TextView
+                android:id="@+id/tvDoctorName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dr. Michael Chen"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/tvDoctorSpecialty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cardiologist"
+                android:textSize="16sp"
+                android:textColor="#CCCCCC"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="En attente de connexion..."
+                android:textSize="14sp"
+                android:textColor="#999999"
+                android:layout_marginTop="24dp" />
+        </LinearLayout>
+
+        <!-- Local Video (Self) - Picture in Picture -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/localVideoCard"
+            android:layout_width="120dp"
+            android:layout_height="160dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="8dp">
+
+            <View
+                android:id="@+id/localVideo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#1A1A1A" />
+
+            <!-- Self Placeholder -->
+            <LinearLayout
+                android:id="@+id/selfPlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_gradient_primary">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="You"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </FrameLayout>
+
+    <!-- Top Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/gradient_overlay_top">
+
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            android:contentDescription="Fermer"
+            android:tint="@color/white" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tvCallDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="#33000000"
+            android:padding="8dp"
+            android:layout_marginEnd="8dp" />
+
+        <ImageButton
+            android:id="@+id/btnSwitchCamera"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_switch_camera"
+            android:contentDescription="Changer de caméra"
+            android:tint="@color/white" />
+    </LinearLayout>
+
+    <!-- Bottom Controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:background="@drawable/gradient_overlay_bottom">
+
+        <!-- Control Buttons -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <!-- Microphone -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnMicrophone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_mic"
+                    app:tint="@color/white"
+                    app:backgroundTint="#4CAF50"
+                    app:fabSize="normal"
+                    android:contentDescription="Microphone" />
+            </FrameLayout>
+
+            <!-- End Call -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnEndCall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_call_end"
+                    app:tint="@color/white"
+                    app:backgroundTint="#F44336"
+                    app:fabSize="normal"
+                    android:contentDescription="Terminer l'appel" />
+            </FrameLayout>
+
+            <!-- Video -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnVideo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_videocam"
+                    app:tint="@color/white"
+                    app:backgroundTint="#2196F3"
+                    app:fabSize="normal"
+                    android:contentDescription="Vidéo" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Labels -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="64dp"
+                android:layout_height="wrap_content"
+                android:text="Micro"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:layout_marginEnd="24dp" />
+
+            <TextView
+                android:layout_width="64dp"
+                android:layout_height="wrap_content"
+                android:text="Terminer"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:layout_marginEnd="24dp" />
+
+            <TextView
+                android:layout_width="64dp"
+                android:layout_height="wrap_content"
+                android:text="Vidéo"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Connection Status -->
+    <TextView
+        android:id="@+id/tvConnectionStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Connexion en cours..."
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:background="#CC000000"
+        android:padding="12dp"
+        android:visibility="gone" />
+</FrameLayout>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Activated</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+            margin: -30px -30px 30px -30px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .success-icon {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .message-box {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .features {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+        .feature-icon {
+            display: inline-block;
+            width: 30px;
+            font-size: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Health App</h1>
+            <p>Doctor Account Activation</p>
+        </div>
+        
+        <div class="success-icon">
+            ✅
+        </div>
+        
+        <p>Dear Dr. <strong th:text="${doctorLastName}">Smith</strong>,</p>
+        
+        <div class="message-box">
+            <strong>Congratulations!</strong> Your doctor account has been successfully activated.
+        </div>
+        
+        <p>
+            We are pleased to inform you that your credentials have been verified and your 
+            account is now active. You can now access all doctor features on Health App.
+        </p>
+        
+        <div class="features">
+            <h3 style="margin-top: 0; color: #667eea;">Available Features:</h3>
+            
+            <div class="feature-item">
+                <span class="feature-icon">👥</span>
+                <strong>Patient Management</strong> - Monitor and track patient health data
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">💊</span>
+                <strong>Prescription Management</strong> - Create and manage prescriptions
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">📊</span>
+                <strong>Health Analytics</strong> - Access detailed health analytics dashboard
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">📅</span>
+                <strong>Appointment Scheduling</strong> - Manage your consultation schedule
+            </div>
+            
+            <div class="feature-item">
+                <span class="feature-icon">📱</span>
+                <strong>Telemedicine</strong> - Conduct remote consultations
+            </div>
+        </div>
+        
+        <p style="text-align: center;">
+            <a th:href="${frontendUrl} + '/login'" class="btn">
+                Login to Your Account →
+            </a>
+        </p>
+        
+        <p style="color: #666; font-size: 14px;">
+            If you have any questions or need assistance getting started, please don't hesitate 
+            to contact our support team at <a href="mailto:support@healthapp.com">support@healthapp.com</a>.
+        </p>
+        
+        <div class="footer">
+            <p><strong>Health App</strong></p>
+            <p>Empowering healthcare professionals</p>
+            <p>&copy; <span th:text="${year}">2024</span> Health App. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

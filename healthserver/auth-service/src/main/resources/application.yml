@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: auth-service  # ⚠️ TRÈS IMPORTANT - Doit être exactement "auth-service"
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/health_auth_db
+  cloud:
+    config:
+      enabled: false
+  main:
+    allow-bean-definition-overriding: true
+
+server:
+  port: 8082
+
+# Configuration Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}  # ID unique pour chaque instance
+    hostname: localhost
+
+# JWT Configuration
+app:
+  jwt:
+    secret: 21f4e176cd2f4b991bd27fd94a7acfa923a032015252f7f725cee7761503b6120d0f92dcda38390c619190e921833477ea8f32100e9d59bcd398073b1552c15e
+    expiration: 900000  # 15 minutes
+    refresh-token:
+      expiration: 604800000  # 7 jours
+
+# Logging
+logging:
+  level:
+    com.healthapp.auth: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

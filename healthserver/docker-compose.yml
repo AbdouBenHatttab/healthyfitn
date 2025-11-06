@@ -1,0 +1,195 @@
+version: '3.8'
+
+services:
+  # ==================== BASE DE DONNÉES ====================
+  
+  mongodb:
+    image: mongo:latest
+    container_name: health-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - health-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== SERVICE DISCOVERY ====================
+  
+  discovery-service:
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile
+    container_name: health-discovery-service
+    ports:
+      - "8761:8761"
+    networks:
+      - health-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==================== API GATEWAY ====================
+  
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: health-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - health-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==================== NOTIFICATION SERVICE ====================
+  
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: health-notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=health_notification_db
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - FRONTEND_URL=http://localhost:4200
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - health-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==================== AUTH SERVICE ====================
+  
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: health-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=health_auth_db
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    networks:
+      - health-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==================== USER SERVICE ====================
+  
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: health-user-service
+    ports:
+      - "8082:8082"
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=health_user_db
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - health-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==================== DOCTOR ACTIVATION SERVICE ====================
+  
+  doctor-activation-service:
+    build:
+      context: ./doctor-activation-service
+      dockerfile: Dockerfile
+    container_name: health-doctor-activation-service
+    ports:
+      - "8083:8083"
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=health_doctor_db
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    networks:
+      - health-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+# ==================== VOLUMES ====================
+
+volumes:
+  mongodb_data:
+    driver: local
+
+# ==================== NETWORKS ====================
+
+networks:
+  health-network:
+    driver: bridge

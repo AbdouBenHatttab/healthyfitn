@@ -1,0 +1,83 @@
+# Configuration du Doctor Activation Service
+
+  # MongoDB
+spring:
+  application:
+    name: doctor-activation-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/health_doctor_db
+  cloud:
+    config:
+      enabled: false
+  main:
+    allow-bean-definition-overriding: true
+
+
+notification:
+  admin-email: healthapp.healthyfittn@gmail.com      
+
+server:
+  port: 8083
+
+# Eureka Client
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full  
+  circuitbreaker:
+    enabled: true
+# Resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      auth-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+      notification-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+
+
+app:
+  jwt:
+    secret: 21f4e176cd2f4b991bd27fd94a7acfa923a032015252f7f725cee7761503b6120d0f92dcda38390c619190e921833477ea8f32100e9d59bcd398073b1552c15e
+    expiration: 900000  # 15 minutes
+    refresh-token:
+      expiration: 604800000  # 7 jours
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.healthapp.doctor: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
