@@ -15,6 +15,7 @@ data class DoctorResponse(
     val yearsOfExperience: Int,
     val officeAddress: String?,
     val consultationHours: String?,
+    val profilePictureUrl: String?,
     val isActivated: Boolean,
     val activationStatus: String,
     val activationDate: String?,

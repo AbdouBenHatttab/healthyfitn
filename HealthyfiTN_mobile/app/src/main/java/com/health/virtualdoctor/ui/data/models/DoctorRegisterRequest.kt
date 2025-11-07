@@ -16,5 +16,8 @@ data class DoctorRegisterRequest(
     val hospitalAffiliation: String,
     val yearsOfExperience: Int,
     val officeAddress: String?,
-    val consultationHours: String?
+    val consultationHours: String?,
+
+
+
 )

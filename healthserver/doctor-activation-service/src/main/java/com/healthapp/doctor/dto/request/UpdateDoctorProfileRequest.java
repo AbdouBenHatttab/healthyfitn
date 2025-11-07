@@ -20,4 +20,5 @@ public class UpdateDoctorProfileRequest {
     private Integer yearsOfExperience;
     private String officeAddress;
     private String consultationHours;
+    private String profilePictureUrl;
 }

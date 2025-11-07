@@ -19,6 +19,7 @@ import com.health.virtualdoctor.R
 import com.health.virtualdoctor.ui.data.api.RetrofitClient
 import com.health.virtualdoctor.ui.data.models.LoginRequest
 import com.health.virtualdoctor.ui.doctor.DoctorDashboardActivity
+import com.health.virtualdoctor.ui.user.UserMetricsActivity
 import com.health.virtualdoctor.ui.utils.FCMHelper
 import com.health.virtualdoctor.ui.utils.TokenManager
 import kotlinx.coroutines.launch
@@ -271,19 +272,39 @@ class LoginActivity : AppCompatActivity() {
         navigateByRole("DOCTOR")
     }
 
+// ✅ REMPLACEZ cette fonction dans LoginActivity.kt
+
     private fun navigateByRole(role: String) {
-        when (role) {
+        val intent = when (role) {
             "USER" -> {
-                Toast.makeText(this, "🏠 User Home", Toast.LENGTH_SHORT).show()
+                // ✅ Redirection vers UserMetricsActivity
+                Intent(this, UserMetricsActivity::class.java)
             }
             "DOCTOR" -> {
-                Toast.makeText(this, "👨‍⚕️ Doctor Dashboard", Toast.LENGTH_SHORT).show()
+                // ✅ Redirection vers DoctorDashboardActivity
+                Intent(this, DoctorDashboardActivity::class.java)
             }
             "ADMIN" -> {
-                Toast.makeText(this, "⚙️ Admin Dashboard", Toast.LENGTH_SHORT).show()
+                // ✅ TODO: Créer AdminDashboardActivity
+                // Pour l'instant, on redirige vers UserMetrics
+                Intent(this, UserMetricsActivity::class.java).apply {
+                    putExtra("message", "⚙️ Admin Dashboard (à implémenter)")
+                }
+            }
+            else -> {
+                // Fallback vers Welcome
+                Intent(this, com.health.virtualdoctor.ui.welcome.WelcomeActivity::class.java)
             }
         }
+
+        // ✅ Clear le stack d'activités pour éviter de revenir au login
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
+        startActivity(intent)
         finish()
+
+        // Animation fluide
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
     private fun navigateToRegister() {

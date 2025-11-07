@@ -41,4 +41,5 @@ public class DoctorResponse {
     private Integer totalConsultations;
     
     private LocalDateTime createdAt;
+    private String profilePictureUrl;
 }

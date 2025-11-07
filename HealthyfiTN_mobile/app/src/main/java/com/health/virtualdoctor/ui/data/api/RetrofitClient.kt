@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // ✅ URLs des deux services
-    private const val AUTH_BASE_URL = "https://stores-faq-looks-burner.trycloudflare.com" // Port 8082
-    private const val DOCTOR_BASE_URL = "https://viking-game-dale-player.trycloudflare.com" // Port 8083
-    private const val USER_BASE_URL = "https://YOUR_USER_SERVICE_URL.trycloudflare.com/" // Port 8085 - REPLACE THIS
+    private const val AUTH_BASE_URL = "https://louisiana-terms-fri-shows.trycloudflare.com" // Port 8082
+    private const val DOCTOR_BASE_URL = "https://inclusive-mood-bikes-climate.trycloudflare.com" // Port 8083
+    private const val USER_BASE_URL = "https://reactions-stanley-airlines-las.trycloudflare.com" // Port 8085 - REPLACE THIS
 
     private var authRetrofit: Retrofit? = null
     private var doctorRetrofit: Retrofit? = null
@@ -86,7 +86,21 @@ object RetrofitClient {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
+// ✅ AJOUTEZ cette fonction pour Notification Service
 
+    private const val NOTIFICATION_BASE_URL = "http://10.0.2.2:8084/" // Emulator
+// private const val NOTIFICATION_BASE_URL = "http://YOUR_IP:8084/" // Real device
+
+    private var notificationRetrofit: Retrofit? = null
+    private var notificationApiService: ApiService? = null
+
+    fun getNotificationService(context: Context): ApiService {
+        if (notificationApiService == null) {
+            notificationRetrofit = createRetrofit(NOTIFICATION_BASE_URL, context)
+            notificationApiService = notificationRetrofit!!.create(ApiService::class.java)
+        }
+        return notificationApiService!!
+    }
     fun getAuthBaseUrl(): String = AUTH_BASE_URL
     fun getDoctorBaseUrl(): String = DOCTOR_BASE_URL
     fun getUserBaseUrl(): String = USER_BASE_URL

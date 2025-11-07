@@ -109,4 +109,8 @@ dependencies {
     // FCM + Analytics
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    // Pour charger les images depuis des URLs
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+// Pour uploader les images
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

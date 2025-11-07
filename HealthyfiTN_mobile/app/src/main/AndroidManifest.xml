@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Permissions -->
+
+    <!-- ✅ Permissions existantes -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- ✅ Permissions Health Connect - TOUTES LES DONNÉES -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> <!-- Android 13+ -->
+
+    <!-- ✅ Permissions Health Connect -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_DISTANCE" />
@@ -15,18 +17,24 @@
     <uses-permission android:name="android.permission.health.READ_BODY_TEMPERATURE" />
     <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
-    <uses-permission android:name="android.permission.health.READ_HEIGHT" /> <!-- ✅ Permissions supplémentaires pour les détails d'exercice -->
+    <uses-permission android:name="android.permission.health.READ_HEIGHT" />
     <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_SPEED" />
     <uses-permission android:name="android.permission.health.READ_STEPS_CADENCE" />
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
-    <uses-permission android:name="android.permission.health.READ_POWER" /> <!-- ✅ NOUVELLE: Permission Hydratation -->
+    <uses-permission android:name="android.permission.health.READ_POWER" />
     <uses-permission android:name="android.permission.health.READ_HYDRATION" />
-<!--    <uses-permission android:name="android.permission.CAMERA" />-->
+
+    <!-- ✅ Permissions caméra et stockage -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <!-- ✅ Pour indiquer que la caméra est optionnelle -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
@@ -39,6 +47,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VirtualDoctor"
         tools:targetApi="31">
+
+        <!-- ✅ FileProvider (doit être à l’intérieur de <application>) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Activities -->
         <activity
             android:name=".ui.doctor.DoctorDashboardActivity"
             android:exported="false" />
@@ -51,7 +72,12 @@
             android:exported="false" />
         <activity
             android:name=".ui.meal.MealAnalysisActivity"
-            android:exported="false" /> <!-- Splash Activity (Launcher) -->
+            android:exported="false" />
+        <activity
+            android:name=".ui.user.UserProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.VirtualDoctor" />
+        <!-- Splash (Launcher) -->
         <activity
             android:name=".ui.splash.SplashActivity"
             android:exported="true"
@@ -59,28 +85,31 @@
             android:theme="@style/Theme.VirtualDoctor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Welcome Activity -->
+        </activity>
+
+        <!-- Autres activities -->
         <activity
             android:name=".ui.welcome.WelcomeActivity"
             android:exported="false"
-            android:screenOrientation="portrait" /> <!-- Login Activity -->
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" /> <!-- Register Activity -->
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.auth.RegisterActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" /> <!-- User Metrics Activity -->
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.user.UserMetricsActivity"
             android:exported="false"
-            android:screenOrientation="portrait" /> <!-- ✅ Activity alias pour Health Connect (OBLIGATOIRE), crée un Point d'entrée au Health Connect -->
+            android:screenOrientation="portrait" />
+
+        <!-- Health Connect -->
         <activity-alias
             android:name=".ViewPermissionUsageActivity"
             android:exported="true"
@@ -91,6 +120,7 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- Firebase Messaging -->
         <service
             android:name=".ui.notifications.FCMService"
             android:exported="false">
@@ -99,15 +129,13 @@
             </intent-filter>
         </service>
 
-        <!-- ✅ ADD DEFAULT NOTIFICATION ICON (OPTIONAL) -->
+        <!-- Default Notification Meta -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notifications" />
-
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/primary" />
-
 
     </application>
 

@@ -45,6 +45,7 @@ class UserMetricsActivity : ComponentActivity() {
         .withZone(ZoneId.systemDefault())
     private lateinit var avatarContainer: FrameLayout
     private lateinit var humanBodyRenderer: HumanBodyRenderer
+    private lateinit var btnProfile: ImageButton
 
     // Views
     private lateinit var tvStatus: android.widget.TextView
@@ -91,10 +92,11 @@ class UserMetricsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_metrics)
         val btnBack: ImageButton = findViewById(R.id.btnBack)
+        btnProfile = findViewById(R.id.btnProfile)
         btnBack.setOnClickListener {
             navigateToWelcome()
         }
-
+        setupProfileButton()
 
         // Initialiser les vues
         tvStatus = findViewById(R.id.tvStatus)
@@ -1270,5 +1272,18 @@ class UserMetricsActivity : ComponentActivity() {
                 ).show()
             }
         }
+    }
+    // ⭐ NOUVELLE FONCTION : Configuration du bouton profil
+    private fun setupProfileButton() {
+        btnProfile.setOnClickListener {
+            navigateToUserProfile()
+        }
+    }
+
+    // ⭐ NOUVELLE FONCTION : Navigation vers le profil user
+    private fun navigateToUserProfile() {
+        val intent = Intent(this, UserProfileActivity::class.java)
+        startActivity(intent)
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
     }
 }

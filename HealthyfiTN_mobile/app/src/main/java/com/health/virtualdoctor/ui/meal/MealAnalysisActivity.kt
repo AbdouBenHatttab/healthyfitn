@@ -3,10 +3,12 @@ package com.health.virtualdoctor.ui.meal
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -18,23 +20,32 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.health.virtualdoctor.R
+import com.health.virtualdoctor.ui.data.api.RetrofitClient
+import com.health.virtualdoctor.ui.utils.TokenManager
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
 class MealAnalysisActivity : ComponentActivity() {
 
+    private lateinit var tokenManager: TokenManager
+
+    // Views
     private lateinit var btnBack: ImageButton
     private lateinit var btnCamera: MaterialButton
     private lateinit var btnGallery: MaterialButton
@@ -43,10 +54,13 @@ class MealAnalysisActivity : ComponentActivity() {
     private lateinit var layoutLoading: LinearLayout
     private lateinit var cardNutritionalBreakdown: CardView
     private lateinit var cardHealthierAlternatives: CardView
+    private lateinit var tvFoodName: TextView
+    private lateinit var tvConfidence: TextView
     private lateinit var tvProteins: TextView
     private lateinit var tvCarbs: TextView
     private lateinit var tvFats: TextView
     private lateinit var tvFiber: TextView
+    private lateinit var tvCalories: TextView
     private lateinit var progressProteins: ProgressBar
     private lateinit var progressCarbs: ProgressBar
     private lateinit var progressFats: ProgressBar
@@ -55,12 +69,24 @@ class MealAnalysisActivity : ComponentActivity() {
     private lateinit var btnScanNewMeal: MaterialButton
 
     private var currentImageBitmap: Bitmap? = null
+    private var currentPhotoPath: String? = null
 
-    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        bitmap?.let {
-            currentImageBitmap = it
-            displayImage(it)
-            analyzeMeal(it)
+    // ========================================
+    // CAMERA LAUNCHERS
+    // ========================================
+
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success && currentPhotoPath != null) {
+            try {
+                val bitmap = BitmapFactory.decodeFile(currentPhotoPath)
+                currentImageBitmap = bitmap
+                displayImage(bitmap)
+                analyzeMeal(bitmap)
+            } catch (e: Exception) {
+                Toast.makeText(this, "❌ Erreur lecture photo: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(this, "Photo annulée", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -72,22 +98,28 @@ class MealAnalysisActivity : ComponentActivity() {
                 displayImage(bitmap)
                 analyzeMeal(bitmap)
             } catch (e: Exception) {
-                Toast.makeText(this, "Erreur de chargement: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "❌ Erreur chargement: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) {
-            cameraLauncher.launch(null)
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            takePicture()
         } else {
-            Toast.makeText(this, "Permission caméra requise", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "⚠️ Permission caméra requise", Toast.LENGTH_SHORT).show()
         }
     }
+
+    // ========================================
+    // LIFECYCLE
+    // ========================================
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_meal_analysis)
+
+        tokenManager = TokenManager(this)
 
         initViews()
         setupListeners()
@@ -102,10 +134,13 @@ class MealAnalysisActivity : ComponentActivity() {
         layoutLoading = findViewById(R.id.layoutLoading)
         cardNutritionalBreakdown = findViewById(R.id.cardNutritionalBreakdown)
         cardHealthierAlternatives = findViewById(R.id.cardHealthierAlternatives)
+        tvFoodName = findViewById(R.id.tvFoodName)
+        tvConfidence = findViewById(R.id.tvConfidence)
         tvProteins = findViewById(R.id.tvProteins)
         tvCarbs = findViewById(R.id.tvCarbs)
         tvFats = findViewById(R.id.tvFats)
         tvFiber = findViewById(R.id.tvFiber)
+        tvCalories = findViewById(R.id.tvCalories)
         progressProteins = findViewById(R.id.progressProteins)
         progressCarbs = findViewById(R.id.progressCarbs)
         progressFats = findViewById(R.id.progressFats)
@@ -118,11 +153,7 @@ class MealAnalysisActivity : ComponentActivity() {
         btnBack.setOnClickListener { finish() }
 
         btnCamera.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                cameraLauncher.launch(null)
-            } else {
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
+            checkCameraPermission()
         }
 
         btnGallery.setOnClickListener {
@@ -134,6 +165,55 @@ class MealAnalysisActivity : ComponentActivity() {
         }
     }
 
+    // ========================================
+    // CAMERA FUNCTIONS
+    // ========================================
+
+    private fun checkCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                takePicture()
+            }
+            else -> {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+
+    private fun takePicture() {
+        try {
+            // Créer un fichier temporaire
+            val photoFile = File.createTempFile(
+                "meal_${System.currentTimeMillis()}",
+                ".jpg",
+                cacheDir
+            )
+
+            currentPhotoPath = photoFile.absolutePath
+
+            // Créer URI avec FileProvider
+            val photoUri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                photoFile
+            )
+
+            // Lancer la caméra
+            cameraLauncher.launch(photoUri)
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "❌ Erreur caméra: ${e.message}", Toast.LENGTH_SHORT).show()
+            Log.e("MealAnalysis", "Erreur caméra", e)
+        }
+    }
+
+    // ========================================
+    // UI FUNCTIONS
+    // ========================================
+
     private fun displayImage(bitmap: Bitmap) {
         ivMealImage.setImageBitmap(bitmap)
         ivMealImage.visibility = View.VISIBLE
@@ -142,7 +222,23 @@ class MealAnalysisActivity : ComponentActivity() {
 
     private fun showLoading(show: Boolean) {
         layoutLoading.visibility = if (show) View.VISIBLE else View.GONE
+        btnCamera.isEnabled = !show
+        btnGallery.isEnabled = !show
     }
+
+    private fun resetView() {
+        currentImageBitmap = null
+        currentPhotoPath = null
+        ivMealImage.visibility = View.GONE
+        layoutPlaceholder.visibility = View.VISIBLE
+        cardNutritionalBreakdown.visibility = View.GONE
+        cardHealthierAlternatives.visibility = View.GONE
+        btnScanNewMeal.visibility = View.GONE
+    }
+
+    // ========================================
+    // ANALYSE FUNCTIONS
+    // ========================================
 
     private fun analyzeMeal(bitmap: Bitmap) {
         showLoading(true)
@@ -151,8 +247,11 @@ class MealAnalysisActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             try {
-                val base64Image = bitmapToBase64(bitmap)
-                val result = sendImageToServer(base64Image)
+                // Convertir bitmap en file
+                val file = bitmapToFile(bitmap)
+
+                // Envoyer au serveur
+                val result = sendImageToNutritionService(file)
 
                 withContext(Dispatchers.Main) {
                     showLoading(false)
@@ -160,118 +259,172 @@ class MealAnalysisActivity : ComponentActivity() {
                         displayNutritionalInfo(result)
                         btnScanNewMeal.visibility = View.VISIBLE
                     } else {
-                        Toast.makeText(this@MealAnalysisActivity, "Erreur d'analyse", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MealAnalysisActivity,
+                            "❌ Erreur d'analyse",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     showLoading(false)
-                    Toast.makeText(this@MealAnalysisActivity, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@MealAnalysisActivity,
+                        "❌ Erreur: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    Log.e("MealAnalysis", "Erreur analyse", e)
                 }
             }
         }
     }
 
-    private fun bitmapToBase64(bitmap: Bitmap): String {
-        val outputStream = ByteArrayOutputStream()
+    private fun bitmapToFile(bitmap: Bitmap): File {
+        val file = File(cacheDir, "meal_${System.currentTimeMillis()}.jpg")
+        val outputStream = FileOutputStream(file)
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
-        val byteArray = outputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+        outputStream.flush()
+        outputStream.close()
+        return file
     }
 
-    private suspend fun sendImageToServer(base64Image: String): JSONObject? = withContext(Dispatchers.IO) {
+    private suspend fun sendImageToNutritionService(imageFile: File): JSONObject? = withContext(Dispatchers.IO) {
         try {
-            val serverUrl = "https://your-api-endpoint.com/analyze-meal"
+            val token = tokenManager.getAccessToken()
 
-            val client = OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build()
-
-            val jsonBody = JSONObject().apply {
-                put("image", base64Image)
+            if (token == null) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MealAnalysisActivity,
+                        "❌ Token manquant",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                return@withContext null
             }
 
-            val requestBody = jsonBody.toString().toRequestBody("application/json".toMediaType())
+            // ✅ URL Cloudflare au lieu de localhost
+            val serverUrl = "https://spending-elderly-change-fin.trycloudflare.com/api/v1/nutrition/analyze"
+            // Ou si vous avez un tunnel ngrok:
+            // val serverUrl = "https://your-ngrok-url.ngrok-free.app/api/v1/nutrition/analyze"
+
+            Log.d("MealAnalysis", "🔄 Envoi vers: $serverUrl")
+
+            val client = OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build()
+
+            // Créer le body multipart
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    "image",
+                    imageFile.name,
+                    imageFile.asRequestBody("image/jpeg".toMediaType())
+                )
+                .addFormDataPart("use_ai", "true")
+                .build()
+
             val request = Request.Builder()
                 .url(serverUrl)
+                .addHeader("Authorization", "Bearer $token")
                 .post(requestBody)
                 .build()
 
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string()
 
+            Log.d("MealAnalysis", "📡 Response code: ${response.code}")
+            Log.d("MealAnalysis", "📡 Response: $responseBody")
+
             response.close()
 
             if (response.isSuccessful && responseBody != null) {
-                JSONObject(responseBody)
+                val json = JSONObject(responseBody)
+                if (json.getBoolean("success")) {
+                    json.getJSONObject("data")
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MealAnalysisActivity,
+                            json.optString("message", "Erreur"),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    null
+                }
             } else {
-                // Données de démo pour tester l'interface
-                createDemoData()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MealAnalysisActivity,
+                        "❌ Erreur HTTP ${response.code}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
-            // Données de démo en cas d'erreur
-            createDemoData()
+            Log.e("MealAnalysis", "❌ Erreur envoi", e)
+            null
         }
     }
-
-    private fun createDemoData(): JSONObject {
-        return JSONObject().apply {
-            put("proteins", 32)
-            put("carbs", 48)
-            put("fats", 15)
-            put("fiber", 8)
-
-            val alternatives = JSONArray()
-            alternatives.put(JSONObject().apply {
-                put("name", "Mediterranean Bowl")
-                put("calories", 380)
-                put("image", "")
-            })
-            alternatives.put(JSONObject().apply {
-                put("name", "Berry Smoothie Bowl")
-                put("calories", 320)
-                put("image", "")
-            })
-
-            put("alternatives", alternatives)
-        }
-    }
-
     private fun displayNutritionalInfo(data: JSONObject) {
-        // Afficher les valeurs nutritionnelles
-        val proteins = data.optInt("proteins", 0)
-        val carbs = data.optInt("carbs", 0)
-        val fats = data.optInt("fats", 0)
-        val fiber = data.optInt("fiber", 0)
+        try {
+            // Extraire les infos
+            val detectedFoods = data.getJSONArray("detected_foods")
+            val totalNutrition = data.getJSONObject("total_nutrition")
 
-        tvProteins.text = "${proteins}g"
-        tvCarbs.text = "${carbs}g"
-        tvFats.text = "${fats}g"
-        tvFiber.text = "${fiber}g"
+            if (detectedFoods.length() > 0) {
+                val mainFood = detectedFoods.getJSONObject(0)
 
-        // Calculer les pourcentages (basé sur des valeurs quotidiennes recommandées)
-        progressProteins.progress = (proteins * 100 / 50).coerceAtMost(100)
-        progressCarbs.progress = (carbs * 100 / 60).coerceAtMost(100)
-        progressFats.progress = (fats * 100 / 35).coerceAtMost(100)
-        progressFiber.progress = (fiber * 100 / 15).coerceAtMost(100)
+                // Nom et confiance
+                tvFoodName.text = mainFood.getString("food_name")
+                tvConfidence.text = "${mainFood.getDouble("confidence").toInt()}%"
 
-        cardNutritionalBreakdown.visibility = View.VISIBLE
+                // Nutrition
+                val proteins = totalNutrition.getDouble("proteins")
+                val carbs = totalNutrition.getDouble("carbohydrates")
+                val fats = totalNutrition.getDouble("fats")
+                val fiber = totalNutrition.getDouble("fiber")
+                val calories = totalNutrition.getDouble("calories")
 
-        // Afficher les alternatives
-        val alternatives = data.optJSONArray("alternatives")
-        if (alternatives != null && alternatives.length() > 0) {
-            containerAlternatives.removeAllViews()
+                tvProteins.text = "${proteins}g"
+                tvCarbs.text = "${carbs}g"
+                tvFats.text = "${fats}g"
+                tvFiber.text = "${fiber}g"
+                tvCalories.text = "${calories.toInt()} kcal"
 
-            for (i in 0 until alternatives.length()) {
-                val alternative = alternatives.getJSONObject(i)
-                val alternativeView = createAlternativeView(alternative)
-                containerAlternatives.addView(alternativeView)
+                // Progress bars
+                progressProteins.progress = ((proteins / 50.0) * 100).toInt().coerceAtMost(100)
+                progressCarbs.progress = ((carbs / 60.0) * 100).toInt().coerceAtMost(100)
+                progressFats.progress = ((fats / 35.0) * 100).toInt().coerceAtMost(100)
+                progressFiber.progress = ((fiber / 15.0) * 100).toInt().coerceAtMost(100)
+
+                cardNutritionalBreakdown.visibility = View.VISIBLE
             }
 
-            cardHealthierAlternatives.visibility = View.VISIBLE
+            // Alternatives
+            if (data.has("alternatives")) {
+                val alternatives = data.getJSONArray("alternatives")
+                containerAlternatives.removeAllViews()
+
+                for (i in 0 until alternatives.length().coerceAtMost(3)) {
+                    val alt = alternatives.getJSONObject(i)
+                    val altView = createAlternativeView(alt)
+                    containerAlternatives.addView(altView)
+                }
+
+                if (alternatives.length() > 0) {
+                    cardHealthierAlternatives.visibility = View.VISIBLE
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e("MealAnalysis", "Erreur affichage", e)
+            Toast.makeText(this, "❌ Erreur affichage: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -279,7 +432,7 @@ class MealAnalysisActivity : ComponentActivity() {
         val cardView = CardView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dpToPx(120)
+                dpToPx(80)
             ).apply {
                 setMargins(0, 0, 0, dpToPx(12))
             }
@@ -291,14 +444,7 @@ class MealAnalysisActivity : ComponentActivity() {
         val contentLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12))
-        }
-
-        // Image placeholder
-        val imageView = ImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dpToPx(96), dpToPx(96))
-            setBackgroundColor(getColor(R.color.background))
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            setImageResource(R.drawable.ic_restaurant) // Placeholder icon
+            gravity = android.view.Gravity.CENTER_VERTICAL
         }
 
         val textLayout = LinearLayout(this).apply {
@@ -308,7 +454,6 @@ class MealAnalysisActivity : ComponentActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 1f
             )
-            setPadding(dpToPx(12), 0, 0, 0)
         }
 
         val nameTextView = TextView(this).apply {
@@ -318,31 +463,19 @@ class MealAnalysisActivity : ComponentActivity() {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         }
 
-        val caloriesTextView = TextView(this).apply {
-            text = "${alternative.optInt("calories", 0)} kcal"
+        val confidenceTextView = TextView(this).apply {
+            text = "${alternative.optDouble("confidence", 0.0).toInt()}% confiance"
             textSize = 14f
             setTextColor(getColor(R.color.text_secondary))
             setPadding(0, dpToPx(4), 0, 0)
         }
 
         textLayout.addView(nameTextView)
-        textLayout.addView(caloriesTextView)
-
-        contentLayout.addView(imageView)
+        textLayout.addView(confidenceTextView)
         contentLayout.addView(textLayout)
-
         cardView.addView(contentLayout)
 
         return cardView
-    }
-
-    private fun resetView() {
-        currentImageBitmap = null
-        ivMealImage.visibility = View.GONE
-        layoutPlaceholder.visibility = View.VISIBLE
-        cardNutritionalBreakdown.visibility = View.GONE
-        cardHealthierAlternatives.visibility = View.GONE
-        btnScanNewMeal.visibility = View.GONE
     }
 
     private fun dpToPx(dp: Int): Int {

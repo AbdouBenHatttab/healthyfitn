@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "793775751903",
+    "project_id": "healthyfitn-a97ed",
+    "storage_bucket": "healthyfitn-a97ed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793775751903:android:c1126f76b957bec6e35f6a",
+        "android_client_info": {
+          "package_name": "com.health.virtualdoctor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBo3VXmvn7xgeFz3JO741F5Oc9o55J-Q00"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

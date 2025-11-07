@@ -1,5 +1,7 @@
 package com.health.virtualdoctor.ui.data.models
 
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -69,6 +71,24 @@ interface ApiService {
     suspend fun getAllDoctorEmails(
         @Header("Authorization") token: String
     ): Response<Map<String, Any>>
+    // FCM Notifications
+    @POST("api/notifications/fcm/token")
+    suspend fun saveFcmToken(
+        @Header("Authorization") token: String,
+        @Body request: FCMTokenRequest
+    ): Response<Map<String, String>>
+    // ==========================================
+// NUTRITION SERVICE (Cloudflare Worker)
+// ==========================================
+    @Multipart
+    @POST("api/nutrition/analyze")
+    suspend fun analyzeNutrition(
+        @Header("Authorization") token: String,
+        @Part image: MultipartBody.Part,
+        @Part("use_ai") useAi: RequestBody
+    ): Response<NutritionAnalysisResponse>
+
+
 }
 
 // ==========================================
@@ -104,12 +124,52 @@ data class ChangePasswordRequest(
 
 // Doctor Profile
 data class UpdateDoctorProfileRequest(
-    val firstName: String?,
-    val lastName: String?,
+    val firstName: String,
+    val lastName: String,
     val phoneNumber: String?,
-    val specialization: String?,
-    val hospitalAffiliation: String?,
+    val specialization: String,
+    val hospitalAffiliation: String,
     val yearsOfExperience: Int?,
     val officeAddress: String?,
-    val consultationHours: String?
+    val consultationHours: String?,
+    val profilePictureUrl: String? = null  // 🆕 AJOUTER CE CHAMP
+)
+// Data class pour la réponse
+data class NutritionAnalysisResponse(
+    val success: Boolean,
+    val data: NutritionData?,
+    val message: String?
+)
+
+data class NutritionData(
+    val detected_foods: List<DetectedFood>,
+    val total_nutrition: TotalNutrition,
+    val alternatives: List<Alternative>?
+)
+
+data class DetectedFood(
+    val food_name: String,
+    val confidence: Double,
+    val nutrition: NutritionInfo
+)
+
+data class TotalNutrition(
+    val calories: Double,
+    val proteins: Double,
+    val carbohydrates: Double,
+    val fats: Double,
+    val fiber: Double
+)
+
+data class NutritionInfo(
+    val calories: Double,
+    val proteins: Double,
+    val carbohydrates: Double,
+    val fats: Double,
+    val fiber: Double
+)
+
+data class Alternative(
+    val name: String,
+    val confidence: Double
 )

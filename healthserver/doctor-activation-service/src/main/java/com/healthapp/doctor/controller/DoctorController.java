@@ -223,6 +223,7 @@ public class DoctorController {
                 .averageRating(doctor.getAverageRating())
                 .totalConsultations(doctor.getTotalConsultations())
                 .createdAt(doctor.getCreatedAt())
+                .profilePictureUrl(doctor.getProfilePictureUrl())
                 .build();
     }
 }
