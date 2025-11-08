@@ -34,6 +34,11 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var etLastName: TextInputEditText
     private lateinit var tilEmail: TextInputLayout
     private lateinit var etEmail: TextInputEditText
+
+    // ✅ NOUVEAU: Contact Email pour doctors
+    private lateinit var tilContactEmail: TextInputLayout
+    private lateinit var etContactEmail: TextInputEditText
+
     private lateinit var tilPhone: TextInputLayout
     private lateinit var etPhone: TextInputEditText
     private lateinit var tilPassword: TextInputLayout
@@ -90,6 +95,11 @@ class RegisterActivity : AppCompatActivity() {
         etLastName = findViewById(R.id.etLastName)
         tilEmail = findViewById(R.id.tilEmailRegister)
         etEmail = findViewById(R.id.etEmailRegister)
+
+        // ✅ NOUVEAU: Contact email
+        tilContactEmail = findViewById(R.id.tilContactEmail)
+        etContactEmail = findViewById(R.id.etContactEmail)
+
         tilPhone = findViewById(R.id.tilPhone)
         etPhone = findViewById(R.id.etPhone)
         tilPassword = findViewById(R.id.tilPasswordRegister)
@@ -128,8 +138,20 @@ class RegisterActivity : AppCompatActivity() {
         // User type selection
         rgUserType.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
-                R.id.rbPatient -> showDoctorFields(false)
-                R.id.rbDoctor -> showDoctorFields(true)
+                R.id.rbPatient -> {
+                    showDoctorFields(false)
+                    // ✅ Cacher le contact email pour les patients
+                    tilContactEmail.visibility = View.GONE
+                    // ✅ Email normal pour patients
+                    tilEmail.hint = "Email"
+                }
+                R.id.rbDoctor -> {
+                    showDoctorFields(true)
+                    // ✅ Afficher le contact email pour les doctors
+                    tilContactEmail.visibility = View.VISIBLE
+                    // ✅ Préciser que c'est l'email système
+                    tilEmail.hint = "Email système (@doctor.com)"
+                }
             }
         }
 
@@ -153,6 +175,7 @@ class RegisterActivity : AppCompatActivity() {
         etFirstName.addTextChangedListener(createTextWatcher(tilFirstName))
         etLastName.addTextChangedListener(createTextWatcher(tilLastName))
         etEmail.addTextChangedListener(createTextWatcher(tilEmail))
+        etContactEmail.addTextChangedListener(createTextWatcher(tilContactEmail))
         etPhone.addTextChangedListener(createTextWatcher(tilPhone))
         etPassword.addTextChangedListener(createTextWatcher(tilPassword))
         etConfirmPassword.addTextChangedListener(createTextWatcher(tilConfirmPassword))
@@ -199,6 +222,24 @@ class RegisterActivity : AppCompatActivity() {
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             tilEmail.error = "Email invalide"
             isValid = false
+        }
+
+        // ✅ NOUVEAU: Valider contactEmail pour doctors
+        if (rbDoctor.isChecked) {
+            val contactEmail = etContactEmail.text.toString().trim()
+            if (contactEmail.isEmpty()) {
+                tilContactEmail.error = "L'email de contact est requis"
+                isValid = false
+            } else if (!Patterns.EMAIL_ADDRESS.matcher(contactEmail).matches()) {
+                tilContactEmail.error = "Email invalide"
+                isValid = false
+            }
+
+            // ✅ Vérifier que l'email système se termine par @doctor
+            if (!email.contains("@doctor.")) {
+                tilEmail.error = "L'email doit se terminer par @doctor (ex: dr.smith@doctor.com)"
+                isValid = false
+            }
         }
 
         val phone = etPhone.text.toString().trim()
@@ -282,10 +323,8 @@ class RegisterActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 if (rbDoctor.isChecked) {
-                    // ✅ DOCTOR: Appeler doctor-activation-service (port 8083)
                     registerAsDoctor()
                 } else {
-                    // ✅ USER: Appeler auth-service (port 8082)
                     registerAsUser()
                 }
             } catch (e: Exception) {
@@ -302,15 +341,16 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Register Doctor via doctor-activation-service (port 8083)
+    // ✅ Register Doctor avec contactEmail
     private suspend fun registerAsDoctor() {
         val request = DoctorRegisterRequest(
             email = etEmail.text.toString().trim(),
+            contactEmail = etContactEmail.text.toString().trim(), // ✅ NOUVEAU
             password = etPassword.text.toString(),
             firstName = etFirstName.text.toString().trim(),
             lastName = etLastName.text.toString().trim(),
-            birthDate = null, // TODO: Add date picker
-            gender = null, // TODO: Add gender selection
+            birthDate = null,
+            gender = null,
             phoneNumber = etPhone.text.toString().trim(),
             medicalLicenseNumber = etLicenseNumber.text.toString().trim(),
             specialization = etSpecialization.text.toString().trim(),
@@ -320,9 +360,10 @@ class RegisterActivity : AppCompatActivity() {
             consultationHours = null
         )
 
-        Log.d("RegisterActivity", "🩺 Registering doctor: ${request.email}")
+        Log.d("RegisterActivity", "🩺 Registering doctor")
+        Log.d("RegisterActivity", "   System email: ${request.email}")
+        Log.d("RegisterActivity", "   Contact email: ${request.contactEmail}")
 
-        // ✅ Utiliser getDoctorService() pour appeler port 8083
         val response = RetrofitClient.getDoctorService(this@RegisterActivity)
             .registerDoctor(request)
 
@@ -333,11 +374,10 @@ class RegisterActivity : AppCompatActivity() {
 
             Toast.makeText(
                 this@RegisterActivity,
-                "✅ Inscription réussie!\n⏳ En attente d'activation par l'admin",
+                "✅ Inscription réussie!\n📧 Vérifiez votre email: ${request.contactEmail}\n⏳ En attente d'activation",
                 Toast.LENGTH_LONG
             ).show()
 
-            // Rediriger vers login
             navigateToLogin()
         } else {
             val errorBody = response.errorBody()?.string() ?: response.message()
@@ -350,7 +390,7 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Register User via auth-service (port 8082)
+    // Register User (inchangé)
     private suspend fun registerAsUser() {
         val request = RegisterRequest(
             email = etEmail.text.toString().trim(),
@@ -365,7 +405,6 @@ class RegisterActivity : AppCompatActivity() {
 
         Log.d("RegisterActivity", "👤 Registering user: ${request.email}")
 
-        // ✅ Utiliser getAuthService() pour appeler port 8082
         val response = RetrofitClient.getAuthService(this@RegisterActivity)
             .register(request)
 
@@ -374,7 +413,6 @@ class RegisterActivity : AppCompatActivity() {
 
             Log.d("RegisterActivity", "✅ User registered: ${authResponse.user.email}")
 
-            // Sauvegarder les tokens
             tokenManager.saveTokens(authResponse.accessToken, authResponse.refreshToken)
 
             val userId = authResponse.userId ?: authResponse.user.email

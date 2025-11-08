@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * DoctorAuthService - Direct doctor registration (no external auth-service call)
+ * DoctorAuthService - Direct doctor registration
  */
 @Service
 @RequiredArgsConstructor
@@ -37,10 +37,11 @@ public class DoctorAuthService {
     private String adminEmail;
     
     /**
-     * Register a new doctor directly (no auth-service call)
+     * Register a new doctor
      */
     public DoctorResponse registerDoctor(DoctorRegisterRequest request) {
-        log.info("🏥 Starting doctor registration for: {}", request.getEmail());
+        log.info("🥼 Starting doctor registration for: {}", request.getEmail());
+        log.info("📧 Contact email: {}", request.getContactEmail());
         
         // Check if doctor already exists
         if (doctorRepository.existsByEmail(request.getEmail())) {
@@ -52,24 +53,24 @@ public class DoctorAuthService {
         }
         
         try {
-            // Step 1: Create doctor profile with hashed password
-            log.info("Step 1: Creating doctor profile with hashed password");
+            // Create doctor profile with contactEmail
+            log.info("Step 1: Creating doctor profile");
             Doctor doctor = createDoctorProfile(request);
             Doctor savedDoctor = doctorRepository.save(doctor);
             
-            // Step 2: Create activation request
+            // Create activation request
             log.info("Step 2: Creating activation request");
             createActivationRequest(savedDoctor);
             
-            // Step 3: Send pending validation email to doctor
-            log.info("Step 3: Sending pending validation email to doctor");
+            // ✅ Send email to CONTACT EMAIL (not system email)
+            log.info("Step 3: Sending pending validation email to: {}", savedDoctor.getNotificationEmail());
             sendPendingValidationEmailToDoctor(savedDoctor);
             
-            // Step 4: Notify admins
+            // Notify admins
             log.info("Step 4: Notifying admins at: {}", adminEmail);
             notifyAdmins(savedDoctor);
             
-            log.info("✅ Doctor registration completed successfully for: {}", request.getEmail());
+            log.info("✅ Doctor registration completed for: {}", request.getEmail());
             
             return mapToDoctorResponse(savedDoctor);
             
@@ -80,7 +81,7 @@ public class DoctorAuthService {
     }
     
     /**
-     * Create doctor profile with hashed password
+     * Create doctor profile with contactEmail
      */
     private Doctor createDoctorProfile(DoctorRegisterRequest request) {
         String userId = UUID.randomUUID().toString();
@@ -89,6 +90,7 @@ public class DoctorAuthService {
         return Doctor.builder()
                 .userId(userId)
                 .email(request.getEmail())
+                .contactEmail(request.getContactEmail()) // ✅ NOUVEAU
                 .password(hashedPassword)
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -130,14 +132,15 @@ public class DoctorAuthService {
     }
     
     /**
-     * Send pending validation email to doctor
+     * ✅ Send pending validation email to doctor's CONTACT EMAIL
      */
     private void sendPendingValidationEmailToDoctor(Doctor doctor) {
         try {
-            log.info("📧 Sending pending validation email to doctor: {}", doctor.getEmail());
+            String emailTo = doctor.getNotificationEmail();
+            log.info("📧 Sending pending validation email to: {}", emailTo);
             
             EmailNotificationRequest emailRequest = EmailNotificationRequest.builder()
-                    .to(doctor.getEmail())
+                    .to(emailTo) // ✅ Contact email, pas system email
                     .subject("Registration Received - Pending Validation")
                     .templateType("DOCTOR_REGISTRATION_PENDING")
                     .templateVariables(Map.of(
@@ -148,10 +151,10 @@ public class DoctorAuthService {
                     .build();
             
             notificationClient.sendEmail(emailRequest);
-            log.info("✅ Pending validation email sent to doctor: {}", doctor.getEmail());
+            log.info("✅ Pending validation email sent to: {}", emailTo);
             
         } catch (Exception e) {
-            log.error("❌ Failed to send pending validation email to doctor", e);
+            log.error("❌ Failed to send pending validation email", e);
         }
     }
     
@@ -170,6 +173,7 @@ public class DoctorAuthService {
                         "adminName", "Admin",
                         "doctorName", doctor.getFullName(),
                         "doctorEmail", doctor.getEmail(),
+                        "doctorContactEmail", doctor.getContactEmail(), // ✅ Inclus dans notification admin
                         "medicalLicense", doctor.getMedicalLicenseNumber(),
                         "specialization", doctor.getSpecialization(),
                         "hospital", doctor.getHospitalAffiliation(),

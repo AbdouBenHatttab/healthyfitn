@@ -165,7 +165,7 @@
                         android:fontFamily="sans-serif" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Email -->
+                <!-- Email (System Email for Doctors / Normal Email for Users) -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilEmailRegister"
                     android:layout_width="match_parent"
@@ -181,6 +181,34 @@
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etEmailRegister"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/edittext_height"
+                        android:inputType="textEmailAddress"
+                        android:background="@drawable/bg_edittext"
+                        android:paddingStart="@dimen/spacing_md"
+                        android:paddingEnd="@dimen/spacing_md"
+                        android:textSize="@dimen/text_size_md"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Contact Email (Visible only for doctors) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilContactEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:hint="Email de contact (pour recevoir les notifications)"
+                    app:startIconDrawable="@drawable/ic_email"
+                    app:boxBackgroundMode="filled"
+                    app:boxBackgroundColor="@color/transparent"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="0dp"
+                    android:visibility="gone"
+                    style="@style/Widget.Material3.TextInputLayout.FilledBox">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etContactEmail"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/edittext_height"
                         android:inputType="textEmailAddress"
@@ -616,4 +644,5 @@
                 android:padding="@dimen/spacing_sm" />
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout></ScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

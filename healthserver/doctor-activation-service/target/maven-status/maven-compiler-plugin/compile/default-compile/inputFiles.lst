@@ -1,6 +1,7 @@
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\security\JwtTokenValidator.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\dto\request\EmailNotificationRequest.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\repository\DoctorRepository.java
+D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\service\DoctorPasswordService.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\controller\DoctorAuthController.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\controller\AdminDoctorController.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\dto\response\DoctorResponse.java
@@ -10,6 +11,7 @@ D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\co
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\controller\DoctorController.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\DoctorActivationServiceApplication.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\dto\response\DoctorDashboardResponse.java
+D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\dto\request\ChangePasswordRequest.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\config\ApplicationConfig.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\entity\Doctor.java
 D:\healthSyncMobile-main\healthserver\doctor-activation-service\src\main\java\com\healthapp\doctor\security\SecurityConfig.java

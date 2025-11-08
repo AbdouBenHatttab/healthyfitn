@@ -46,4 +46,6 @@ public class DoctorDashboardResponse {
     // Metadata
     private LocalDateTime lastLoginAt;
     private LocalDateTime generatedAt;
+    private String profilePictureUrl;
+
 }

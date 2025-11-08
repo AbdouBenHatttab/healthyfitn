@@ -11,35 +11,64 @@ import kotlinx.coroutines.launch
 
 object FCMHelper {
 
+    private const val TAG = "FCMHelper"
+
+    /**
+     * Récupère le FCM token et l'envoie au backend via le Notification Service (Cloudflare)
+     */
     fun saveFCMToken(context: Context) {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                Log.d("FCM", "🔑 FCM Token: $token")
+            if (!task.isSuccessful) {
+                Log.e(TAG, "❌ Failed to get FCM token", task.exception)
+                return@addOnCompleteListener
+            }
 
-                // ✅ Send to backend
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val request = FCMTokenRequest(
-                            fcmToken = token,
-                            deviceType = "ANDROID",
-                            deviceModel = android.os.Build.MODEL
-                        )
+            val token = task.result
+            Log.d(TAG, "✅ FCM Token obtained: $token")
 
-                        val authToken = "Bearer ${TokenManager(context).getAccessToken()}"
+            // Envoyer le token au backend
+            sendTokenToBackend(context, token)
+        }
+    }
 
-                        // ✅ TODO: Add this endpoint to your ApiService
-                        // RetrofitClient.getNotificationService(context)
-                        //     .saveFcmToken(authToken, request)
+    /**
+     * Envoie le FCM token au Notification Service via Cloudflare
+     */
+    private fun sendTokenToBackend(context: Context, fcmToken: String) {
+        val tokenManager = TokenManager(context)
+        val accessToken = tokenManager.getAccessToken()
 
-                        Log.d("FCM", "✅ Token saved to backend")
-                    } catch (e: Exception) {
-                        Log.e("FCM", "❌ Failed to save token: ${e.message}")
-                    }
+        if (accessToken.isNullOrEmpty()) {
+            Log.w(TAG, "⚠️ No access token available, skipping FCM token registration")
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = FCMTokenRequest(fcmToken)
+
+                // 🆕 Utiliser le Notification Service (Cloudflare port 8084)
+                val response = RetrofitClient.getNotificationService(context)
+                    .saveFcmToken("Bearer $accessToken", request)
+
+                if (response.isSuccessful) {
+                    Log.d(TAG, "✅ FCM token saved successfully to Cloudflare Notification Service")
+                } else {
+                    val error = response.errorBody()?.string()
+                    Log.e(TAG, "❌ Failed to save FCM token: ${response.code()} - $error")
                 }
-            } else {
-                Log.e("FCM", "❌ Failed to get FCM token", task.exception)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Exception while saving FCM token: ${e.message}", e)
             }
         }
+    }
+
+    /**
+     * Rafraîchir le token FCM (appelé quand le token change)
+     */
+    fun refreshFCMToken(context: Context, newToken: String) {
+        Log.d(TAG, "🔄 FCM Token refreshed: $newToken")
+        sendTokenToBackend(context, newToken)
     }
 }

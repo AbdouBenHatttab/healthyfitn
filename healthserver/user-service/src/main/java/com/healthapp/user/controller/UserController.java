@@ -10,6 +10,9 @@ import com.healthapp.user.service.PasswordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -55,5 +58,6 @@ public class UserController {
         passwordService.changePassword(principal.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Password changed", null));
     }
+  
 
 }

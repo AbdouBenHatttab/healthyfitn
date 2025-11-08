@@ -22,6 +22,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.health.virtualdoctor.R
 import com.health.virtualdoctor.ui.auth.LoginActivity
 import com.health.virtualdoctor.ui.data.api.RetrofitClient
+import com.health.virtualdoctor.ui.data.models.ChangePasswordRequest
 import com.health.virtualdoctor.ui.data.models.UpdateDoctorProfileRequest
 import com.health.virtualdoctor.ui.utils.ImageUploadHelper
 import com.health.virtualdoctor.ui.utils.TokenManager
@@ -47,12 +48,13 @@ class DoctorDashboardActivity : AppCompatActivity() {
     private lateinit var etConsultationHours: EditText
     private lateinit var btnUpdateProfile: Button
     private lateinit var btnCheckActivation: Button
+    private lateinit var btnChangePassword: Button // ✅ NOUVEAU
     private lateinit var btnEditProfile: com.google.android.material.button.MaterialButton
     private lateinit var cardEditProfile: androidx.cardview.widget.CardView
 
     // Image selection
     private var selectedImageBitmap: Bitmap? = null
-    private var currentProfileImageUrl: String? = null  // ✅ FIX : Nom correct de la variable
+    private var currentProfileImageUrl: String? = null
 
     // Image Picker
     private val pickImageLauncher = registerForActivityResult(
@@ -88,34 +90,29 @@ class DoctorDashboardActivity : AppCompatActivity() {
         tokenManager = TokenManager(this)
 
         initViews()
-        setupToolbar()  // 🆕 AJOUTER
+        setupToolbar()
         setupListeners()
         loadDoctorProfile()
     }
 
-    // 🆕 Configurer la toolbar
     private fun setupToolbar() {
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
     }
 
-    // 🆕 Créer le menu
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_doctor_dashboard, menu)
         return true
     }
 
-    // 🆕 Gérer les clics sur le menu
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_notifications -> {
                 Toast.makeText(this, "🔔 Notifications", Toast.LENGTH_SHORT).show()
-                // TODO: Ouvrir l'écran des notifications
                 true
             }
             R.id.action_settings -> {
                 Toast.makeText(this, "⚙️ Paramètres", Toast.LENGTH_SHORT).show()
-                // TODO: Ouvrir l'écran des paramètres
                 true
             }
             R.id.action_logout -> {
@@ -126,7 +123,6 @@ class DoctorDashboardActivity : AppCompatActivity() {
         }
     }
 
-    // 🆕 Afficher une boîte de dialogue de confirmation avant logout
     private fun showLogoutDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Déconnexion")
@@ -138,21 +134,13 @@ class DoctorDashboardActivity : AppCompatActivity() {
             .show()
     }
 
-    // 🆕 Effectuer la déconnexion
     private fun performLogout() {
         lifecycleScope.launch {
             try {
-                // 1. Supprimer le token local
                 tokenManager.clearTokens()
-
-                // 2. (Optionnel) Informer le backend de la déconnexion
-                // val token = "Bearer ${tokenManager.getAccessToken()}"
-                // RetrofitClient.getAuthService().logout(token)
-
                 Log.d("DoctorProfile", "✅ Logout successful")
                 Toast.makeText(this@DoctorDashboardActivity, "👋 Déconnecté avec succès", Toast.LENGTH_SHORT).show()
 
-                // 3. Rediriger vers l'écran de connexion
                 val intent = Intent(this@DoctorDashboardActivity, LoginActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
@@ -181,6 +169,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
         etConsultationHours = findViewById(R.id.etConsultationHours)
         btnUpdateProfile = findViewById(R.id.btnUpdateProfile)
         btnCheckActivation = findViewById(R.id.btnCheckActivation)
+        btnChangePassword = findViewById(R.id.btnChangePassword) // ✅ NOUVEAU
         btnEditProfile = findViewById(R.id.btnEditProfile)
         cardEditProfile = findViewById(R.id.cardEditProfile)
     }
@@ -192,6 +181,11 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
         btnCheckActivation.setOnClickListener {
             checkActivationStatus()
+        }
+
+        // ✅ NOUVEAU: Bouton changer mot de passe
+        btnChangePassword.setOnClickListener {
+            showChangePasswordDialog()
         }
 
         btnEditProfile.setOnClickListener {
@@ -247,36 +241,29 @@ class DoctorDashboardActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val profile = response.body()!!
 
-                    tvDoctorName.text = profile.fullName
-                    tvDoctorEmail.text = profile.email
-                    tvSpecialization.text = profile.specialization
-                    tvActivationStatus.text = if (profile.isActivated) {
-                        "✅ Activated"
-                    } else {
-                        "⏳ Pending Activation"
-                    }
+                    runOnUiThread {
+                        tvDoctorName.text = profile.fullName
+                        tvDoctorEmail.text = profile.email
+                        tvSpecialization.text = profile.specialization
+                        tvActivationStatus.text = if (profile.isActivated) {
+                            "✅ Activated"
+                        } else {
+                            "⏳ Pending Activation"
+                        }
 
-                    // Pre-fill edit fields
-                    etFirstName.setText(profile.firstName)
-                    etLastName.setText(profile.lastName)
-                    etPhoneNumber.setText(profile.phoneNumber ?: "")
-                    etSpecialization.setText(profile.specialization)
-                    etHospital.setText(profile.hospitalAffiliation)
-                    etYearsOfExperience.setText(profile.yearsOfExperience.toString())
-                    etOfficeAddress.setText(profile.officeAddress ?: "")
-                    etConsultationHours.setText(profile.consultationHours ?: "")
+                        etFirstName.setText(profile.firstName)
+                        etLastName.setText(profile.lastName)
+                        etPhoneNumber.setText(profile.phoneNumber ?: "")
+                        etSpecialization.setText(profile.specialization)
+                        etHospital.setText(profile.hospitalAffiliation)
+                        etYearsOfExperience.setText(profile.yearsOfExperience.toString())
+                        etOfficeAddress.setText(profile.officeAddress ?: "")
+                        etConsultationHours.setText(profile.consultationHours ?: "")
 
-                    // ✅ FIX : Utiliser le nom correct de la variable
-                    currentProfileImageUrl = profile.profilePictureUrl
-                    if (!currentProfileImageUrl.isNullOrEmpty()) {
-                        Glide.with(this@DoctorDashboardActivity)
-                            .load(currentProfileImageUrl)
-                            .placeholder(R.drawable.ic_person)
-                            .error(R.drawable.ic_person)
-                            .circleCrop()
-                            .into(ivDoctorProfile)
-
-                        Log.d("DoctorProfile", "✅ Profile image loaded: $currentProfileImageUrl")
+                        currentProfileImageUrl = profile.profilePictureUrl
+                        if (!currentProfileImageUrl.isNullOrEmpty()) {
+                            loadProfileImage(currentProfileImageUrl!!)
+                        }
                     }
 
                     Log.d("DoctorProfile", "✅ Profile loaded: ${profile.email}")
@@ -294,6 +281,17 @@ class DoctorDashboardActivity : AppCompatActivity() {
                 ).show()
             }
         }
+    }
+
+    private fun loadProfileImage(imageUrl: String) {
+        Glide.with(this@DoctorDashboardActivity)
+            .load(imageUrl)
+            .placeholder(R.drawable.ic_person)
+            .error(R.drawable.ic_person)
+            .circleCrop()
+            .into(ivDoctorProfile)
+
+        Log.d("DoctorProfile", "✅ Profile image loaded: $imageUrl")
     }
 
     private fun updateDoctorProfile() {
@@ -317,9 +315,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
                 btnUpdateProfile.text = "Updating..."
 
                 val token = "Bearer ${tokenManager.getAccessToken()}"
-
-                // Upload l'image si une nouvelle a été sélectionnée
-                var imageUrl = currentProfileImageUrl  // ✅ FIX : Nom correct
+                var imageUrl = currentProfileImageUrl
 
                 if (selectedImageBitmap != null) {
                     Toast.makeText(this@DoctorDashboardActivity, "📤 Uploading image...", Toast.LENGTH_SHORT).show()
@@ -329,11 +325,17 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     if (imageUrl != null) {
                         Log.d("DoctorProfile", "✅ Image uploaded: $imageUrl")
                         Toast.makeText(this@DoctorDashboardActivity, "✅ Image uploaded!", Toast.LENGTH_SHORT).show()
+
+                        runOnUiThread {
+                            loadProfileImage(imageUrl)
+                        }
                     } else {
                         Log.e("DoctorProfile", "❌ Image upload failed")
-                        Toast.makeText(this@DoctorDashboardActivity, "⚠️ Image upload failed, continuing without image", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@DoctorDashboardActivity, "⚠️ Image upload failed", Toast.LENGTH_SHORT).show()
                     }
                 }
+
+                val finalImageUrl = imageUrl ?: currentProfileImageUrl
 
                 val request = UpdateDoctorProfileRequest(
                     firstName = firstName,
@@ -344,8 +346,10 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     yearsOfExperience = yearsOfExperience,
                     officeAddress = officeAddress.ifEmpty { null },
                     consultationHours = consultationHours.ifEmpty { null },
-                    profilePictureUrl = imageUrl
+                    profilePictureUrl = finalImageUrl
                 )
+
+                Log.d("DoctorProfile", "📤 Updating profile with imageUrl: $finalImageUrl")
 
                 val response = RetrofitClient.getDoctorService(this@DoctorDashboardActivity)
                     .updateDoctorProfile(token, request)
@@ -353,20 +357,25 @@ class DoctorDashboardActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val updatedProfile = response.body()!!
 
-                    tvDoctorName.text = updatedProfile.fullName
-                    tvSpecialization.text = updatedProfile.specialization
+                    runOnUiThread {
+                        tvDoctorName.text = updatedProfile.fullName
+                        tvSpecialization.text = updatedProfile.specialization
 
-                    // ✅ FIX : Nom correct
-                    currentProfileImageUrl = updatedProfile.profilePictureUrl
-                    selectedImageBitmap = null
+                        currentProfileImageUrl = updatedProfile.profilePictureUrl
+                        selectedImageBitmap = null
 
-                    Toast.makeText(
-                        this@DoctorDashboardActivity,
-                        "✅ Profile updated successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        if (!currentProfileImageUrl.isNullOrEmpty()) {
+                            loadProfileImage(currentProfileImageUrl!!)
+                        }
 
-                    toggleEditProfileVisibility()
+                        Toast.makeText(
+                            this@DoctorDashboardActivity,
+                            "✅ Profile updated successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        toggleEditProfileVisibility()
+                    }
 
                     Log.d("DoctorProfile", "✅ Profile updated: ${updatedProfile.email}")
                 } else {
@@ -382,8 +391,89 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             } finally {
-                btnUpdateProfile.isEnabled = true
-                btnUpdateProfile.text = "Enregistrer"
+                runOnUiThread {
+                    btnUpdateProfile.isEnabled = true
+                    btnUpdateProfile.text = "Enregistrer"
+                }
+            }
+        }
+    }
+
+    // ✅ NOUVEAU: Dialog pour changer le mot de passe
+    private fun showChangePasswordDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_change_password, null)
+        val etCurrentPassword = dialogView.findViewById<EditText>(R.id.etCurrentPassword)
+        val etNewPassword = dialogView.findViewById<EditText>(R.id.etNewPassword)
+        val etConfirmPassword = dialogView.findViewById<EditText>(R.id.etConfirmPassword)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Changer le mot de passe")
+            .setView(dialogView)
+            .setPositiveButton("Changer") { _, _ ->
+                val currentPassword = etCurrentPassword.text.toString()
+                val newPassword = etNewPassword.text.toString()
+                val confirmPassword = etConfirmPassword.text.toString()
+
+                if (currentPassword.isEmpty() || newPassword.isEmpty()) {
+                    Toast.makeText(this, "⚠️ Tous les champs requis", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                if (newPassword != confirmPassword) {
+                    Toast.makeText(this, "⚠️ Mots de passe non identiques", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                if (newPassword.length < 8) {
+                    Toast.makeText(this, "⚠️ Minimum 8 caractères", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                changeDoctorPassword(currentPassword, newPassword)
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+
+    // ✅ NOUVEAU: Changer le mot de passe doctor
+    private fun changeDoctorPassword(currentPassword: String, newPassword: String) {
+        lifecycleScope.launch {
+            try {
+                val token = "Bearer ${tokenManager.getAccessToken()}"
+                val request = ChangePasswordRequest(currentPassword, newPassword)
+
+                Log.d("DoctorProfile", "🔐 Changing doctor password...")
+
+                // Call DOCTOR SERVICE (port 8083)
+                val response = RetrofitClient.getDoctorService(this@DoctorDashboardActivity)
+                    .changeDoctorPassword(token, request)
+
+                if (response.isSuccessful) {
+                    Toast.makeText(
+                        this@DoctorDashboardActivity,
+                        "✅ Mot de passe changé!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    Log.d("DoctorProfile", "✅ Password changed successfully")
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("DoctorProfile", "❌ Password change error: $errorBody")
+
+                    Toast.makeText(
+                        this@DoctorDashboardActivity,
+                        "❌ Erreur ${response.code()}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+            } catch (e: Exception) {
+                Log.e("DoctorProfile", "❌ Exception: ${e.message}", e)
+                Toast.makeText(
+                    this@DoctorDashboardActivity,
+                    "❌ Erreur: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -401,13 +491,15 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     val isActivated = status["isActivated"] as? Boolean ?: false
                     val message = status["message"] as? String ?: "Unknown"
 
-                    tvActivationStatus.text = if (isActivated) {
-                        "✅ Activated"
-                    } else {
-                        "⏳ $message"
-                    }
+                    runOnUiThread {
+                        tvActivationStatus.text = if (isActivated) {
+                            "✅ Activated"
+                        } else {
+                            "⏳ $message"
+                        }
 
-                    Toast.makeText(this@DoctorDashboardActivity, message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@DoctorDashboardActivity, message, Toast.LENGTH_LONG).show()
+                    }
 
                     Log.d("DoctorProfile", "✅ Activation status: $isActivated")
                 } else {

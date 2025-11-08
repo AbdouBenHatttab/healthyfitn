@@ -314,33 +314,55 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Action Buttons -->
+                    <!-- Action Buttons -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="end">
+                        android:orientation="vertical">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnCheckActivation"
-                            android:layout_width="wrap_content"
+                        <!-- Boutons Check Activation et Update Profile -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Vérifier statut"
-                            android:textColor="@color/primary"
-                            app:cornerRadius="8dp"
-                            app:backgroundTint="@android:color/transparent"
-                            app:strokeColor="@color/primary"
-                            app:strokeWidth="1dp"
-                            android:layout_marginEnd="@dimen/spacing_sm"
-                            style="@style/Widget.Material3.Button.OutlinedButton" />
+                            android:orientation="horizontal"
+                            android:gravity="end"
+                            android:layout_marginBottom="8dp">
 
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnCheckActivation"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Vérifier statut"
+                                android:textColor="@color/primary"
+                                app:cornerRadius="8dp"
+                                app:backgroundTint="@android:color/transparent"
+                                app:strokeColor="@color/primary"
+                                app:strokeWidth="1dp"
+                                android:layout_marginEnd="@dimen/spacing_sm"
+                                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnUpdateProfile"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Enregistrer"
+                                android:textColor="@color/white"
+                                app:cornerRadius="8dp"
+                                app:backgroundTint="@color/primary"
+                                style="@style/Widget.Material3.Button" />
+                        </LinearLayout>
+
+                        <!-- ✅ NOUVEAU: Bouton Change Password -->
                         <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnUpdateProfile"
-                            android:layout_width="wrap_content"
+                            android:id="@+id/btnChangePassword"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Enregistrer"
+                            android:text="Changer le mot de passe"
                             android:textColor="@color/white"
+                            app:icon="@drawable/ic_lock"
+                            app:iconGravity="start"
                             app:cornerRadius="8dp"
-                            app:backgroundTint="@color/primary"
+                            app:backgroundTint="@color/accent"
                             style="@style/Widget.Material3.Button" />
                     </LinearLayout>
                 </LinearLayout>

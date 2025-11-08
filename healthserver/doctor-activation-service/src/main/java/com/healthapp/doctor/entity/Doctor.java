@@ -38,6 +38,9 @@ public class Doctor {
     
     @Indexed(unique = true)
     private String email;
+    // ✅ NOUVEAU: Email réel pour notifications (Gmail, Outlook, etc.)
+    @Indexed
+    private String contactEmail;
     private String password;
 
     private String firstName;
@@ -97,5 +100,14 @@ public class Doctor {
     
     public boolean isPending() {
         return "PENDING".equals(activationStatus);
+    }
+    /**
+     * ✅ NOUVEAU: Retourne l'email à utiliser pour les notifications
+     * Priorité: contactEmail > email
+     */
+    public String getNotificationEmail() {
+        return contactEmail != null && !contactEmail.isEmpty() 
+            ? contactEmail 
+            : email;
     }
 }

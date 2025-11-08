@@ -85,7 +85,7 @@ public class DoctorActivationService {
         activationRequest.markAsProcessed(adminId, adminEmail, "APPROVE", notes);
         activationRequestRepository.save(activationRequest);
         
-        // Envoyer email de confirmation au médecin
+        // ✅ Envoyer email de confirmation au CONTACT EMAIL
         sendActivationConfirmationEmail(doctor);
         
         log.info("✅ Doctor approved successfully: {}", doctor.getEmail());
@@ -109,42 +109,49 @@ public class DoctorActivationService {
         activationRequest.markAsProcessed(adminId, adminEmail, "REJECT", notes);
         activationRequestRepository.save(activationRequest);
         
-        // Envoyer email de rejet au médecin
+        // ✅ Envoyer email de rejet au CONTACT EMAIL
         sendActivationRejectionEmail(doctor, notes);
         
         log.info("❌ Doctor rejected: {}", doctor.getEmail());
     }
     
     /**
-     * Envoyer email de confirmation d'activation
+     * ✅ Envoyer email de confirmation d'activation au CONTACT EMAIL
      */
     private void sendActivationConfirmationEmail(Doctor doctor) {
         try {
+            String emailTo = doctor.getNotificationEmail();
+            log.info("📧 Sending activation confirmation to: {}", emailTo);
+            
             EmailNotificationRequest emailRequest = EmailNotificationRequest.builder()
-                    .to(doctor.getEmail())
+                    .to(emailTo) // ✅ Contact email
                     .subject("Account Activated - Welcome to Health App")
                     .templateType("DOCTOR_ACTIVATION_CONFIRMATION")
                     .templateVariables(Map.of(
                         "doctorLastName", doctor.getLastName(),
-                        "doctorFirstName", doctor.getFirstName()
+                        "doctorFirstName", doctor.getFirstName(),
+                        "loginEmail", doctor.getEmail() // ✅ Rappeler l'email de connexion
                     ))
                     .build();
             
             notificationClient.sendEmail(emailRequest);
-            log.info("📧 Activation confirmation sent to: {}", doctor.getEmail());
+            log.info("✅ Activation confirmation sent to: {}", emailTo);
             
         } catch (Exception e) {
-            log.error("Failed to send activation confirmation email", e);
+            log.error("❌ Failed to send activation confirmation email", e);
         }
     }
     
     /**
-     * Envoyer email de rejet
+     * ✅ Envoyer email de rejet au CONTACT EMAIL
      */
     private void sendActivationRejectionEmail(Doctor doctor, String reason) {
         try {
+            String emailTo = doctor.getNotificationEmail();
+            log.info("📧 Sending rejection notification to: {}", emailTo);
+            
             EmailNotificationRequest emailRequest = EmailNotificationRequest.builder()
-                    .to(doctor.getEmail())
+                    .to(emailTo) // ✅ Contact email
                     .subject("Account Registration Review - Health App")
                     .templateType("DOCTOR_ACTIVATION_REJECTION")
                     .templateVariables(Map.of(
@@ -154,10 +161,10 @@ public class DoctorActivationService {
                     .build();
             
             notificationClient.sendEmail(emailRequest);
-            log.info("📧 Rejection notification sent to: {}", doctor.getEmail());
+            log.info("✅ Rejection notification sent to: {}", emailTo);
             
         } catch (Exception e) {
-            log.error("Failed to send rejection email", e);
+            log.error("❌ Failed to send rejection email", e);
         }
     }
     

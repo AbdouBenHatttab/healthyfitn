@@ -4,6 +4,12 @@ spring:
   main:
     allow-bean-definition-overriding: true
   
+  web:
+    resources:
+      add-mappings: false  # ← NEW - Critical fix
+  
+  mvc:
+    throw-exception-if-no-handler-found: true  # ← NEW
   data:
     mongodb:
       uri: mongodb://localhost:27017/health_auth_db

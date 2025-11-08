@@ -23,7 +23,12 @@ public class DoctorRegisterRequest {
         message = "Doctor email must end with @doctor (e.g., john@doctor.com, marie@doctor.fr)"
     )
     private String email;
-    
+
+    // ✅ NOUVEAU: Email réel pour recevoir les notifications
+    @NotBlank(message = "Contact email is required")
+    @Email(message = "Invalid email format")
+    private String contactEmail;
+
     @NotBlank(message = "Password is required")
     @Pattern(
         regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&.])[A-Za-z\\d@$!%*?&.]{8,128}$",

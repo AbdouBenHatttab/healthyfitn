@@ -42,6 +42,12 @@ interface ApiService {
         @Body request: ChangePasswordRequest
     ): Response<Unit>
 
+    // ✅ NOUVEAU: Forgot Password pour USER
+    @POST("api/v1/users/forgot-password")
+    suspend fun forgotUserPassword(
+        @Body request: Map<String, String>
+    ): Response<Map<String, Any>>
+
     // ==========================================
     // DOCTOR SERVICE (port 8083)
     // ==========================================
@@ -71,15 +77,32 @@ interface ApiService {
     suspend fun getAllDoctorEmails(
         @Header("Authorization") token: String
     ): Response<Map<String, Any>>
-    // FCM Notifications
+
+    // ✅ NOUVEAU: Change Password pour DOCTOR
+    @POST("api/doctors/change-password")
+    suspend fun changeDoctorPassword(
+        @Header("Authorization") token: String,
+        @Body request: ChangePasswordRequest
+    ): Response<Map<String, Any>>
+
+    // ✅ NOUVEAU: Forgot Password pour DOCTOR
+    @POST("api/doctors/forgot-password")
+    suspend fun forgotDoctorPassword(
+        @Body request: Map<String, String>
+    ): Response<Map<String, Any>>
+
+    // ==========================================
+    // NOTIFICATION SERVICE
+    // ==========================================
     @POST("api/notifications/fcm/token")
     suspend fun saveFcmToken(
         @Header("Authorization") token: String,
         @Body request: FCMTokenRequest
     ): Response<Map<String, String>>
+
     // ==========================================
-// NUTRITION SERVICE (Cloudflare Worker)
-// ==========================================
+    // NUTRITION SERVICE (Cloudflare Worker)
+    // ==========================================
     @Multipart
     @POST("api/nutrition/analyze")
     suspend fun analyzeNutrition(
@@ -87,12 +110,10 @@ interface ApiService {
         @Part image: MultipartBody.Part,
         @Part("use_ai") useAi: RequestBody
     ): Response<NutritionAnalysisResponse>
-
-
 }
 
 // ==========================================
-// NEW DATA CLASSES
+// DATA CLASSES
 // ==========================================
 
 // User Profile
@@ -132,9 +153,10 @@ data class UpdateDoctorProfileRequest(
     val yearsOfExperience: Int?,
     val officeAddress: String?,
     val consultationHours: String?,
-    val profilePictureUrl: String? = null  // 🆕 AJOUTER CE CHAMP
+    val profilePictureUrl: String? = null
 )
-// Data class pour la réponse
+
+// Nutrition Analysis
 data class NutritionAnalysisResponse(
     val success: Boolean,
     val data: NutritionData?,
