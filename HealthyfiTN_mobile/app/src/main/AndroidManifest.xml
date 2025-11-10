@@ -108,7 +108,11 @@
             android:name=".ui.user.UserMetricsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-
+        <activity
+            android:name=".ui.admin.AdminDashboardActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.VirtualDoctor"
+            android:exported="false" />
         <!-- Health Connect -->
         <activity-alias
             android:name=".ViewPermissionUsageActivity"

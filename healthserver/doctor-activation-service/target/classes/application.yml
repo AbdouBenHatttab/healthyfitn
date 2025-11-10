@@ -1,28 +1,43 @@
 # Configuration du Doctor Activation Service
 
-  # MongoDB
 spring:
   application:
     name: doctor-activation-service
+  
   data:
     mongodb:
       uri: mongodb://localhost:27017/health_doctor_db
+  
   cloud:
     config:
       enabled: false
+  
   main:
     allow-bean-definition-overriding: true
+  
+  # ✅ CORRECTION: Configuration Web/MVC pour éviter que /api/** soit traité comme ressource statique
+  web:
+    resources:
+      add-mappings: true
+      static-locations: classpath:/static/,classpath:/public/
+  
+  mvc:
+    static-path-pattern: /static/**
+    throw-exception-if-no-handler-found: true
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
-
+# Configuration des notifications
 notification:
   admin-email: healthapp.healthyfittn@gmail.com
   service:
     url: http://localhost:8084
 
+# Configuration du serveur
 server:
   port: 8083
 
-# Eureka Client
+# Eureka Client Configuration
 eureka:
   client:
     service-url:
@@ -33,6 +48,7 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.value}
 
+# Feign Client Configuration
 feign:
   client:
     config:
@@ -42,7 +58,8 @@ feign:
         loggerLevel: full  
   circuitbreaker:
     enabled: true
-# Resilience4j
+
+# Resilience4j Circuit Breaker Configuration
 resilience4j:
   circuitbreaker:
     instances:
@@ -59,14 +76,15 @@ resilience4j:
         wait-duration-in-open-state: 10s
         failure-rate-threshold: 50
 
-
+# JWT Configuration
 app:
   jwt:
     secret: 21f4e176cd2f4b991bd27fd94a7acfa923a032015252f7f725cee7761503b6120d0f92dcda38390c619190e921833477ea8f32100e9d59bcd398073b1552c15e
     expiration: 900000  # 15 minutes
     refresh-token:
       expiration: 604800000  # 7 jours
-# Actuator
+
+# Actuator Configuration
 management:
   endpoints:
     web:
@@ -76,10 +94,12 @@ management:
     health:
       show-details: always
 
-# Logging
+# Logging Configuration
 logging:
   level:
     com.healthapp.doctor: DEBUG
     org.springframework.cloud.openfeign: DEBUG
+    org.springframework.web.servlet.mvc: DEBUG
+    org.springframework.web.servlet.handler: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

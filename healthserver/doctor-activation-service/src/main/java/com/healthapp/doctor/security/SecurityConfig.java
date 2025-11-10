@@ -1,5 +1,3 @@
-
-
 package com.healthapp.doctor.security;
 
 import lombok.RequiredArgsConstructor;
@@ -55,19 +53,19 @@ public class SecurityConfig {
                         "/api/doctors/login", 
                         "/api/doctors/health", 
                         "/api/doctors/forgot-password",
-                        "/api/doctors/test",              // TEST endpoint
-                        "/api/doctors/debug/**",          // DEBUG endpoints
+                        "/api/doctors/test",
+                        "/api/doctors/debug/**",
                         "/actuator/**"
                     ).permitAll()
                     
-                    // Authenticated endpoints - EXPLICIT
+                    // Admin endpoints - MUST BE BEFORE authenticated()
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                    
+                    // Authenticated doctor endpoints
                     .requestMatchers(HttpMethod.PUT, "/api/doctors/change-password").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/doctors/profile").authenticated()
                     .requestMatchers(HttpMethod.PUT, "/api/doctors/profile").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/doctors/activation-status").authenticated()
-                    
-                    // Admin endpoints
-                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     
                     // All other requests
                     .anyRequest().authenticated();

@@ -18,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.health.virtualdoctor.R
+import com.health.virtualdoctor.ui.admin.AdminDashboardActivity
 import com.health.virtualdoctor.ui.data.api.RetrofitClient
 import com.health.virtualdoctor.ui.data.models.LoginRequest
 import com.health.virtualdoctor.ui.doctor.DoctorDashboardActivity
@@ -273,15 +274,12 @@ class LoginActivity : AppCompatActivity() {
         navigateByRole("DOCTOR")
     }
 
+
     private fun navigateByRole(role: String) {
         val intent = when (role) {
             "USER" -> Intent(this, UserMetricsActivity::class.java)
             "DOCTOR" -> Intent(this, DoctorDashboardActivity::class.java)
-            "ADMIN" -> {
-                Intent(this, UserMetricsActivity::class.java).apply {
-                    putExtra("message", "⚙️ Admin Dashboard (à implémenter)")
-                }
-            }
+            "ADMIN" -> Intent(this, AdminDashboardActivity::class.java) // ✅ NOUVEAU
             else -> Intent(this, com.health.virtualdoctor.ui.welcome.WelcomeActivity::class.java)
         }
 

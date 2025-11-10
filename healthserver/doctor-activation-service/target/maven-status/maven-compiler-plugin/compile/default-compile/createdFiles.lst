@@ -3,6 +3,7 @@ com\healthapp\doctor\repository\DoctorRepository.class
 com\healthapp\doctor\dto\request\EmailNotificationRequest$EmailNotificationRequestBuilder.class
 com\healthapp\doctor\repository\DoctorActivationRequestRepository.class
 com\healthapp\doctor\config\MongoConfig.class
+com\healthapp\doctor\dto\request\ChangePasswordRequest$ChangePasswordRequestBuilder.class
 com\healthapp\doctor\dto\request\DoctorActivationRequestDto$DoctorActivationRequestDtoBuilder.class
 com\healthapp\doctor\service\DoctorActivationService.class
 com\healthapp\doctor\dto\response\DoctorResponse$DoctorResponseBuilder.class
@@ -18,11 +19,13 @@ com\healthapp\doctor\dto\response\DoctorResponse.class
 com\healthapp\doctor\dto\request\DoctorActivationRequestDto.class
 com\healthapp\doctor\dto\request\UpdateDoctorProfileRequest.class
 com\healthapp\doctor\entity\DoctorActivationRequest$DoctorActivationRequestBuilder.class
+com\healthapp\doctor\service\DoctorPasswordService.class
 com\healthapp\doctor\controller\DoctorAuthController.class
 com\healthapp\doctor\exception\GlobalExceptionHandler.class
 com\healthapp\doctor\service\DoctorLoginService.class
 com\healthapp\doctor\config\ApplicationConfig.class
 com\healthapp\doctor\entity\Doctor$DoctorBuilder.class
+com\healthapp\doctor\dto\request\ChangePasswordRequest.class
 com\healthapp\doctor\dto\request\DoctorRegisterRequest.class
 com\healthapp\doctor\client\NotificationClientFallback.class
 com\healthapp\doctor\controller\AdminDoctorController.class
@@ -31,4 +34,5 @@ com\healthapp\doctor\entity\Doctor.class
 com\healthapp\doctor\entity\DoctorActivationRequest.class
 com\healthapp\doctor\security\SecurityConfig.class
 com\healthapp\doctor\DoctorActivationServiceApplication.class
+com\healthapp\doctor\service\DoctorPasswordResetService.class
 com\healthapp\doctor\dto\request\UpdateDoctorProfileRequest$UpdateDoctorProfileRequestBuilder.class

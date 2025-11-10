@@ -108,6 +108,30 @@ interface ApiService {
         @Part image: MultipartBody.Part,
         @Part("use_ai") useAi: RequestBody
     ): Response<NutritionAnalysisResponse>
+
+    // ==========================================
+    // ADMIN SERVICE ENDPOINTS
+    // ==========================================
+    @GET("api/admin/doctors/pending")
+    suspend fun getPendingDoctors(
+        @Header("Authorization") token: String
+    ): Response<List<DoctorPendingResponse>>
+
+    @GET("api/admin/doctors/pending/count")
+    suspend fun getPendingDoctorsCount(
+        @Header("Authorization") token: String
+    ): Response<Map<String, Long>>
+
+    @GET("api/admin/doctors/activated")
+    suspend fun getActivatedDoctors(
+        @Header("Authorization") token: String
+    ): Response<List<DoctorPendingResponse>>
+
+    @POST("api/admin/doctors/activate")
+    suspend fun activateDoctor(
+        @Header("Authorization") token: String,
+        @Body request: Map<String, String>
+    ): Response<Map<String, String>>
 }
 
 // ==========================================

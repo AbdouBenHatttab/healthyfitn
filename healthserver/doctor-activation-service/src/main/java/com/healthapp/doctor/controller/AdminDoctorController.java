@@ -88,6 +88,17 @@ public class AdminDoctorController {
             "message", message
         ));
     }
+    /**
+     * ✅ NOUVEAU: Récupérer la liste des médecins activés
+     */
+    @GetMapping("/activated")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<DoctorPendingResponse>> getActivatedDoctors() {
+        log.info("📋 Admin requesting activated doctors list");
+        List<DoctorPendingResponse> activatedDoctors = doctorActivationService.getActivatedDoctors();
+        log.info("✅ Found {} activated doctors", activatedDoctors.size());
+        return ResponseEntity.ok(activatedDoctors);
+    }
     
     /**
      * Compter les médecins en attente

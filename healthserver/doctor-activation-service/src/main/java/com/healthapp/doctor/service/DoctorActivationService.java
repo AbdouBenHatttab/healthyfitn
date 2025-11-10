@@ -66,6 +66,20 @@ public class DoctorActivationService {
             throw new IllegalArgumentException("Invalid action: " + request.getAction());
         }
     }
+    /**
+     * ✅ NOUVEAU: Récupérer tous les médecins activés
+     */
+    public List<DoctorPendingResponse> getActivatedDoctors() {
+        log.info("📋 Fetching activated doctor requests");
+        
+        List<Doctor> activatedDoctors = doctorRepository.findByActivationStatus("APPROVED");
+        
+        log.info("✅ Found {} activated doctors", activatedDoctors.size());
+        
+        return activatedDoctors.stream()
+                .map(this::mapToPendingResponse)
+                .collect(Collectors.toList());
+    }
     
     /**
      * Approuver un médecin
