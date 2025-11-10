@@ -13,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayout
 import com.health.virtualdoctor.R
@@ -92,6 +91,12 @@ class AdminDashboardActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_refresh -> {
                 refreshData()
+                true
+            }
+            R.id.action_manage_users -> {
+                // ✅ Ouvrir l'activité de gestion des utilisateurs
+                val intent = Intent(this, UserManagementActivity::class.java)
+                startActivity(intent)
                 true
             }
             R.id.action_logout -> {

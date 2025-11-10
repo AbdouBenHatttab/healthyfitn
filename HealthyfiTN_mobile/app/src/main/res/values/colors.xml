@@ -41,5 +41,6 @@
     <color name="primary_green">#4CAF50</color>
     <color name="accent_blue">#2196F3</color>
 
+    <color name="divider">#FFE0E0E0</color>
 
 </resources>

@@ -113,6 +113,10 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.VirtualDoctor"
             android:exported="false" />
+        <activity
+            android:name=".ui.admin.UserManagementActivity"
+            android:exported="false"
+            android:theme="@style/Theme.VirtualDoctor" />
         <!-- Health Connect -->
         <activity-alias
             android:name=".ViewPermissionUsageActivity"

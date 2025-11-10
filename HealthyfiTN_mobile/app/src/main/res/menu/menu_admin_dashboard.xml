@@ -13,4 +13,9 @@
         android:icon="@drawable/ic_logout"
         android:title="Déconnexion"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_manage_users"
+        android:icon="@drawable/ic_users"
+        android:title="Gérer les utilisateurs"
+        app:showAsAction="ifRoom" />
 </menu>

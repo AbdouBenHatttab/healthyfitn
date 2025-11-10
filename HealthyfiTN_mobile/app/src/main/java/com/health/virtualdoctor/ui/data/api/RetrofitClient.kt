@@ -14,7 +14,7 @@ object RetrofitClient {
     private const val AUTH_BASE_URL = "https://viking-carl-ohio-pointing.trycloudflare.com" // Port 8082
     private const val DOCTOR_BASE_URL = "https://track-receivers-worked-reasonably.trycloudflare.com" // Port 8083
     private const val NOTIFICATION_BASE_URL = "https://calendar-glad-rec-prescribed.trycloudflare.com" // Port 8084
-    private const val USER_BASE_URL = "https://implications-charged-explain-summaries.trycloudflare.com" // Port 8085
+    private const val USER_BASE_URL = "https://machines-initiative-rate-left.trycloudflare.com" // Port 8085
 
     private var authRetrofit: Retrofit? = null
     private var doctorRetrofit: Retrofit? = null

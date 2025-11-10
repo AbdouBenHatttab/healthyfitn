@@ -48,6 +48,39 @@ interface ApiService {
         @Body request: Map<String, String>
     ): Response<Map<String, Any>>
 
+    @GET("api/v1/admin/users")
+    suspend fun getAllUsers(
+        @Header("Authorization") token: String
+    ): Response<UserApiResponse<List<UserManagementResponse>>>
+
+    @POST("api/v1/admin/users/search")
+    suspend fun searchUsers(
+        @Header("Authorization") token: String,
+        @Body request: UserSearchRequest
+    ): Response<UserApiResponse<UserPageResponse>>
+
+    @GET("api/v1/admin/users/{userId}")
+    suspend fun getUserById(
+        @Header("Authorization") token: String,
+        @Path("userId") userId: String
+    ): Response<UserApiResponse<UserManagementResponse>>
+
+    @DELETE("api/v1/admin/users/{userId}")
+    suspend fun deleteUser(
+        @Header("Authorization") token: String,
+        @Path("userId") userId: String
+    ): Response<UserApiResponse<Void>>
+
+    @GET("api/v1/admin/users/role/{role}")
+    suspend fun getUsersByRole(
+        @Header("Authorization") token: String,
+        @Path("role") role: String
+    ): Response<UserApiResponse<List<UserManagementResponse>>>
+
+    @GET("api/v1/admin/users/statistics")
+    suspend fun getUserStatistics(
+        @Header("Authorization") token: String
+    ): Response<UserApiResponse<UserStatistics>>
     // ==========================================
     // DOCTOR SERVICE (port 8083)
     // ==========================================
