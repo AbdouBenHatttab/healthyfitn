@@ -6,7 +6,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "doctor-activation-service", url = "http://localhost:8083")
+/**
+ * Feign Client for Doctor Service
+ * Communicates with doctor-activation-service endpoints
+ */
+@FeignClient(
+        name = "doctor-activation-service",
+        url = "http://localhost:8083"
+)
 public interface DoctorServiceClient {
 
     @PostMapping("/api/doctors/appointments/from-patient")
@@ -15,8 +22,16 @@ public interface DoctorServiceClient {
     @GetMapping("/api/doctors/appointments/patient/{patientId}")
     List<Map<String, Object>> getPatientAppointments(@PathVariable String patientId);
 
+    /**
+     * ✅ CRITICAL: This endpoint is now PUBLIC in doctor-service
+     * Path: /api/doctors/appointments/{appointmentId}/cancel
+     * No authentication required
+     */
     @PostMapping("/api/doctors/appointments/{appointmentId}/cancel")
-    void cancelAppointment(@PathVariable String appointmentId, @RequestBody Map<String, String> body);
+    void cancelAppointment(
+            @PathVariable String appointmentId,
+            @RequestBody Map<String, String> body
+    );
 
     @GetMapping("/api/doctors/available")
     List<Map<String, Object>> getActivatedDoctors();
