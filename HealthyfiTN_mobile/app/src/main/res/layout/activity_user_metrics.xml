@@ -70,18 +70,44 @@
                 android:alpha="0.9"
                 android:fontFamily="sans-serif" />
 
-            <!-- Refresh Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
+            <!-- Action Buttons Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="🔄 Actualiser"
-                android:textColor="@color/primary"
-                android:backgroundTint="@color/white"
-                app:cornerRadius="24dp"
-                app:elevation="2dp"
-                style="@style/Widget.Material3.Button.ElevatedButton" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Appointments Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAppointments"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="📅 Appointments"
+                    android:textColor="@color/primary"
+                    android:backgroundTint="@color/white"
+                    app:cornerRadius="24dp"
+                    app:elevation="2dp"
+                    style="@style/Widget.Material3.Button.ElevatedButton" />
+
+                <!-- Refresh Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRefresh"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="🔄 Actualiser"
+                    android:textColor="@color/primary"
+                    android:backgroundTint="@color/white"
+                    app:cornerRadius="24dp"
+                    app:elevation="2dp"
+                    style="@style/Widget.Material3.Button.ElevatedButton" />
+
+            </LinearLayout>
+
             <!-- Action Buttons Grid -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -851,6 +877,7 @@
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
             <!-- Avatar 3D Section -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -887,5 +914,4 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

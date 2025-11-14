@@ -130,7 +130,60 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: FCMTokenRequest
     ): Response<Map<String, String>>
+    // ==========================================
+    // APPOINTMENT SERVICE
+    // ==========================================
+    /**
+     * Get all appointments for authenticated doctor
+     */
+    @GET("api/doctors/appointments")
+    suspend fun getDoctorAppointments(
+        @Header("Authorization") token: String
+    ): Response<List<AppointmentResponse>>
 
+    /**
+     * Get upcoming appointments only
+     */
+    @GET("api/doctors/appointments/upcoming")
+    suspend fun getUpcomingAppointments(
+        @Header("Authorization") token: String
+    ): Response<List<AppointmentResponse>>
+
+    /**
+     * Get doctor's patient list
+     */
+    @GET("api/doctors/appointments/patients")
+    suspend fun getDoctorPatients(
+        @Header("Authorization") token: String
+    ): Response<List<PatientInfoResponse>>
+
+    /**
+     * Get dashboard statistics
+     */
+    @GET("api/doctors/appointments/dashboard/stats")
+    suspend fun getDoctorStats(
+        @Header("Authorization") token: String
+    ): Response<DoctorStatsResponse>
+
+    /**
+     * Complete an appointment
+     */
+    @POST("api/doctors/appointments/{appointmentId}/complete")
+    suspend fun completeAppointment(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String,
+        @Body request: Map<String, String>
+    ): Response<AppointmentResponse>
+
+    /**
+     * Cancel appointment (Doctor side)
+     */
+    @POST("api/doctors/appointments/{appointmentId}/cancel")
+    suspend fun cancelAppointmentByDoctor(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String,
+        @Body request: Map<String, String>
+    ): Response<Map<String, String>>
     // ==========================================
     // NUTRITION SERVICE
     // ==========================================
@@ -193,6 +246,16 @@ data class UserProfileResponse(
     val isActivated: Boolean,
     val createdAt: String
 )
+
+//data class PatientInfoResponse(
+//    val id: String,
+//    val email: String,
+//    val firstName: String,
+//    val lastName: String,
+//    val fullName: String,
+//    val phoneNumber: String?,
+//    val profilePictureUrl: String?
+//)
 
 data class UpdateUserProfileRequest(
     val firstName: String?,
