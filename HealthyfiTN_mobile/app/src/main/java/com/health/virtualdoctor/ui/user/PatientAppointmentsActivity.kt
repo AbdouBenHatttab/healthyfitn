@@ -35,7 +35,7 @@ import java.util.Calendar
 import java.util.Locale
 
 
-class   PatientAppointmentsActivity : AppCompatActivity() {
+class PatientAppointmentsActivity : AppCompatActivity() {
 
     private lateinit var tokenManager: TokenManager
     private lateinit var rvAppointments: RecyclerView
@@ -47,7 +47,6 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
     private lateinit var appointmentsAdapter: PatientAppointmentsAdapter
 
     private var allAppointments = listOf<AppointmentResponse>()
-
     private var availableDoctors = listOf<DoctorAvailableResponse>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,7 +88,6 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
                 val selectedChipId = checkedIds[0]
                 filterAppointments(selectedChipId)
             } else {
-                // If no chip is selected, default to showing upcoming appointments
                 appointmentsAdapter.updateAppointments(allAppointments.filter { it.status.equals("SCHEDULED", ignoreCase = true) })
             }
         }
@@ -125,9 +123,10 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
 
                 if (response.isSuccessful && response.body() != null) {
                     val apiResponse = response.body()!!
-                    allAppointments = apiResponse.data?.sortedByDescending { LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME) } ?: emptyList()
+                    allAppointments = apiResponse.data?.sortedByDescending {
+                        LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
+                    } ?: emptyList()
 
-                    // Default filter
                     filterAppointments(chipGroupFilter.checkedChipId)
 
                     Log.d("PatientAppointments", "✅ Loaded ${allAppointments.size} appointments")
@@ -154,7 +153,6 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
         }
     }
 
-
     private fun loadAvailableDoctors() {
         lifecycleScope.launch {
             try {
@@ -165,6 +163,12 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val apiResponse = response.body()!!
                     availableDoctors = apiResponse.data ?: emptyList()
+
+                    // Debug logging
+                    availableDoctors.forEach { doctor ->
+                        Log.d("PatientAppointments", "Doctor: ${doctor.fullName} | ${doctor.firstName} ${doctor.lastName}")
+                    }
+
                     Log.d("PatientAppointments", "✅ Loaded ${availableDoctors.size} available doctors")
                 } else {
                     Log.w("PatientAppointments", "Failed to load doctors: ${response.code()}")
@@ -198,15 +202,12 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
     private fun showAppointmentDetails(appointment: AppointmentResponse) {
         val detailsView = LayoutInflater.from(this).inflate(R.layout.dialog_appointment_details, null)
 
-        // ✅ Configure for PATIENT view - show doctor info, hide patient info
         detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails).visibility = View.VISIBLE
         detailsView.findViewById<TextView>(R.id.tvPatientNameDialog).visibility = View.GONE
         detailsView.findViewById<TextView>(R.id.lblPatientEmail)?.visibility = View.GONE
         detailsView.findViewById<TextView>(R.id.tvPatientEmailDialog).visibility = View.GONE
         detailsView.findViewById<TextView>(R.id.lblPatientPhone)?.visibility = View.GONE
         detailsView.findViewById<TextView>(R.id.tvPatientPhoneDialog).visibility = View.GONE
-
-        // Show patient-specific views, hide doctor aliases
         detailsView.findViewById<TextView>(R.id.tvAppointmentDateDetails).visibility = View.VISIBLE
         detailsView.findViewById<TextView>(R.id.tvAppointmentDateDialog).visibility = View.GONE
         detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDetails).visibility = View.VISIBLE
@@ -217,12 +218,9 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
         detailsView.findViewById<TextView>(R.id.tvReasonDialog).visibility = View.GONE
         detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails).visibility = View.VISIBLE
         detailsView.findViewById<com.google.android.material.chip.Chip>(R.id.chipStatusDialog).visibility = View.GONE
-
-        // Hide doctor-only elements
         detailsView.findViewById<View>(R.id.cardNotesDialog).visibility = View.GONE
         detailsView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCloseDialog).visibility = View.GONE
 
-        // ✅ Set appointment data
         detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails).text = "Dr. ${appointment.doctorName}"
         detailsView.findViewById<TextView>(R.id.tvAppointmentDateDetails).text = formatDisplayDate(appointment.appointmentDateTime)
         detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDetails).text = formatDisplayTime(appointment.appointmentDateTime)
@@ -230,7 +228,6 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
         detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails).text = appointment.status
         detailsView.findViewById<com.google.android.material.chip.Chip>(R.id.chipAppointmentTypeDetails).text = appointment.appointmentType
 
-        // ✅ Use MaterialAlertDialogBuilder for consistent styling
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(detailsView)
             .setPositiveButton("Fermer") { d, _ -> d.dismiss() }
@@ -244,7 +241,6 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
         val etCancelReason = dialogView.findViewById<EditText>(R.id.etCancelReason)
         val tvPatientName = dialogView.findViewById<TextView>(R.id.tvPatientNameCancel)
         tvPatientName.text = "Rendez-vous avec Dr. ${appointment.doctorName}"
-
 
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
@@ -277,7 +273,7 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
 
                 if (response.isSuccessful) {
                     Toast.makeText(this@PatientAppointmentsActivity, "✅ Rendez-vous annulé", Toast.LENGTH_SHORT).show()
-                    loadAppointments() // Refresh list
+                    loadAppointments()
                 } else {
                     Toast.makeText(this@PatientAppointmentsActivity, "❌ Erreur: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
@@ -287,7 +283,6 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun showCreateAppointmentDialog() {
         if (availableDoctors.isEmpty()) {
@@ -301,44 +296,58 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
         val etAppointmentTime = dialogView.findViewById<EditText>(R.id.etAppointmentTime)
         val etReasonForVisit = dialogView.findViewById<EditText>(R.id.etReasonForVisit)
 
-        // ✅ Fixed: Access data class properties directly
-        val doctorNames = availableDoctors.map { "Dr. ${it.firstName} ${it.lastName}" }
+        // ✅ FIXED: Use fullName or fallback to firstName + lastName
+        val doctorNames = availableDoctors.map { doctor ->
+            val name = doctor.fullName?.takeIf { it.isNotBlank() }
+                ?: "${doctor.firstName} ${doctor.lastName}".trim()
+            "Dr. $name"
+        }
         val doctorAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, doctorNames)
         doctorSpinner.setAdapter(doctorAdapter)
 
         var selectedDoctorId: String? = null
         doctorSpinner.setOnItemClickListener { _, _, position, _ ->
-            // ✅ Access the id property directly from the data class
             selectedDoctorId = availableDoctors[position].id
             Log.d("PatientAppointments", "Selected doctor ID: $selectedDoctorId")
         }
 
-        // Date Picker
+        // Date Picker - Only allow future dates
         etAppointmentDate.setOnClickListener {
             val calendar = Calendar.getInstance()
-            DatePickerDialog(
+            val datePicker = DatePickerDialog(
                 this,
                 { _, year, month, dayOfMonth ->
-                    etAppointmentDate.setText(String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, dayOfMonth))
+                    // Format: yyyy-MM-dd
+                    val formattedDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                    etAppointmentDate.setText(formattedDate)
+                    Log.d("PatientAppointments", "Date selected: $formattedDate")
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            )
+
+            // Set minimum date to today
+            datePicker.datePicker.minDate = System.currentTimeMillis()
+            datePicker.show()
         }
 
         // Time Picker
         etAppointmentTime.setOnClickListener {
             val calendar = Calendar.getInstance()
-            TimePickerDialog(
+            val timePicker = TimePickerDialog(
                 this,
                 { _, hourOfDay, minute ->
-                    etAppointmentTime.setText(String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute))
+                    // Format: HH:mm
+                    val formattedTime = String.format(Locale.US, "%02d:%02d", hourOfDay, minute)
+                    etAppointmentTime.setText(formattedTime)
+                    Log.d("PatientAppointments", "Time selected: $formattedTime")
                 },
                 calendar.get(Calendar.HOUR_OF_DAY),
                 calendar.get(Calendar.MINUTE),
-                true
-            ).show()
+                true // 24-hour format
+            )
+            timePicker.show()
         }
 
         val dialog = MaterialAlertDialogBuilder(this)
@@ -355,11 +364,46 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val appointmentDateTime = "${dateStr}T${timeStr}:00"
+            // ✅ Format to match MongoDB: yyyy-MM-ddTHH:mm:ss.SSS+00:00
+            val appointmentDateTime = try {
+                val dateParts = dateStr.split("-")
+                val timeParts = timeStr.split(":")
+
+                if (dateParts.size != 3 || timeParts.size != 2) {
+                    throw IllegalArgumentException("Format de date/heure invalide")
+                }
+
+                val year = dateParts[0].toInt()
+                val month = dateParts[1].toInt()
+                val day = dateParts[2].toInt()
+                val hour = timeParts[0].toInt()
+                val minute = timeParts[1].toInt()
+
+                // **FIX: Match MongoDB format exactly**
+                // Format: yyyy-MM-dd'T'HH:mm:ss.SSS+00:00
+                String.format(
+                    Locale.US,
+                    "%04d-%02d-%02dT%02d:%02d:00.000+00:00",
+                    year, month, day, hour, minute
+                )
+            } catch (e: Exception) {
+                Toast.makeText(this, "Format de date/heure invalide: ${e.message}", Toast.LENGTH_LONG).show()
+                Log.e("PatientAppointments", "Date parsing error: ${e.message}")
+                return@setOnClickListener
+            }
+
+
+            Log.d("PatientAppointments", "Creating appointment:")
+            Log.d("PatientAppointments", "  - Doctor ID: $selectedDoctorId")
+            Log.d("PatientAppointments", "  - Doctor Name: ${availableDoctors.find { it.id == selectedDoctorId }?.fullName}")
+            Log.d("PatientAppointments", "  - DateTime: $appointmentDateTime")
+            Log.d("PatientAppointments", "  - Reason: $reason")
+            Log.d("PatientAppointments", "  - Type: VIDEO_CALL")
+
             val request = AppointmentRequest(
                 doctorId = selectedDoctorId!!,
                 appointmentDateTime = appointmentDateTime,
-                reasonForVisit = reason,
+                reason  = reason,
                 appointmentType = "VIDEO_CALL"
             )
             createAppointment(request)
@@ -373,32 +417,133 @@ class   PatientAppointmentsActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    // REPLACE ONLY the createAppointment function in your PatientAppointmentsActivity.kt
+// Starting around line 416
+
     private fun createAppointment(request: AppointmentRequest) {
+        Log.d("APPT_DEBUG", "===== CREATE APPOINTMENT REQUEST =====")
+        Log.d("APPT_DEBUG", "Doctor ID: ${request.doctorId}")
+        Log.d("APPT_DEBUG", "DateTime: ${request.appointmentDateTime}")
+        Log.d("APPT_DEBUG", "Reason: ${request.reason}")
+        Log.d("APPT_DEBUG", "Type: ${request.appointmentType}")
+
         lifecycleScope.launch {
             try {
-                val token = "Bearer ${tokenManager.getAccessToken()}"
+                // Vérification du token
+                val token = tokenManager.getAccessToken()
+                if (token.isNullOrEmpty()) {
+                    Toast.makeText(this@PatientAppointmentsActivity, "❌ Token invalide. Veuillez vous reconnecter.", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
+                val authHeader = "Bearer $token"
+
+                // Appel API
                 val response = RetrofitClient.getUserService(this@PatientAppointmentsActivity)
-                    .createAppointment(token, request)
+                    .createAppointment(authHeader, request)
+
+                Log.d("APPT_DEBUG", "Response code: ${response.code()}")
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@PatientAppointmentsActivity, "✅ Rendez-vous créé!", Toast.LENGTH_SHORT).show()
-                    loadAppointments() // Refresh list
-                } else {
-                     val errorBody = response.errorBody()?.string()
-                    Log.e("PatientAppointments", "Failed to create appointment: ${response.code()} - $errorBody")
-                    Toast.makeText(this@PatientAppointmentsActivity, "❌ Erreur: $errorBody", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@PatientAppointmentsActivity, "✅ Rendez-vous créé avec succès!", Toast.LENGTH_LONG).show()
+                    loadAppointments()
+                    return@launch
                 }
+
+                // Gestion des erreurs HTTP
+                val errorBody = response.errorBody()?.string()
+                val statusCode = response.code()
+
+                Log.e("APPT_DEBUG", "❌ HTTP Error $statusCode")
+                Log.e("APPT_DEBUG", "Error body: $errorBody")
+
+                val errorMessage = when (statusCode) {
+                    400 -> {
+                        when {
+                            errorBody?.contains("date", ignoreCase = true) == true ->
+                                "❌ Date invalide. Vérifiez le format et l'heure."
+                            errorBody?.contains("doctor", ignoreCase = true) == true ->
+                                "❌ Médecin non disponible à cette heure."
+                            errorBody?.contains("time", ignoreCase = true) == true ->
+                                "❌ Horaire invalide. Choisissez une heure de travail."
+                            else -> "❌ Données invalides. Vérifiez tous les champs."
+                        }
+                    }
+                    401 -> "❌ Session expirée. Veuillez vous reconnecter."
+                    403 -> "❌ Vous n'avez pas l'autorisation de créer ce rendez-vous."
+                    404 -> "❌ Médecin non trouvé."
+                    409 -> "❌ Conflit: Un rendez-vous existe déjà à cette heure."
+                    422 -> "❌ Données de validation incorrectes."
+                    500 -> "❌ Erreur serveur temporaire. Réessayez dans quelques minutes."
+                    502, 503, 504 -> "❌ Service temporairement indisponible."
+                    else -> "❌ Erreur inconnue ($statusCode)"
+                }
+
+                Toast.makeText(this@PatientAppointmentsActivity, errorMessage, Toast.LENGTH_LONG).show()
+
             } catch (e: Exception) {
-                Log.e("PatientAppointments", "❌ Exception on create appointment: ${e.message}", e)
-                Toast.makeText(this@PatientAppointmentsActivity, "❌ Erreur: ${e.message}", Toast.LENGTH_LONG).show()
+                Log.e("APPT_DEBUG", "❌ Network exception: ${e.message}", e)
+                Toast.makeText(this@PatientAppointmentsActivity, "❌ Erreur réseau: ${e.message ?: "Vérifiez votre connexion"}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
+    private fun showToast(msg: String) {
+        runOnUiThread {
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+        }
+    }
 
-    // =========================================
-    // HELPER FUNCTIONS
-    // =========================================
+    private fun handleServerError(response: retrofit2.Response<*>) {
+        val errorBody = response.errorBody()?.string()
+        android.util.Log.e("APPT_DEBUG", "❌ SERVER ERROR ${response.code()}")
+        android.util.Log.e("APPT_DEBUG", "Error body: $errorBody")
+
+        // Try to extract meaningful error message
+        val errorMessage = extractErrorMessage(errorBody, response.code())
+
+        runOnUiThread {
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun extractErrorMessage(errorBody: String?, statusCode: Int): String {
+        return try {
+            if (!errorBody.isNullOrEmpty()) {
+                // Try to parse as JSON first
+                if (errorBody.trim().startsWith("{")) {
+                    val errorJson = org.json.JSONObject(errorBody)
+
+                    // Check common error field names
+                    listOf("message", "error", "detail", "reason", "errorMessage").forEach { field ->
+                        if (errorJson.has(field)) {
+                            val value = errorJson.optString(field, "")
+                            if (value.isNotEmpty()) {
+                                android.util.Log.e("APPT_DEBUG", "Found error in field '$field': $value")
+                                return value
+                            }
+                        }
+                    }
+
+                    // If no specific field found, return the whole JSON
+                    errorJson.toString()
+                } else {
+                    // Not JSON, return raw body
+                    errorBody
+                }
+            } else {
+                when (statusCode) {
+                    500 -> "Erreur interne du serveur. Veuillez réessayer plus tard."
+                    400 -> "Données invalides envoyées au serveur."
+                    else -> "Erreur $statusCode"
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("APPT_DEBUG", "Error parsing error message: ${e.message}")
+            "Erreur $statusCode: ${errorBody ?: "Unknown error"}"
+        }
+    }
+
     private fun formatDisplayDate(isoDateTime: String): String {
         return try {
             val dateTime = LocalDateTime.parse(isoDateTime, DateTimeFormatter.ISO_DATE_TIME)
