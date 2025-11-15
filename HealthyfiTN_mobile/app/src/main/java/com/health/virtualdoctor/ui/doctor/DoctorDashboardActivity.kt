@@ -37,6 +37,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
     private lateinit var tokenManager: TokenManager
 
+    private lateinit var btnManageAppointments: MaterialButton
     // Views - Profile Section
     private lateinit var ivDoctorProfile: ImageView
     private lateinit var tvDoctorName: TextView
@@ -116,7 +117,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
 
         // Back button
-        btnBack = findViewById(R.id.btnBack)
+       //
 
         // ➕ Add this (Manage Appointments button)
         btnManageAppointments = findViewById(R.id.btnManageAppointments)
@@ -182,10 +183,10 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
     private fun setupListeners() {
 
-        // Back button
-        btnBack.setOnClickListener {
-            finish()
-        }
+//        // Back button
+//        btnBack.setOnClickListener {
+//            finish()
+//        }
 
         // Manage Appointments
         btnManageAppointments.setOnClickListener {
