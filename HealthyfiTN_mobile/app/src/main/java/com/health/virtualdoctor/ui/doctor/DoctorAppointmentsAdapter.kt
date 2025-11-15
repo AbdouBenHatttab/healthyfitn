@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -28,6 +29,9 @@ class DoctorAppointmentsAdapter(
         val tvAppointmentDate: TextView = view.findViewById(R.id.tvAppointmentDate)
         val tvAppointmentReason: TextView = view.findViewById(R.id.tvAppointmentReason)
         val btnViewDetails: MaterialButton = view.findViewById(R.id.btnViewDetails)
+        val btnComplete: MaterialButton = view.findViewById(R.id.btnComplete)
+        val btnCancelAppt: MaterialButton = view.findViewById(R.id.btnCancelAppt)
+        val llActionButtons: LinearLayout = view.findViewById(R.id.llActionButtons)
         val btnStartConsultation: MaterialButton = view.findViewById(R.id.btnStartConsultation)
     }
 
@@ -60,56 +64,69 @@ class DoctorAppointmentsAdapter(
         // Reason
         holder.tvAppointmentReason.text = appointment.reason
 
-        // Status chip
+        // Status chip and button visibility
         when (appointment.status) {
             "SCHEDULED" -> {
+                // Status chip
                 holder.chipStatus.text = "⏰ Programmé"
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_orange_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
+
+                // Show all action buttons
+                holder.llActionButtons.visibility = View.VISIBLE
+                holder.btnStartConsultation.visibility = View.GONE
+
+                // Set button listeners
+                holder.btnViewDetails.setOnClickListener {
+                    onActionClick(appointment, "view_details")
+                }
+
+                holder.btnComplete.setOnClickListener {
+                    onActionClick(appointment, "complete")
+                }
+
+                holder.btnCancelAppt.setOnClickListener {
+                    onActionClick(appointment, "cancel")
+                }
             }
             "COMPLETED" -> {
-                holder.chipStatus.text = "✅ Complété"
+                // Status chip
+                holder.chipStatus.text = "✅ Terminé"
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_green_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
+
+                // Only show view details button
+                holder.llActionButtons.visibility = View.GONE
+                holder.btnStartConsultation.visibility = View.VISIBLE
+                holder.btnStartConsultation.text = "👁️ Voir les détails"
+                holder.btnStartConsultation.setOnClickListener {
+                    onActionClick(appointment, "view_details")
+                }
             }
             "CANCELLED" -> {
+                // Status chip
                 holder.chipStatus.text = "❌ Annulé"
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_red_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
+
+                // Only show view details button
+                holder.llActionButtons.visibility = View.GONE
+                holder.btnStartConsultation.visibility = View.VISIBLE
+                holder.btnStartConsultation.text = "👁️ Voir les détails"
+                holder.btnStartConsultation.setOnClickListener {
+                    onActionClick(appointment, "view_details")
+                }
             }
             else -> {
                 holder.chipStatus.text = appointment.status
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.darker_gray)
                 holder.chipStatus.setTextColor(Color.WHITE)
-            }
-        }
 
-        // Button visibility based on status
-        when (appointment.status) {
-            "SCHEDULED" -> {
+                holder.llActionButtons.visibility = View.GONE
                 holder.btnStartConsultation.visibility = View.VISIBLE
-                holder.btnStartConsultation.text = "Démarrer"
-                holder.btnStartConsultation.setIconResource(R.drawable.ic_videocam)
-            }
-            "COMPLETED" -> {
-                holder.btnStartConsultation.visibility = View.GONE
-            }
-            "CANCELLED" -> {
-                holder.btnStartConsultation.visibility = View.GONE
-            }
-            else -> {
-                holder.btnStartConsultation.visibility = View.VISIBLE
-            }
-        }
-
-        // Button listeners
-        holder.btnViewDetails.setOnClickListener {
-            onActionClick(appointment, "view_details")
-        }
-
-        holder.btnStartConsultation.setOnClickListener {
-            if (appointment.status == "SCHEDULED") {
-                onActionClick(appointment, "start_consultation")
+                holder.btnStartConsultation.setOnClickListener {
+                    onActionClick(appointment, "view_details")
+                }
             }
         }
     }

@@ -83,7 +83,9 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
     private fun handleAppointmentAction(appointment: AppointmentResponse, action: String) {
         when (action) {
             "view_details" -> showAppointmentDetails(appointment)
-            "start_consultation" -> showConsultationOptions(appointment)
+            "complete" -> showCompleteAppointmentDialog(appointment)
+            "cancel" -> showCancelAppointmentDialog(appointment)
+            "start_consultation" -> showConsultationOptions(appointment) // Keep for backward compatibility
         }
     }
 
