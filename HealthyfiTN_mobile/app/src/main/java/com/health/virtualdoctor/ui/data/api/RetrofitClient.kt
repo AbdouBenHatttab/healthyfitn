@@ -12,9 +12,9 @@ object RetrofitClient {
 
     // ✅ URLs des services via Cloudflare Tunnels
     private const val AUTH_BASE_URL = "https://safe-organizer-austin-graphical.trycloudflare.com" // Port 8082
-    private const val DOCTOR_BASE_URL = "https://surround-dig-folder-sms.trycloudflare.com" // Port 8083
+    private const val DOCTOR_BASE_URL = "https://entering-married-earl-whilst.trycloudflare.com" // Port 8083
     private const val NOTIFICATION_BASE_URL = "https://normal-maintaining-antenna-his.trycloudflare.com" // Port 8084
-    private const val USER_BASE_URL = "https://november-crm-consulting-doug.trycloudflare.com" // Port 8085
+    private const val USER_BASE_URL = "https://gaming-generation-mediterranean-suggestion.trycloudflare.com" // Port 8085
 
     private var authRetrofit: Retrofit? = null
     private var doctorRetrofit: Retrofit? = null
