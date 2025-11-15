@@ -96,14 +96,14 @@ interface ApiService {
     @POST("api/v1/appointments")
     suspend fun createAppointment(
         @Header("Authorization") token: String,
-        @Body request: Map<String, Any>
+        @Body request: AppointmentRequest
     ): Response<ApiResponse<AppointmentResponse>>
 
     /**
      * Cancel appointment
      */
     @POST("api/v1/appointments/{appointmentId}/cancel")
-    suspend fun cancelAppointment(
+    suspend fun cancelAppointmentByUser(
         @Header("Authorization") token: String,
         @Path("appointmentId") appointmentId: String,
         @Body request: Map<String, String>
@@ -282,15 +282,15 @@ data class UserProfileResponse(
     val createdAt: String
 )
 
-//data class PatientInfoResponse(
-//    val id: String,
-//    val email: String,
-//    val firstName: String,
-//    val lastName: String,
-//    val fullName: String,
-//    val phoneNumber: String?,
-//    val profilePictureUrl: String?
-//)
+data class PatientInfoResponse(
+    val id: String,
+    val email: String,
+    val firstName: String,
+    val lastName: String,
+    val fullName: String,
+    val phoneNumber: String?,
+    val profilePictureUrl: String?
+)
 
 data class UpdateUserProfileRequest(
     val firstName: String?,
@@ -303,6 +303,14 @@ data class UpdateUserProfileRequest(
 data class ChangePasswordRequest(
     val currentPassword: String,
     val newPassword: String
+)
+
+data class AppointmentRequest(
+    val doctorId: String,
+    val appointmentDateTime: String,
+    val reason: String,
+    val notes: String,
+    val appointmentType: String
 )
 
 // Doctor Profile

@@ -28,9 +28,7 @@ import com.health.virtualdoctor.ui.data.models.AppointmentRequest
 import com.health.virtualdoctor.ui.data.models.AppointmentResponse
 import com.health.virtualdoctor.ui.utils.TokenManager
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
@@ -199,7 +197,7 @@ class PatientAppointmentsActivity : AppCompatActivity() {
         detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails).text = "Dr. ${appointment.doctorName}"
         detailsView.findViewById<TextView>(R.id.tvAppointmentDateDetails).text = formatDisplayDate(appointment.appointmentDateTime)
         detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDetails).text = formatDisplayTime(appointment.appointmentDateTime)
-        detailsView.findViewById<TextView>(R.id.tvAppointmentReasonDetails).text = appointment.reasonForVisit
+        detailsView.findViewById<TextView>(R.id.tvAppointmentReasonDetails).text = appointment.reason
         detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails).text = appointment.status
         detailsView.findViewById<Chip>(R.id.chipAppointmentTypeDetails).text = appointment.appointmentType
 
@@ -289,7 +287,7 @@ class PatientAppointmentsActivity : AppCompatActivity() {
             DatePickerDialog(
                 this,
                 { _, year, month, dayOfMonth ->
-                    etAppointmentDate.setText(String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth))
+                    etAppointmentDate.setText(String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, dayOfMonth))
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -303,7 +301,7 @@ class PatientAppointmentsActivity : AppCompatActivity() {
             TimePickerDialog(
                 this,
                 { _, hourOfDay, minute ->
-                    etAppointmentTime.setText(String.format("%02d:%02d", hourOfDay, minute))
+                    etAppointmentTime.setText(String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute))
                 },
                 calendar.get(Calendar.HOUR_OF_DAY),
                 calendar.get(Calendar.MINUTE),
@@ -325,11 +323,12 @@ class PatientAppointmentsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val appointmentDateTime = LocalDateTime.parse("${dateStr}T${timeStr}:00")
+            val appointmentDateTime = "${dateStr}T${timeStr}:00"
             val request = AppointmentRequest(
                 doctorId = selectedDoctorId!!,
-                appointmentDateTime = appointmentDateTime.toString(),
-                reasonForVisit = reason,
+                appointmentDateTime = appointmentDateTime,
+                reason = reason,
+                notes = "",
                 appointmentType = "VIDEO_CALL" // Or get from UI
             )
 
