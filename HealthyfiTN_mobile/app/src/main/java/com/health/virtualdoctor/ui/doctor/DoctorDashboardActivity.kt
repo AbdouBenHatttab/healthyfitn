@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.health.virtualdoctor.R
 import com.health.virtualdoctor.ui.auth.LoginActivity
@@ -189,6 +190,9 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
         ivDoctorProfile.setOnClickListener {
             showImagePickerDialog()
+        }
+        findViewById<MaterialButton>(R.id.btnManageAppointments).setOnClickListener {
+            startActivity(Intent(this, DoctorAppointmentsActivity::class.java))
         }
     }
 

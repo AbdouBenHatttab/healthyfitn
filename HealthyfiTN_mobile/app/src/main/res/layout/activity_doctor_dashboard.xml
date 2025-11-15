@@ -368,6 +368,16 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManageAppointments"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="📅 Gérer mes rendez-vous"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/primary"
+                app:cornerRadius="12dp"
+                android:layout_marginBottom="@dimen/spacing_md" />
+
             <!-- Statistics Cards -->
             <LinearLayout
                 android:layout_width="match_parent"
