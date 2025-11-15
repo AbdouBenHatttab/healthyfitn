@@ -571,18 +571,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Floating Action Button -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabNewAppointment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/spacing_lg"
-        android:text="Nouvelle consultation"
-        app:icon="@drawable/ic_add"
-        app:iconTint="@color/white"
-        android:textColor="@color/white"
-        app:backgroundTint="@color/primary"
-        app:elevation="6dp" />
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -113,7 +113,16 @@ class DoctorDashboardActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+
+
+        // Back button
+        btnBack = findViewById(R.id.btnBack)
+
+        // ➕ Add this (Manage Appointments button)
+        btnManageAppointments = findViewById(R.id.btnManageAppointments)
+
         // Profile views
+
         ivDoctorProfile = findViewById(R.id.ivDoctorProfile)
         tvDoctorName = findViewById(R.id.tvDoctorName)
         tvDoctorEmail = findViewById(R.id.tvDoctorEmail)
@@ -172,29 +181,43 @@ class DoctorDashboardActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+
+        // Back button
+        btnBack.setOnClickListener {
+            finish()
+        }
+
+        // Manage Appointments
+        btnManageAppointments.setOnClickListener {
+            startActivity(Intent(this, DoctorAppointmentsActivity::class.java))
+        }
+
+        // Update profile
         btnUpdateProfile.setOnClickListener {
             updateDoctorProfile()
         }
 
+        // Check activation
         btnCheckActivation.setOnClickListener {
             checkActivationStatus()
         }
 
+        // Change password
         btnChangePassword.setOnClickListener {
             showChangePasswordDialog()
         }
 
+        // Edit profile section toggle
         btnEditProfile.setOnClickListener {
             toggleEditProfileVisibility()
         }
 
+        // Profile image click
         ivDoctorProfile.setOnClickListener {
             showImagePickerDialog()
         }
-        findViewById<MaterialButton>(R.id.btnManageAppointments).setOnClickListener {
-            startActivity(Intent(this, DoctorAppointmentsActivity::class.java))
-        }
     }
+
 
     private fun setupRecyclerView() {
         appointmentsAdapter = DoctorAppointmentsAdapter(emptyList()) { appointment, action ->
