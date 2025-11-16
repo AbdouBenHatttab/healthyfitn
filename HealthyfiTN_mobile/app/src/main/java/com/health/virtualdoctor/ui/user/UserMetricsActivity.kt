@@ -1,4 +1,4 @@
-package com.health.virtualdoctor.ui.user;
+package com.health.virtualdoctor.ui.user
 
 import android.content.Intent
 import android.os.Bundle
@@ -17,7 +17,7 @@ import androidx.health.connect.client.records.*
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import com.google.android.material.button.MaterialButton
-import com.health.virtualdoctor.ui.auth.LoginActivity
+import com.health.virtualdoctor.ui.chatBot.ChatBotActivity
 import com.health.virtualdoctor.ui.consultation.ConsultationActivity
 import com.health.virtualdoctor.ui.meal.MealAnalysisActivity
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +36,7 @@ import kotlin.math.roundToInt
 import java.util.Locale
 
 class UserMetricsActivity : ComponentActivity() {
+    private lateinit var cardChatbot: androidx.cardview.widget.CardView
     private lateinit var cardAnalyze: androidx.cardview.widget.CardView
     private lateinit var cardConsult: androidx.cardview.widget.CardView
 
@@ -126,6 +127,7 @@ class UserMetricsActivity : ComponentActivity() {
             navigateToAppointments()
         }
         // Initialiser les boutons
+        cardChatbot = findViewById(R.id.cardChatbot)
         cardAnalyze = findViewById(R.id.cardAnalyze)
         cardConsult = findViewById(R.id.cardConsult)
         avatarContainer = findViewById(R.id.avatarContainer)
@@ -133,6 +135,22 @@ class UserMetricsActivity : ComponentActivity() {
 
 
 // Click listeners avec animations
+        cardChatbot.setOnClickListener {
+            it.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction {
+                    it.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(100)
+                        .withEndAction {
+                            navigateToChatBot()
+                        }
+                }
+        }
+
         cardAnalyze.setOnClickListener {
             it.animate()
                 .scaleX(0.95f)
@@ -383,6 +401,17 @@ class UserMetricsActivity : ComponentActivity() {
             else -> "Activité ($type)"
         }
     }
+    private fun navigateToChatBot() {
+        try {
+            val intent = Intent(this, ChatBotActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun navigateToMealAnalysis() {
         val intent = Intent(this, MealAnalysisActivity::class.java)
         startActivity(intent)

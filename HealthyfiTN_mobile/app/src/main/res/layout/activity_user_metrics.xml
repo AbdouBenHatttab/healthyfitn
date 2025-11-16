@@ -43,7 +43,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="12dp"
-                    android:text="🏥 Health Dashboard"
+                    android:text="Health Dashboard"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:textColor="@color/white"
@@ -85,7 +85,7 @@
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="📅 Appointments"
+                    android:text="Appointments"
                     android:textColor="@color/primary"
                     android:backgroundTint="@color/white"
                     app:cornerRadius="24dp"
@@ -99,7 +99,7 @@
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="🔄 Actualiser"
+                    android:text="Actualiser"
                     android:textColor="@color/primary"
                     android:backgroundTint="@color/white"
                     app:cornerRadius="24dp"
@@ -211,10 +211,57 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
+            <!-- NOUVEAU BOUTON CHATBOT (centré, sous les deux cartes) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardChatbot"
+                android:layout_width="wrap_content"
+                android:layout_height="100dp"
+                android:layout_marginTop="16dp"
+                android:layout_gravity="center_horizontal"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white"
+                app:rippleColor="#9C27B0">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp"
+                    android:minWidth="140dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💬"
+                        android:textSize="36sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chatbot"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#9C27B0"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Santé IA"
+                        android:textSize="11sp"
+                        android:textColor="#666666"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
-
 
 
     <!-- Main Content -->
