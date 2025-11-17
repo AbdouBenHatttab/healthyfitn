@@ -44,4 +44,14 @@
     <color name="input_background">#F8F9FA</color>
     <color name="disabled">#BDBDBD</color>
     <color name="feature_icon_bg">#0891B2</color>
+
+    <!-- ✅ Couleurs pour Health Analysis -->
+    <color name="chip_background">#E0E0E0</color>
+
+    <!-- Couleurs de santé -->
+    <color name="health_excellent">#4CAF50</color>
+    <color name="health_good">#8BC34A</color>
+    <color name="health_moderate">#FF9800</color>
+    <color name="health_poor">#FF5722</color>
+    <color name="health_critical">#D32F2F</color>
 </resources>
