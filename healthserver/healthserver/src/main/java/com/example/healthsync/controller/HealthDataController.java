@@ -35,10 +35,10 @@ public class HealthDataController {
 
             // ✅ SAUVEGARDE DANS MONGODB
             List<BiometricData> savedData = biometricDataService.saveBiometricData(healthData);
-            String userId = savedData.isEmpty() ? "unknown" : savedData.get(0).getUserId();
+            String userEmail = healthData.getEmail();
 
             System.out.println("💾 DONNÉES SAUVEGARDÉES DANS MONGODB");
-            System.out.println("   • User ID: " + userId);
+            System.out.println("   • Email utilisateur: " + userEmail);
             System.out.println("   • Nombre de jours: " + savedData.size());
             System.out.println("   • IDs MongoDB: ");
             savedData.forEach(data ->
@@ -206,11 +206,11 @@ public class HealthDataController {
             System.out.println("╚═════════════════════════════════════════════════════════════╝\n");
 
             log.info("Health data processed successfully - User: {}, Records: {}, Data points: {}",
-                    userId, savedData.size(), totalDataPoints);
+                    userEmail, savedData.size(), totalDataPoints);
 
             return ResponseEntity.ok(String.format(
-                    "✅ %d données reçues et sauvegardées!\n👤 User ID: %s\n💾 %d enregistrements MongoDB",
-                    totalDataPoints, userId, savedData.size()
+                    "✅ %d données reçues et sauvegardées!\n👤 Email: %s\n💾 %d enregistrements MongoDB",
+                    totalDataPoints, userEmail, savedData.size()
             ));
 
         } catch (Exception e) {

@@ -118,6 +118,10 @@
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
         </activity-alias>
+        <activity android:name=".ui.user.HealthAnalysisActivity" android:exported="false" android:screenOrientation="portrait"/>
+        <activity android:name=".ui.user.MedicalAlertsActivity" android:exported="false"/>
+        <activity android:name=".ui.user.HealthTrendsActivity" android:exported="false"/>
+        <activity android:name=".ui.user.HealthGoalsActivity" android:exported="false"/>
 
         <activity
             android:name=".ui.admin.AdminDashboardActivity"

@@ -158,6 +158,7 @@ public class UserService {
                 .fullName(user.getFullName())
                 .birthDate(user.getBirthDate())
                 .gender(user.getGender())
+                .score(user.getScore())
                 .phoneNumber(user.getPhoneNumber())
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .roles(user.getRoles())
@@ -174,4 +175,18 @@ public class UserService {
                 .activationDate(user.getActivationDate())
                 .build();
     }
+
+    public UserResponse updateUserScore(String email, Double score) {
+        log.info("Setting score {} for user {}", score, email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + email));
+
+        user.setScore(score);
+
+        User saved = userRepository.save(user);
+
+        return mapToUserResponse(saved);
+    }
+
 }

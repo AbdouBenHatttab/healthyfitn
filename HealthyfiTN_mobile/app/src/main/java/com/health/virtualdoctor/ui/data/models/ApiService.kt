@@ -253,11 +253,23 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
+
+    // Set score for patient
+    @PUT("api/v1/users/{email}/score")
+    suspend fun setScorePatient(
+        @Header("Authorization") token: String,
+        @Path("email") email: String,
+        @Body scoreRequest: ScoreRequest
+    ): Response<ApiResponse<UserProfileResponse>>
+
 }
 
 // ==========================================
 // WRAPPER FOR USER SERVICE RESPONSES
 // ==========================================
+data class ScoreRequest(
+    val score: Double
+)
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String?,
