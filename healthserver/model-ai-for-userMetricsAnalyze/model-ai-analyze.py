@@ -440,22 +440,14 @@ class TrendsAnalyzer:
     """Analyse les tendances de santé sur plusieurs jours"""
 
     @staticmethod
-    def get_user_trends(user_id: str, days: int = 30) -> Dict:
+    def get_user_trends(email: str, days: int = 30) -> Dict:
         """Récupère et analyse les tendances d'un utilisateur sur plusieurs jours"""
 
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
 
-        # 🔍 Récupération des enregistrements depuis MongoDB
-        cursor = collection.find({
-            "userId": user_id,
-            "date": {
-                "$gte": start_date.strftime("%Y-%m-%d"),
-                "$lte": end_date.strftime("%Y-%m-%d")
-            }
-        }).sort("date", 1)
-
-        records = list(cursor)
+        # 🔍 Récupération des enregistrements depuis MongoDB (1 par jour)
+        records = get_unique_daily_data(email, start_date, end_date)
 
         if len(records) < 2:
             raise HTTPException(
@@ -545,7 +537,7 @@ class TrendsAnalyzer:
                 }
 
         return {
-            'user_id': user_id,
+            'email': email,
             'period_days': days,
             'data_points': len(records),
             'trends': trends,
@@ -575,73 +567,90 @@ class TrendsAnalyzer:
 # =====================================================
 # 🚨 ANALYSEUR D'ALERTES
 # =====================================================
+def get_unique_daily_data(email, start_date, end_date):
+    pipeline = [
+        {
+            "$match": {
+                "email": email,
+                "date": {"$gte": start_date, "$lte": end_date}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$date",   # regrouper par jour
+                "doc": {"$first": "$$ROOT"}  # prendre le premier document du jour
+            }
+        },
+        {
+            "$replaceRoot": {"newRoot": "$doc"}
+        },
+        {
+            "$sort": {"date": 1}
+        }
+    ]
+
+    return list(collection.aggregate(pipeline))
 
 class RiskAlertsAnalyzer:
     """Génère des alertes de risque intelligentes"""
-    
+
     @staticmethod
     def generate_alerts(email: str, period_days: int = 7, specific_date: Optional[str] = None) -> Dict:
         """
         Génère des alertes basées sur les données récentes
-        
-        Args:
-            email: email de l'utilisateur
-            period_days: Nombre de jours à analyser (1, 7, 30)
-            specific_date: Date spécifique au format "YYYY-MM-DD" (optionnel)
         """
-        
-        # Si date spécifique fournie, analyser uniquement ce jour
+
+        # --- 1️⃣ Sélection des données à analyser ---
         if specific_date:
-            cursor = collection.find({
-                "email": email,
-                "date": specific_date
-            })
+            start_date_str = end_date_str = specific_date
+            # éliminer les doublons par date comme pour une période
+            records = get_unique_daily_data(email, start_date_str, end_date_str)
             analysis_mode = "specific_date"
-            end_date = datetime.strptime(specific_date, "%Y-%m-%d")
-            start_date = end_date
+
         else:
-            # 🔥 CORRECTION : Partir de la date actuelle et remonter dans le temps
+            # Cas 2 : analyse sur une période
             end_date = datetime.now()
             start_date = end_date - timedelta(days=period_days - 1)
-            
-            cursor = collection.find({
-                "email": email,
-                "date": {
-                    "$gte": start_date.strftime("%Y-%m-%d"),
-                    "$lte": end_date.strftime("%Y-%m-%d")
-                }
-            }).sort("date", -1)
+
+            start_date_str = start_date.strftime("%Y-%m-%d")
+            end_date_str = end_date.strftime("%Y-%m-%d")
+
+            # 🔥 correction : éliminer les doublons par date
+            records = get_unique_daily_data(email, start_date_str, end_date_str)
+
             analysis_mode = "period_average"
-        
-        records = list(cursor)
-        
+
+        # Aucun document trouvé ?
         if len(records) == 0:
             raise HTTPException(status_code=404, detail="Aucune donnée trouvée pour cette période")
-        
+
         latest = records[0]
         alerts = []
         risk_factors = []
         action_priorities = []
-        
-        # 🔥 CORRECTION : Calculer MOYENNES sur la période (pas juste dernier jour)
+
+        # --- 2️⃣ Calcul des moyennes sur la période ---
         if len(records) > 1 and analysis_mode == "period_average":
-            # Moyennes sur toute la période
             current_steps = int(np.mean([r.get('totalSteps', 0) for r in records]))
             current_sleep = float(np.mean([float(r.get('totalSleepHours', '7')) for r in records]))
             current_hr = int(np.mean([r.get('avgHeartRate', 70) for r in records]))
             current_stress = int(np.mean([r.get('stressScore', 50) for r in records]))
             current_hydration = float(np.mean([float(r.get('totalHydrationLiters', '2')) for r in records]))
+
             analysis_type = f"Moyennes sur {len(records)} jours"
+
         else:
-            # Un seul jour ou date spécifique
+            # Si analyse d'un seul jour
             current_steps = latest.get('totalSteps', 0)
             current_sleep = float(latest.get('totalSleepHours', '7'))
             current_hr = latest.get('avgHeartRate', 70)
             current_stress = latest.get('stressScore', 50)
             current_hydration = float(latest.get('totalHydrationLiters', '2'))
+
             analysis_type = "Données du jour"
-        
-        # 1. SOMMEIL
+
+        # --- 3️⃣ Détection des alertes ---
+        # SOMMEIL
         if current_sleep < 6:
             alerts.append("🚨 CRITIQUE: Sommeil insuffisant (< 6h)")
             risk_factors.append({
@@ -661,6 +670,7 @@ class RiskAlertsAnalyzer:
                 'urgency': 'high',
                 'impact': 'Réduction de risque de 90%'
             })
+
         elif current_sleep < 7:
             alerts.append("⚠️ ATTENTION: Sommeil sous-optimal")
             risk_factors.append({
@@ -676,8 +686,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Amélioration de 60%'
             })
-        
-        # 2. ACTIVITÉ PHYSIQUE
+
+        # ACTIVITÉ
         if current_steps < 2000:
             alerts.append("🚨 CRITIQUE: Sédentarité extrême")
             risk_factors.append({
@@ -697,6 +707,7 @@ class RiskAlertsAnalyzer:
                 'urgency': 'high',
                 'impact': 'Réduction de risque de 85%'
             })
+
         elif current_steps < 5000:
             alerts.append("⚠️ ATTENTION: Activité insuffisante")
             risk_factors.append({
@@ -712,8 +723,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Amélioration de 40%'
             })
-        
-        # 3. STRESS
+
+        # STRESS
         if current_stress >= 80:
             alerts.append("🚨 CRITIQUE: Stress très élevé")
             risk_factors.append({
@@ -733,6 +744,7 @@ class RiskAlertsAnalyzer:
                 'urgency': 'high',
                 'impact': 'Réduction de risque de 80%'
             })
+
         elif current_stress >= 60:
             alerts.append("⚠️ Stress modéré à élevé")
             risk_factors.append({
@@ -751,8 +763,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Réduction de risque de 60%'
             })
-        
-        # 4. HYDRATATION
+
+        # HYDRATATION
         if current_hydration < 1.0:
             alerts.append("⚠️ Déshydratation probable")
             risk_factors.append({
@@ -768,64 +780,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Réduction de risque de 70%'
             })
-        
-        # 5. FRÉQUENCE CARDIAQUE
-        if current_hr > 100:
-            alerts.append("⚠️ Tachycardie détectée")
-            risk_factors.append({
-                'type': 'elevated_heart_rate',
-                'severity': 'medium',
-                'description': f'FC à {current_hr} bpm (normal: 60-100)',
-                'probability': 60.0,
-                'actions': [
-                    'Exercices de relaxation',
-                    'Consultez un médecin'
-                ]
-            })
-            action_priorities.append({
-                'action': 'Consultation médicale + gestion stress',
-                'category': 'elevated_heart_rate',
-                'urgency': 'medium',
-                'impact': 'Réduction de risque de 60%'
-            })
-        
-        # 6. TENDANCES (si données suffisantes)
-        if len(records) >= 5:
-            recent_steps = [r.get('totalSteps', 0) for r in records[:5]]
-            if len(recent_steps) == 5 and np.mean(recent_steps[:3]) < np.mean(recent_steps[3:]) * 0.7:
-                alerts.append("📉 TENDANCE: Déclin d'activité sur 5 jours")
-                risk_factors.append({
-                    'type': 'activity_declining',
-                    'severity': 'medium',
-                    'description': 'Activité en baisse significative',
-                    'probability': 70.0,
-                    'actions': ['Reprenez activité physique progressive']
-                })
-                action_priorities.append({
-                    'action': 'Rétablir niveau d\'activité antérieur',
-                    'category': 'activity_declining',
-                    'urgency': 'medium',
-                    'impact': 'Amélioration de 70%'
-                })
-            
-            recent_stress = [r.get('stressScore', 50) for r in records[:5]]
-            if len(recent_stress) == 5 and np.mean(recent_stress[:3]) > np.mean(recent_stress[3:]) * 1.3:
-                alerts.append("📈 TENDANCE: Augmentation du stress")
-                risk_factors.append({
-                    'type': 'stress_increasing',
-                    'severity': 'medium',
-                    'description': 'Stress en hausse',
-                    'probability': 65.0,
-                    'actions': ['Identifiez sources de stress', 'Techniques relaxation']
-                })
-                action_priorities.append({
-                    'action': 'Gestion proactive du stress',
-                    'category': 'stress_increasing',
-                    'urgency': 'medium',
-                    'impact': 'Réduction de risque de 65%'
-                })
-        
-        # 7. SIGNES VITAUX CRITIQUES
+
+        # SIGNES VITAUX
         if latest.get('oxygenSaturation') and len(latest['oxygenSaturation']) > 0:
             spo2 = latest['oxygenSaturation'][-1].get('percentage', 100)
             if spo2 < 90:
@@ -833,7 +789,7 @@ class RiskAlertsAnalyzer:
                 risk_factors.append({
                     'type': 'critical_oxygen',
                     'severity': 'critical',
-                    'description': f'SpO2 à {spo2}% (normal: > 95%)',
+                    'description': f'SpO2 à {spo2}%',
                     'probability': 100.0,
                     'actions': ['APPELEZ SAMU IMMÉDIATEMENT']
                 })
@@ -843,7 +799,7 @@ class RiskAlertsAnalyzer:
                     'urgency': 'critical',
                     'impact': 'Vital'
                 })
-        
+
         if latest.get('bodyTemperature') and len(latest['bodyTemperature']) > 0:
             temp = latest['bodyTemperature'][-1].get('temperature', 36.5)
             if temp >= 39:
@@ -865,9 +821,10 @@ class RiskAlertsAnalyzer:
                     'urgency': 'high',
                     'impact': 'Réduction de risque de 80%'
                 })
-        
-        # Niveau d'alerte global
+
+        # --- 4️⃣ Niveau d’alerte global ---
         critical_count = len([a for a in alerts if "🚨" in a])
+
         if critical_count > 0:
             alert_level = "Critique"
         elif len(alerts) >= 3:
@@ -877,23 +834,25 @@ class RiskAlertsAnalyzer:
         else:
             alert_level = "Faible"
             alerts.append("✅ Aucune alerte critique")
-        
-        # Tri des actions par urgence
+
+        # Trier actions
         urgency_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
         action_priorities.sort(key=lambda x: urgency_order.get(x['urgency'], 3))
-        
-        # Date de prochain check-up
+
+        # --- 5️⃣ Résultat final ---
         next_checkup = datetime.now() + timedelta(days=7)
         if critical_count > 0:
             next_checkup = datetime.now() + timedelta(days=3)
-        
+
         return {
             'email': email,
             'alert_level': alert_level,
-            'analysis_period': f"{start_date.strftime('%Y-%m-%d')} au {end_date.strftime('%Y-%m-%d')}" if not specific_date else f"Date: {specific_date}",
-            'analysis_type': analysis_type,  # 🆕 AJOUTÉ
-            'data_points_analyzed': len(records),  # 🆕 AJOUTÉ
-            'averages_computed': {  # 🆕 AJOUTÉ
+            'analysis_period':
+                f"{start_date.strftime('%Y-%m-%d')} au {end_date.strftime('%Y-%m-%d')}"
+                if not specific_date else f"Date: {specific_date}",
+            'analysis_type': analysis_type,
+            'data_points_analyzed': len(records),
+            'averages_computed': {
                 'steps': current_steps,
                 'sleep_hours': round(current_sleep, 1),
                 'heart_rate': current_hr,
@@ -905,6 +864,7 @@ class RiskAlertsAnalyzer:
             'action_priorities': action_priorities,
             'next_checkup_recommended': next_checkup.isoformat()
         }
+
 # =====================================================
 # 🎯 GÉNÉRATEUR D'OBJECTIFS SMART
 # =====================================================
@@ -1275,14 +1235,14 @@ async def analyze_health(data: BiometricData):
         raise HTTPException(status_code=500, detail=f"Erreur d'analyse: {str(e)}")
 
 # 🆕 ENDPOINT 1: TENDANCES
-@app.get("/health-trends/{user_id}")
+@app.get("/health-trends/{email}")
 async def get_health_trends(
-    user_id: str,
+    email: str,
     days: int = Query(default=30, ge=2, le=90, description="Nombre de jours d'historique")
 ):
     """Analyse des tendances de santé sur plusieurs jours"""
     try:
-        trends = TrendsAnalyzer.get_user_trends(user_id, days)
+        trends = TrendsAnalyzer.get_user_trends(email, days)
         return trends
     except HTTPException as e:
         raise e

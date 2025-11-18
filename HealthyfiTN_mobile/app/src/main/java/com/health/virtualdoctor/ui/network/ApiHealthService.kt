@@ -117,10 +117,10 @@ interface ApiHealthService {
      */
     @GET("risk-alerts/{email}")
     suspend fun getRiskAlerts(
-        @Path("user_id") email: String,
+        @Path("email") email: String,
         @Query("period_days") periodDays: Int = 7,
         @Query("specific_date") specificDate: String? = null
-    ): Response<Any>
+    ): Response<RiskAlertsResponse>
 
     /**
      * Objectifs personnalisés
