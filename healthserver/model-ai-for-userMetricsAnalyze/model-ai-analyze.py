@@ -580,12 +580,12 @@ class RiskAlertsAnalyzer:
     """Génère des alertes de risque intelligentes"""
     
     @staticmethod
-    def generate_alerts(user_id: str, period_days: int = 7, specific_date: Optional[str] = None) -> Dict:
+    def generate_alerts(email: str, period_days: int = 7, specific_date: Optional[str] = None) -> Dict:
         """
         Génère des alertes basées sur les données récentes
         
         Args:
-            user_id: ID de l'utilisateur
+            email: email de l'utilisateur
             period_days: Nombre de jours à analyser (1, 7, 30)
             specific_date: Date spécifique au format "YYYY-MM-DD" (optionnel)
         """
@@ -593,7 +593,7 @@ class RiskAlertsAnalyzer:
         # Si date spécifique fournie, analyser uniquement ce jour
         if specific_date:
             cursor = collection.find({
-                "userId": user_id,
+                "email": email,
                 "date": specific_date
             })
             analysis_mode = "specific_date"
@@ -605,7 +605,7 @@ class RiskAlertsAnalyzer:
             start_date = end_date - timedelta(days=period_days - 1)
             
             cursor = collection.find({
-                "userId": user_id,
+                "email": email,
                 "date": {
                     "$gte": start_date.strftime("%Y-%m-%d"),
                     "$lte": end_date.strftime("%Y-%m-%d")
@@ -888,7 +888,7 @@ class RiskAlertsAnalyzer:
             next_checkup = datetime.now() + timedelta(days=3)
         
         return {
-            'user_id': user_id,
+            'email': email,
             'alert_level': alert_level,
             'analysis_period': f"{start_date.strftime('%Y-%m-%d')} au {end_date.strftime('%Y-%m-%d')}" if not specific_date else f"Date: {specific_date}",
             'analysis_type': analysis_type,  # 🆕 AJOUTÉ
@@ -1290,9 +1290,9 @@ async def get_health_trends(
         raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
 
 # 🆕 ENDPOINT 2: ALERTES DE RISQUE
-@app.get("/risk-alerts/{user_id}")
+@app.get("/risk-alerts/{email}")
 async def get_risk_alerts(
-    user_id: str,
+    email: str,
     period_days: Optional[int] = 7,
     specific_date: Optional[str] = None
 ):
@@ -1300,12 +1300,12 @@ async def get_risk_alerts(
     Génère des alertes de risque personnalisées
     
     Args:
-        user_id: ID de l'utilisateur
+        email: email de l'utilisateur
         period_days: Nombre de jours (1, 7, 30) - défaut: 7
         specific_date: Date spécifique "YYYY-MM-DD" (optionnel)
     """
     try:
-        alerts = RiskAlertsAnalyzer.generate_alerts(user_id, period_days, specific_date)
+        alerts = RiskAlertsAnalyzer.generate_alerts(email, period_days, specific_date)
         return alerts
     except HTTPException as e:
         raise e

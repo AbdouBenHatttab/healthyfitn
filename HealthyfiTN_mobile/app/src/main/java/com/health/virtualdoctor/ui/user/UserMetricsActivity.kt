@@ -1413,7 +1413,7 @@ class UserMetricsActivity : ComponentActivity() {
                 Toast.makeText(this@UserMetricsActivity, "🔄 Connexion au serveur...", Toast.LENGTH_SHORT).show()
 
                 val result = withContext(Dispatchers.IO) {
-                    val serverUrl = "https://mention-songs-neon-bob.trycloudflare.com/fetch"
+                    val serverUrl = "https://previous-actual-thumbnails-ended.trycloudflare.com/fetch"
 
                     // 👉 Récupérer l'email des SharedPreferences
                     val userEmail = tokenManager.getUserEmail() ?: "unknown@noemail.com"
