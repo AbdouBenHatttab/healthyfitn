@@ -54,4 +54,17 @@
     <color name="health_moderate">#FF9800</color>
     <color name="health_poor">#FF5722</color>
     <color name="health_critical">#D32F2F</color>
+
+    <!-- Couleurs des métriques -->
+    <color name="color_steps">#4CAF50</color>
+    <color name="color_heart_rate">#F44336</color>
+    <color name="color_sleep">#2196F3</color>
+    <color name="color_stress">#FF9800</color>
+    <color name="color_hydration">#00BCD4</color>
+    <color name="color_weight">#9C27B0</color>
+
+    <!-- Couleurs de tendances -->
+    <color name="trend_up">#4CAF50</color>
+    <color name="trend_down">#F44336</color>
+    <color name="trend_stable">#9E9E9E</color>
 </resources>
