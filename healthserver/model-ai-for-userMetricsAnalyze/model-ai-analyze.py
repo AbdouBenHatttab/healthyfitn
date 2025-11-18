@@ -446,8 +446,18 @@ class TrendsAnalyzer:
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
 
-        # 🔍 Récupération des enregistrements depuis MongoDB (1 par jour)
-        records = get_unique_daily_data(email, start_date, end_date)
+        # ✅ Exclure le jour actuel pour avoir exactement N jours
+        end_date = end_date - timedelta(days=1)
+
+        # Convertir en strings
+        start_date_str = start_date.strftime("%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+
+        print(f"🔍 Recherche de {start_date_str} à {end_date_str} pour {email}")
+
+        records = get_unique_daily_data(email, start_date_str, end_date_str)
+
+        print(f"📊 Nombre d'enregistrements trouvés: {len(records)}")
 
         if len(records) < 2:
             raise HTTPException(
@@ -568,6 +578,16 @@ class TrendsAnalyzer:
 # 🚨 ANALYSEUR D'ALERTES
 # =====================================================
 def get_unique_daily_data(email, start_date, end_date):
+    """
+    Récupère les données uniques par jour pour un utilisateur
+    Args:
+        email: str - email de l'utilisateur
+        start_date: str - date de début au format "YYYY-MM-DD"
+        end_date: str - date de fin au format "YYYY-MM-DD"
+    """
+
+    print(f"🔍 Query MongoDB: email={email}, date>={start_date}, date<={end_date}")
+
     pipeline = [
         {
             "$match": {
@@ -577,8 +597,8 @@ def get_unique_daily_data(email, start_date, end_date):
         },
         {
             "$group": {
-                "_id": "$date",   # regrouper par jour
-                "doc": {"$first": "$$ROOT"}  # prendre le premier document du jour
+                "_id": "$date",
+                "doc": {"$first": "$$ROOT"}
             }
         },
         {
@@ -589,7 +609,14 @@ def get_unique_daily_data(email, start_date, end_date):
         }
     ]
 
-    return list(collection.aggregate(pipeline))
+    results = list(collection.aggregate(pipeline))
+    print(f"✅ Documents trouvés: {len(results)}")
+
+    if len(results) > 0:
+        print(f"📅 Première date: {results[0].get('date')}")
+        print(f"📅 Dernière date: {results[-1].get('date')}")
+
+    return results
 
 class RiskAlertsAnalyzer:
     """Génère des alertes de risque intelligentes"""

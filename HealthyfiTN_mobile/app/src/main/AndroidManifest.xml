@@ -120,7 +120,7 @@
         </activity-alias>
         <activity android:name=".ui.user.HealthAnalysisActivity" android:exported="false" android:screenOrientation="portrait"/>
         <activity android:name=".ui.user.MedicalAlertsActivity" android:exported="false" android:screenOrientation="portrait"/>
-        <activity android:name=".ui.user.HealthTrendsActivity" android:exported="false"/>
+        <activity android:name=".ui.user.HealthTrendsActivity" android:exported="false" android:screenOrientation="portrait" android:theme="@style/Theme.VirtualDoctor"/>
         <activity android:name=".ui.user.HealthGoalsActivity" android:exported="false"/>
 
         <activity
