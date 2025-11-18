@@ -30,7 +30,8 @@ class HealthAnalysisActivity : ComponentActivity() {
     // Views
     private lateinit var progressBar: ProgressBar
     private lateinit var contentContainer: LinearLayout
-    private lateinit var tvError: TextView
+    private lateinit var tvErrorMessage: TextView
+    private lateinit var errorContainer: LinearLayout
     private lateinit var tvHealthScore: TextView
     private lateinit var chipRiskLevel: Chip
     private lateinit var tvAiExplanation: TextView
@@ -76,7 +77,9 @@ class HealthAnalysisActivity : ComponentActivity() {
     private fun initViews() {
         progressBar = findViewById(R.id.progressBar)
         contentContainer = findViewById(R.id.contentContainer)
-        tvError = findViewById(R.id.tvError)
+
+        errorContainer = findViewById(R.id.errorContainer)
+        tvErrorMessage = findViewById(R.id.tvErrorMessage)
         tvHealthScore = findViewById(R.id.tvHealthScore)
         chipRiskLevel = findViewById(R.id.chipRiskLevel)
         tvAiExplanation = findViewById(R.id.tvAiExplanation)
@@ -503,7 +506,7 @@ class HealthAnalysisActivity : ComponentActivity() {
     private fun showLoading() {
         progressBar.visibility = View.VISIBLE
         contentContainer.visibility = View.GONE
-        tvError.visibility = View.GONE
+        errorContainer.visibility = View.GONE
     }
 
     private fun hideLoading() {
@@ -513,10 +516,13 @@ class HealthAnalysisActivity : ComponentActivity() {
     private fun showError(message: String) {
         progressBar.visibility = View.GONE
         contentContainer.visibility = View.GONE
-        tvError.visibility = View.VISIBLE
-        tvError.text = message
+
+        errorContainer.visibility = View.VISIBLE
+        tvErrorMessage.text = message
+
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
+
 
     private fun dpToPx(dp: Int): Int {
         val density = resources.displayMetrics.density
