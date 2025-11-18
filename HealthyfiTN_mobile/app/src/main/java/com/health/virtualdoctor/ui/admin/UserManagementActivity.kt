@@ -82,7 +82,7 @@ class UserManagementActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         setSupportActionBar(toolbar)
-        supportActionBar?.title = "👥 Gestion des Utilisateurs"
+        supportActionBar?.title = "👥 Gestion des utilisateurs"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
@@ -110,28 +110,24 @@ class UserManagementActivity : AppCompatActivity() {
     }
 
     private fun setupRoleFilters() {
-        // Chip "Tous"
         val chipAll: Chip = findViewById(R.id.chipAll)
         chipAll.setOnClickListener {
             currentRoleFilter = null
             loadAllUsers()
         }
 
-        // Chip "Users"
         val chipUsers: Chip = findViewById(R.id.chipUsers)
         chipUsers.setOnClickListener {
             currentRoleFilter = "USER"
             loadUsersByRole("USER")
         }
 
-        // Chip "Doctors"
         val chipDoctors: Chip = findViewById(R.id.chipDoctors)
         chipDoctors.setOnClickListener {
             currentRoleFilter = "DOCTOR"
             loadUsersByRole("DOCTOR")
         }
 
-        // Chip "Admins"
         val chipAdmins: Chip = findViewById(R.id.chipAdmins)
         chipAdmins.setOnClickListener {
             currentRoleFilter = "ADMIN"
@@ -145,7 +141,7 @@ class UserManagementActivity : AppCompatActivity() {
             if (query.isNotEmpty()) {
                 searchUsers(query)
             } else {
-                Toast.makeText(this, "Entrez un terme de recherche", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Veuillez entrer un terme de recherche", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -169,7 +165,7 @@ class UserManagementActivity : AppCompatActivity() {
                 }
 
             } catch (e: Exception) {
-                Log.e("UserManagement", "Error loading statistics: ${e.message}")
+                Log.e("UserManagement", "Erreur lors du chargement des statistiques: ${e.message}")
             }
         }
     }
@@ -211,7 +207,7 @@ class UserManagementActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 runOnUiThread {
                     showLoading(false)
-                    Log.e("UserManagement", "Error: ${e.message}", e)
+                    Log.e("UserManagement", "Erreur: ${e.message}", e)
                     Toast.makeText(
                         this@UserManagementActivity,
                         "❌ Erreur: ${e.message}",
@@ -259,7 +255,7 @@ class UserManagementActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 runOnUiThread {
                     showLoading(false)
-                    Log.e("UserManagement", "Error: ${e.message}", e)
+                    Log.e("UserManagement", "Erreur: ${e.message}", e)
                     Toast.makeText(
                         this@UserManagementActivity,
                         "❌ Erreur: ${e.message}",
@@ -317,7 +313,7 @@ class UserManagementActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 runOnUiThread {
                     showLoading(false)
-                    Log.e("UserManagement", "Error: ${e.message}", e)
+                    Log.e("UserManagement", "Erreur: ${e.message}", e)
                     Toast.makeText(
                         this@UserManagementActivity,
                         "❌ Erreur: ${e.message}",
@@ -393,7 +389,7 @@ class UserManagementActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 runOnUiThread {
-                    Log.e("UserManagement", "Error: ${e.message}", e)
+                    Log.e("UserManagement", "Erreur: ${e.message}", e)
                     Toast.makeText(
                         this@UserManagementActivity,
                         "❌ Erreur: ${e.message}",

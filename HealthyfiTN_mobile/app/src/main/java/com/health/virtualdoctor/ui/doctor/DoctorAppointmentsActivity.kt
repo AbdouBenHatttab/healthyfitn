@@ -20,12 +20,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Doctor Appointments Activity
- * Shows list of appointments with options to:
- * - View details
- * - Complete consultation
- * - Cancel appointment
- * - Create new appointment
+ * Activité des Rendez-vous du Docteur
+ * Affiche la liste des rendez-vous avec les options pour :
+ * - Voir les détails
+ * - Terminer la consultation
+ * - Annuler le rendez-vous
+ * - Créer un nouveau rendez-vous
  */
 class DoctorAppointmentsActivity : AppCompatActivity() {
 
@@ -85,7 +85,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
             "view_details" -> showAppointmentDetails(appointment)
             "complete" -> showCompleteAppointmentDialog(appointment)
             "cancel" -> showCancelAppointmentDialog(appointment)
-            "start_consultation" -> showConsultationOptions(appointment) // Keep for backward compatibility
+            "start_consultation" -> showConsultationOptions(appointment) // Gardé pour la compatibilité
         }
     }
 
@@ -115,7 +115,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("DoctorAppointments", "Error loading appointments: ${e.message}", e)
+                Log.e("DoctorAppointments", "Erreur lors du chargement des rendez-vous: ${e.message}", e)
                 Toast.makeText(
                     this@DoctorAppointmentsActivity,
                     "❌ Erreur: ${e.message}",
@@ -130,7 +130,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
     private fun showAppointmentDetails(appointment: AppointmentResponse) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_appointment_details, null)
 
-        // Set patient details
+        // Définir les détails du patient
         dialogView.findViewById<TextView>(R.id.tvPatientNameDialog).apply {
             visibility = View.VISIBLE
             text = appointment.patientName
@@ -141,14 +141,14 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
         }
         dialogView.findViewById<TextView>(R.id.tvPatientPhoneDialog).apply {
             visibility = View.VISIBLE
-            text = appointment.patientPhone ?: "N/A"
+            text = appointment.patientPhone ?: "Non disponible"
         }
 
-        // Show labels
+        // Afficher les labels
         dialogView.findViewById<TextView>(R.id.lblPatientEmail)?.visibility = View.VISIBLE
         dialogView.findViewById<TextView>(R.id.lblPatientPhone)?.visibility = View.VISIBLE
 
-        // Set appointment details
+        // Définir les détails du rendez-vous
         try {
             val dateTime = LocalDateTime.parse(appointment.appointmentDateTime)
             val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -205,7 +205,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Options de Consultation")
             .setItems(arrayOf(
-                "✅ Compléter la consultation",
+                "✅ Terminer la consultation",
                 "❌ Annuler le rendez-vous"
             )) { _, which ->
                 when (which) {
@@ -273,7 +273,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
 
         dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnConfirmCancel)
             .setOnClickListener {
-                val reason = etReason.text.toString().trim().ifEmpty { "No reason provided" }
+                val reason = etReason.text.toString().trim().ifEmpty { "Aucune raison fournie" }
                 cancelAppointment(appointment.id, reason)
                 dialog.dismiss()
             }
@@ -297,7 +297,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     Toast.makeText(
                         this@DoctorAppointmentsActivity,
-                        "✅ Consultation complétée",
+                        "✅ Consultation terminée avec succès",
                         Toast.LENGTH_SHORT
                     ).show()
                     loadAppointments()
@@ -309,7 +309,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
                     ).show()
                 }
             } catch (e: Exception) {
-                Log.e("DoctorAppointments", "Error completing: ${e.message}", e)
+                Log.e("DoctorAppointments", "Erreur lors de la finalisation: ${e.message}", e)
                 Toast.makeText(
                     this@DoctorAppointmentsActivity,
                     "❌ Erreur: ${e.message}",
@@ -331,7 +331,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     Toast.makeText(
                         this@DoctorAppointmentsActivity,
-                        "✅ Rendez-vous annulé",
+                        "✅ Rendez-vous annulé avec succès",
                         Toast.LENGTH_SHORT
                     ).show()
                     loadAppointments()
@@ -343,7 +343,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
                     ).show()
                 }
             } catch (e: Exception) {
-                Log.e("DoctorAppointments", "Error cancelling: ${e.message}", e)
+                Log.e("DoctorAppointments", "Erreur lors de l'annulation: ${e.message}", e)
                 Toast.makeText(
                     this@DoctorAppointmentsActivity,
                     "❌ Erreur: ${e.message}",
@@ -354,9 +354,9 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
     }
 
     private fun showCreateAppointmentDialog() {
-        // TODO: Implement create appointment for doctor
-        // This would require getting list of patients
-        Toast.makeText(this, "Créer RDV - À implémenter", Toast.LENGTH_SHORT).show()
+        // TODO: Implémenter la création de rendez-vous pour le docteur
+        // Cela nécessiterait d'obtenir la liste des patients
+        Toast.makeText(this, "Créer un rendez-vous - Fonctionnalité à implémenter", Toast.LENGTH_SHORT).show()
     }
 
     override fun onResume() {
