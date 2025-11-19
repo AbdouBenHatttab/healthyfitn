@@ -81,6 +81,41 @@ interface ApiService {
     suspend fun getUserStatistics(
         @Header("Authorization") token: String
     ): Response<UserApiResponse<UserStatistics>>
+
+    /**
+     * Get all appointments for authenticated patient
+     */
+    @GET("api/v1/appointments")
+    suspend fun getPatientAppointments(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<List<AppointmentResponse>>>
+
+    /**
+     * Create new appointment
+     */
+    @POST("api/v1/appointments")
+    suspend fun createAppointment(
+        @Header("Authorization") token: String,
+        @Body request: AppointmentRequest
+    ): Response<ApiResponse<AppointmentResponse>>
+
+    /**
+     * Cancel appointment
+     */
+    @POST("api/v1/appointments/{appointmentId}/cancel")
+    suspend fun cancelAppointmentByUser(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String,
+        @Body request: Map<String, String>
+    ): Response<ApiResponse<String>>
+
+    /**
+     * Get available doctors for appointments
+     */
+    @GET("api/v1/appointments/doctors")
+    suspend fun getAvailableDoctors(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<List<DoctorAvailableResponse>>>
     // ==========================================
     // DOCTOR SERVICE (port 8083)
     // ==========================================
@@ -130,7 +165,60 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: FCMTokenRequest
     ): Response<Map<String, String>>
+    // ==========================================
+    // APPOINTMENT SERVICE
+    // ==========================================
+    /**
+     * Get all appointments for authenticated doctor
+     */
+    @GET("api/doctors/appointments")
+    suspend fun getDoctorAppointments(
+        @Header("Authorization") token: String
+    ): Response<List<AppointmentResponse>>
 
+    /**
+     * Get upcoming appointments only
+     */
+    @GET("api/doctors/appointments/upcoming")
+    suspend fun getUpcomingAppointments(
+        @Header("Authorization") token: String
+    ): Response<List<AppointmentResponse>>
+
+    /**
+     * Get doctor's patient list
+     */
+    @GET("api/doctors/appointments/patients")
+    suspend fun getDoctorPatients(
+        @Header("Authorization") token: String
+    ): Response<List<PatientInfoResponse>>
+
+    /**
+     * Get dashboard statistics
+     */
+    @GET("api/doctors/appointments/dashboard/stats")
+    suspend fun getDoctorStats(
+        @Header("Authorization") token: String
+    ): Response<DoctorStatsResponse>
+
+    /**
+     * Complete an appointment
+     */
+    @POST("api/doctors/appointments/{appointmentId}/complete")
+    suspend fun completeAppointment(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String,
+        @Body request: Map<String, String>
+    ): Response<AppointmentResponse>
+
+    /**
+     * Cancel appointment (Doctor side)
+     */
+    @POST("api/doctors/appointments/{appointmentId}/cancel")
+    suspend fun cancelAppointmentByDoctor(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String,
+        @Body request: Map<String, String>
+    ): Response<Map<String, String>>
     // ==========================================
     // NUTRITION SERVICE
     // ==========================================
@@ -165,11 +253,23 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
+
+    // Set score for patient
+    @PUT("api/v1/users/{email}/score")
+    suspend fun setScorePatient(
+        @Header("Authorization") token: String,
+        @Path("email") email: String,
+        @Body scoreRequest: ScoreRequest
+    ): Response<ApiResponse<UserProfileResponse>>
+
 }
 
 // ==========================================
 // WRAPPER FOR USER SERVICE RESPONSES
 // ==========================================
+data class ScoreRequest(
+    val score: Double
+)
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String?,
@@ -194,6 +294,16 @@ data class UserProfileResponse(
     val createdAt: String
 )
 
+//data class PatientInfoResponse(
+//    val id: String,
+//    val email: String,
+//    val firstName: String,
+//    val lastName: String,
+//    val fullName: String,
+//    val phoneNumber: String?,
+//    val profilePictureUrl: String?
+//)
+
 data class UpdateUserProfileRequest(
     val firstName: String?,
     val lastName: String?,
@@ -206,6 +316,7 @@ data class ChangePasswordRequest(
     val currentPassword: String,
     val newPassword: String
 )
+
 
 // Doctor Profile
 data class UpdateDoctorProfileRequest(

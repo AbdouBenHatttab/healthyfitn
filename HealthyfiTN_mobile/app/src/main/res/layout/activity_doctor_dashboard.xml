@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- App Bar -->
+    <!-- Barre d'application -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
@@ -19,13 +19,13 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@android:color/transparent"
-            app:title="Dashboard"
+            app:title="Tableau de bord"
             app:titleTextColor="@color/text_primary"
             app:menu="@menu/menu_doctor_dashboard" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Main Content -->
+    <!-- Contenu principal -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -38,7 +38,7 @@
             android:orientation="vertical"
             android:padding="@dimen/spacing_md">
 
-            <!-- Doctor Profile Card -->
+            <!-- Carte du profil médecin -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardDoctorProfile"
                 android:layout_width="match_parent"
@@ -55,7 +55,7 @@
                     android:padding="@dimen/spacing_lg"
                     android:gravity="center_vertical">
 
-                    <!-- Profile Image -->
+                    <!-- Image de profil -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="80dp"
                         android:layout_height="80dp"
@@ -72,7 +72,7 @@
                             android:contentDescription="Photo du médecin" />
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- Doctor Info -->
+                    <!-- Informations du médecin -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -116,7 +116,7 @@
                             android:id="@+id/tvActivationStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="✅ Activated"
+                            android:text="✅ Activé"
                             android:textSize="12sp"
                             android:textColor="@color/white"
                             android:alpha="0.9"
@@ -133,7 +133,7 @@
                                 android:layout_width="16dp"
                                 android:layout_height="16dp"
                                 android:src="@drawable/ic_star"
-                                android:tint="@color/white" />
+                                app:tint="@color/white" />
 
                             <TextView
                                 android:id="@+id/tvRating"
@@ -147,7 +147,7 @@
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- Edit Button -->
+                    <!-- Bouton Modifier -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnEditProfile"
                         android:layout_width="48dp"
@@ -165,7 +165,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Edit Profile Section (Initially Hidden) -->
+            <!-- Section Modification du profil (Cachée initialement) -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardEditProfile"
                 android:layout_width="match_parent"
@@ -192,7 +192,7 @@
                         android:layout_marginBottom="@dimen/spacing_md"
                         android:fontFamily="sans-serif-medium" />
 
-                    <!-- First Name -->
+                    <!-- Prénom -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -207,7 +207,7 @@
                             android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Last Name -->
+                    <!-- Nom -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -222,7 +222,7 @@
                             android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Phone Number -->
+                    <!-- Numéro de téléphone -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -237,7 +237,7 @@
                             android:inputType="phone" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Specialization -->
+                    <!-- Spécialisation -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -252,7 +252,7 @@
                             android:inputType="text" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Hospital -->
+                    <!-- Hôpital -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -267,7 +267,7 @@
                             android:inputType="text" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Years of Experience -->
+                    <!-- Années d'expérience -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -282,7 +282,7 @@
                             android:inputType="number" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Office Address -->
+                    <!-- Adresse du cabinet -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -298,7 +298,7 @@
                             android:minLines="2" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Consultation Hours -->
+                    <!-- Heures de consultation -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -313,14 +313,13 @@
                             android:inputType="text" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Action Buttons -->
-                    <!-- Action Buttons -->
+                    <!-- Boutons d'action -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <!-- Boutons Check Activation et Update Profile -->
+                        <!-- Boutons Vérifier statut et Enregistrer -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -352,7 +351,7 @@
                                 style="@style/Widget.Material3.Button" />
                         </LinearLayout>
 
-                        <!-- ✅ NOUVEAU: Bouton Change Password -->
+                        <!-- Bouton Changer le mot de passe -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnChangePassword"
                             android:layout_width="match_parent"
@@ -368,7 +367,17 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Statistics Cards -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManageAppointments"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="📅 Gérer mes rendez-vous"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/primary"
+                app:cornerRadius="12dp"
+                android:layout_marginBottom="@dimen/spacing_md" />
+
+            <!-- Cartes de statistiques -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -376,7 +385,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:weightSum="3">
 
-                <!-- Today's Appointments -->
+                <!-- Rendez-vous du jour -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="100dp"
@@ -414,7 +423,7 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Total Patients -->
+                <!-- Patients totaux -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="100dp"
@@ -453,7 +462,7 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Revenue -->
+                <!-- Revenus -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="100dp"
@@ -492,7 +501,7 @@
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
-            <!-- Appointments Section Header -->
+            <!-- En-tête section consultations -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -524,7 +533,7 @@
                     app:chipIcon="@drawable/ic_filter" />
             </LinearLayout>
 
-            <!-- Appointments List -->
+            <!-- Liste des consultations -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvAppointments"
                 android:layout_width="match_parent"
@@ -532,7 +541,7 @@
                 android:nestedScrollingEnabled="false"
                 android:clipToPadding="false" />
 
-            <!-- Empty State -->
+            <!-- État vide -->
             <LinearLayout
                 android:id="@+id/llEmptyState"
                 android:layout_width="match_parent"
@@ -546,7 +555,7 @@
                     android:layout_height="80dp"
                     android:src="@drawable/ic_calendar"
                     android:alpha="0.3"
-                    android:tint="@color/text_secondary" />
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -560,19 +569,5 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!-- Floating Action Button -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabNewAppointment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/spacing_lg"
-        android:text="Nouvelle consultation"
-        app:icon="@drawable/ic_add"
-        app:iconTint="@color/white"
-        android:textColor="@color/white"
-        app:backgroundTint="@color/primary"
-        app:elevation="6dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

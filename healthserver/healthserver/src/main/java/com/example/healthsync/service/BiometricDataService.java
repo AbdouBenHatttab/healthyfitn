@@ -22,9 +22,7 @@ public class BiometricDataService {
     private final BiometricDataRepository repository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private String generateTemporaryUserId() {
-        return "user_" + UUID.randomUUID().toString().substring(0, 8);
-    }
+
 
     /**
      * Sauvegarde les données biométriques reçues de l'app Android
@@ -37,15 +35,19 @@ public class BiometricDataService {
             throw new IllegalArgumentException("Aucune donnée quotidienne à sauvegarder");
         }
 
-        String userId = generateTemporaryUserId();
-        log.info("📝 UserID généré: {}", userId);
+        String email = healthData.getEmail();
+        log.info("📝 Email utilisateur utilisé comme userId: {}", email);
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email utilisateur manquant");
+        }
 
         for (HealthData.DailyData day : healthData.getDailyData()) {
             try {
                 BiometricData data = new BiometricData();
 
                 // Métadonnées
-                data.setUserId(userId);
+                data.setEmail(email);
                 data.setReceivedAt(LocalDateTime.now());
                 data.setDate(day.getDate());
 
@@ -142,7 +144,7 @@ public class BiometricDataService {
                 savedRecords.add(saved);
 
                 log.info("✅ Sauvegardé: userId={}, date={}, id={}",
-                        userId, data.getDate(), saved.getId());
+                        email, data.getDate(), saved.getId());
 
             } catch (Exception e) {
                 log.error("❌ Erreur sauvegarde jour {}: {}", day.getDate(), e.getMessage());
@@ -153,12 +155,13 @@ public class BiometricDataService {
         return savedRecords;
     }
 
-    public List<BiometricData> getUserData(String userId) {
-        return repository.findByUserId(userId);
+    public List<BiometricData> getUserData(String email) {
+        return repository.findByEmailOrderByReceivedAtDesc(email);
     }
 
-    public String getUserStats(String userId) {
-        long count = repository.countByUserId(userId);
-        return String.format("👤 User %s: %d enregistrements", userId, count);
+
+    public String getUserStats(String email) {
+        long total = repository.countByEmail(email);
+        return String.format("👤 User %s: %d enregistrements", email, total);
     }
 }

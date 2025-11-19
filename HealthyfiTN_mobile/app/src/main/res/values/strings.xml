@@ -29,21 +29,22 @@
     <string name="login_link">Connectez-vous</string>
     <string name="terms_accept">J\'accepte les conditions d\'utilisation</string>
     <!-- Welcome Screen -->
-    <string name="welcome_title">Your Virtual Doctor,\nAlways Available</string>
-    <string name="welcome_subtitle">Connect with healthcare professionals, track your health metrics, and get personalized recommendations.</string>
-    <string name="feature_bmi_title">BMI Calculator</string>
-    <string name="feature_bmi_desc">Track your body mass index easily</string>
-    <string name="feature_meal_title">Meal Analysis</string>
-    <string name="feature_meal_desc">Get nutritional insights instantly</string>
-    <string name="feature_ai_title">AI Health Assistant</string>
-    <string name="feature_ai_desc">24/7 health guidance and tips</string>
-    <string name="healthy_lifestyle_title">Healthy Lifestyle</string>
-    <string name="btn_get_started">Get Started</string>
-    <string name="btn_explore_dashboard">Explore Dashboard</string>
-    <string name="btn_login">Login</string>
-    <string name="btn_register">Register</string>
-    <string name="already_member">Already a member?</string>
-    <string name="new_user">New user?</string>
+    <string name="welcome_title">Votre médecin virtuel,\nToujours disponible</string>
+    <string name="welcome_subtitle">Connectez-vous avec des professionnels de santé, suivez vos indicateurs de santé et recevez des recommandations personnalisées.</string>
+    <string name="feature_bmi_title">Calculateur IMC</string>
+    <string name="feature_bmi_desc">Suivez facilement votre indice de masse corporelle</string>
+    <string name="feature_meal_title">Analyse des repas</string>
+    <string name="feature_meal_desc">Obtenez instantanément des informations nutritionnelles</string>
+    <string name="feature_ai_title">Assistant santé IA</string>
+    <string name="feature_ai_desc">Conseils et guidances santé 24/7</string>
+    <string name="healthy_lifestyle_title">Mode de vie sain</string>
+    <string name="btn_get_started">Commencer</string>
+    <string name="btn_explore_dashboard">Explorer le tableau de bord</string>
+    <string name="btn_login">Se connecter</string>
+    <string name="btn_register">S’inscrire</string>
+    <string name="already_member">Déjà membre ?</string>
+    <string name="new_user">Nouveau utilisateur ?</string>
+
     <!-- Register Screen - Doctor Fields -->
     <!-- Register Screen - Doctor Fields -->
     <string name="specialization_hint">Spécialisation</string>
