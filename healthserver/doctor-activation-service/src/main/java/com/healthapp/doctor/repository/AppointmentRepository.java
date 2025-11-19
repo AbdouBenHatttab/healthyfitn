@@ -30,6 +30,7 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
     List<Appointment> findTodayAppointmentsForDoctor(String doctorId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
     // Count appointments by status for doctor
+    List<Appointment> findByDoctorIdAndStatusOrderByAppointmentDateTimeAsc(String doctorId, String status);
     long countByDoctorIdAndStatus(String doctorId, String status);
 
     // Count total appointments for doctor
@@ -42,4 +43,6 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
     // Find unique patient IDs for a doctor
     @Query(value = "{ 'doctorId': ?0 }", fields = "{ 'patientId': 1 }")
     List<Appointment> findDistinctPatientsByDoctorId(String doctorId);
+
+
 }

@@ -45,7 +45,9 @@ public class Appointment {
     private String appointmentType;   // CONSULTATION, FOLLOW_UP, EMERGENCY
     private String reason;
     private String notes;
-
+    private String doctorResponse; // "ACCEPTED" or "REJECTED"
+    private String doctorResponseReason; // Reason if rejected
+    private LocalDateTime respondedAt;
     // Status Management
     @Indexed
     @Builder.Default

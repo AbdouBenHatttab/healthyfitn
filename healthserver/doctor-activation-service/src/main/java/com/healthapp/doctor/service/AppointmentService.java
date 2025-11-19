@@ -56,7 +56,7 @@
                     .appointmentType(request.getAppointmentType())
                     .reason(request.getReason())
                     .notes(request.getNotes())
-                    .status("SCHEDULED")
+                    .status("PENDING")
                     .build();
 
             Appointment saved = appointmentRepository.save(appointment);
@@ -178,6 +178,7 @@
             long upcoming = appointmentRepository.countByDoctorIdAndStatus(doctorId, "SCHEDULED");
             long completed = appointmentRepository.countByDoctorIdAndStatus(doctorId, "COMPLETED");
             long cancelled = appointmentRepository.countByDoctorIdAndStatus(doctorId, "CANCELLED");
+            long pending = appointmentRepository.countByDoctorIdAndStatus(doctorId, "PENDING");
 
             // This week
             LocalDateTime startOfWeek = now.with(LocalDate.now().minusDays(now.getDayOfWeek().getValue() - 1))
@@ -212,6 +213,7 @@
                     .thisWeekAppointments(weekAppts.size())
                     .thisMonthAppointments(monthAppts.size())
                     .generatedAt(LocalDateTime.now())
+                    .pendingAppointments((int) pending)
                     .build();
         }
 
@@ -295,4 +297,85 @@
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
         }
+
+        /**
+         * Get pending appointments for doctor (need response)
+         */
+        public List<AppointmentResponse> getPendingAppointments(String doctorId) {
+            log.info("📋 Fetching pending appointments for doctor: {}", doctorId);
+
+            List<Appointment> appointments = appointmentRepository
+                    .findByDoctorIdAndStatusOrderByAppointmentDateTimeAsc(doctorId, "PENDING");
+
+            return appointments.stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
+
+        /**
+         * Doctor accepts an appointment
+         */
+        @Transactional
+        public AppointmentResponse acceptAppointment(String appointmentId, String doctorId) {
+            log.info("✅ Doctor {} accepting appointment {}", doctorId, appointmentId);
+
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+            if (!appointment.getDoctorId().equals(doctorId)) {
+                throw new RuntimeException("Unauthorized: Not your appointment");
+            }
+
+            if (!"PENDING".equals(appointment.getStatus())) {
+                throw new RuntimeException("Appointment is not pending");
+            }
+
+            appointment.setStatus("SCHEDULED");
+            appointment.setDoctorResponse("ACCEPTED");
+            appointment.setRespondedAt(LocalDateTime.now());
+
+            Appointment saved = appointmentRepository.save(appointment);
+
+            // TODO: Send notification to patient
+            log.info("✅ Appointment {} accepted by doctor {}", appointmentId, doctorId);
+
+            return mapToResponse(saved);
+        }
+
+        /**
+         * Doctor rejects an appointment
+         */
+        @Transactional
+        public AppointmentResponse rejectAppointment(
+                String appointmentId,
+                String doctorId,
+                String reason,
+                String availableHours) {
+
+            log.info("❌ Doctor {} rejecting appointment {}", doctorId, appointmentId);
+
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+            if (!appointment.getDoctorId().equals(doctorId)) {
+                throw new RuntimeException("Unauthorized: Not your appointment");
+            }
+
+            if (!"PENDING".equals(appointment.getStatus())) {
+                throw new RuntimeException("Appointment is not pending");
+            }
+
+            appointment.setStatus("REJECTED");
+            appointment.setDoctorResponse("REJECTED");
+            appointment.setDoctorResponseReason(reason);
+            appointment.setRespondedAt(LocalDateTime.now());
+
+            Appointment saved = appointmentRepository.save(appointment);
+
+            // TODO: Send notification to patient with reason and available hours
+            log.info("❌ Appointment {} rejected. Reason: {}", appointmentId, reason);
+
+            return mapToResponse(saved);
+        }
+
     }
