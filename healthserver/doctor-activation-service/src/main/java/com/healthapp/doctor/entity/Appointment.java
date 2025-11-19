@@ -28,14 +28,14 @@ public class Appointment {
 
     // Patient Information
     @Indexed
-    private String patientId;        // User ID from user-service
+    private String patientId;
     private String patientEmail;
     private String patientName;
     private String patientPhone;
 
     // Doctor Information
     @Indexed
-    private String doctorId;         // Doctor ID from doctor-service
+    private String doctorId;
     private String doctorEmail;
     private String doctorName;
     private String specialization;
@@ -46,13 +46,24 @@ public class Appointment {
     private String appointmentType;   // CONSULTATION, FOLLOW_UP, EMERGENCY
     private String reason;
     private String notes;
+
+    // ✅ Doctor Response Fields (consolidated - removed duplicates)
+    @Field("doctor_response")
     private String doctorResponse; // "ACCEPTED" or "REJECTED"
-    private String doctorResponseReason; // Reason if rejected
-    private LocalDateTime respondedAt;
+
+    @Field("doctor_response_reason")
+    private String doctorResponseReason; // Why rejected
+
+    @Field("available_hours_suggestion")
+    private String availableHoursSuggestion; // e.g., "8:00 AM - 4:00 PM"
+
+    @Field("responded_at")
+    private LocalDateTime respondedAt; // When doctor responded
+
     // Status Management
     @Indexed
     @Builder.Default
-    private String status = "SCHEDULED"; // SCHEDULED, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW
+    private String status = "PENDING"; // PENDING, SCHEDULED, CONFIRMED, COMPLETED, CANCELLED, REJECTED, NO_SHOW
 
     private String cancellationReason;
     private LocalDateTime cancelledAt;
@@ -81,18 +92,11 @@ public class Appointment {
     }
 
     public boolean canBeCancelled() {
-        return "SCHEDULED".equals(status) && appointmentDateTime.isAfter(LocalDateTime.now());
+        return ("SCHEDULED".equals(status) || "PENDING".equals(status))
+                && appointmentDateTime.isAfter(LocalDateTime.now());
     }
 
-    @Field("doctor_response")
-    private String doctorResponse; // "ACCEPTED" or "REJECTED"
-
-    @Field("doctor_response_reason")
-    private String doctorResponseReason; // Why rejected
-
-    @Field("available_hours_suggestion")
-    private String availableHoursSuggestion; // e.g., "8:00 AM - 4:00 PM"
-
-    @Field("responded_at")
-    private LocalDateTime respondedAt; // When doctor responded
+    public boolean isPending() {
+        return "PENDING".equals(status);
+    }
 }
