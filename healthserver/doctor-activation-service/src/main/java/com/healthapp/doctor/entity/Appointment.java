@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
@@ -82,4 +83,16 @@ public class Appointment {
     public boolean canBeCancelled() {
         return "SCHEDULED".equals(status) && appointmentDateTime.isAfter(LocalDateTime.now());
     }
+
+    @Field("doctor_response")
+    private String doctorResponse; // "ACCEPTED" or "REJECTED"
+
+    @Field("doctor_response_reason")
+    private String doctorResponseReason; // Why rejected
+
+    @Field("available_hours_suggestion")
+    private String availableHoursSuggestion; // e.g., "8:00 AM - 4:00 PM"
+
+    @Field("responded_at")
+    private LocalDateTime respondedAt; // When doctor responded
 }

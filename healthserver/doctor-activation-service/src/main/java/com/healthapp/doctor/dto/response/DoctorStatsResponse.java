@@ -21,7 +21,7 @@ public class DoctorStatsResponse {
     private Integer todayAppointments;
     private Integer todayCompleted;
     private Integer todayPending;
-
+    private Integer pendingAppointments;
     // Overall Stats
     private Integer totalAppointments;
     private Integer totalPatients;

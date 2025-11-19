@@ -285,20 +285,6 @@
                     .build();
         }
         /**
-         * PATIENT: Get appointments for a patient
-         */
-        public List<AppointmentResponse> getPatientAppointments(String patientId) {
-            log.info("Fetching appointments for patient: {}", patientId);
-
-            List<Appointment> appointments = appointmentRepository
-                    .findByPatientIdOrderByAppointmentDateTimeDesc(patientId);
-
-            return appointments.stream()
-                    .map(this::mapToResponse)
-                    .collect(Collectors.toList());
-        }
-
-        /**
          * Get pending appointments for doctor (need response)
          */
         public List<AppointmentResponse> getPendingAppointments(String doctorId) {
@@ -336,7 +322,6 @@
 
             Appointment saved = appointmentRepository.save(appointment);
 
-            // TODO: Send notification to patient
             log.info("✅ Appointment {} accepted by doctor {}", appointmentId, doctorId);
 
             return mapToResponse(saved);
@@ -368,11 +353,11 @@
             appointment.setStatus("REJECTED");
             appointment.setDoctorResponse("REJECTED");
             appointment.setDoctorResponseReason(reason);
+            appointment.setAvailableHoursSuggestion(availableHours);
             appointment.setRespondedAt(LocalDateTime.now());
 
             Appointment saved = appointmentRepository.save(appointment);
 
-            // TODO: Send notification to patient with reason and available hours
             log.info("❌ Appointment {} rejected. Reason: {}", appointmentId, reason);
 
             return mapToResponse(saved);
