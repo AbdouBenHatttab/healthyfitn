@@ -89,6 +89,7 @@ dependencies {
     // OkHttp - Version récente
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.12")
     implementation(libs.androidx.activity)
+    implementation(libs.volley)
 
     // Desugaring pour java.time sur API < 26
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
@@ -115,4 +116,8 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation ("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

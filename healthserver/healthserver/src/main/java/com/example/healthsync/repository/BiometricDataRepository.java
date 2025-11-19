@@ -10,8 +10,11 @@ import java.util.Optional;
 @Repository
 public interface BiometricDataRepository extends MongoRepository<BiometricData, String> {
 
-    List<BiometricData> findByUserId(String userId);
-    Optional<BiometricData> findByUserIdAndDate(String userId, String date);
-    List<BiometricData> findByUserIdOrderByReceivedAtDesc(String userId);
-    long countByUserId(String userId);
+    List<BiometricData> findByEmail(String email);
+
+    Optional<BiometricData> findByEmailAndDate(String email, String date);
+
+    List<BiometricData> findByEmailOrderByReceivedAtDesc(String email);
+
+    long countByEmail(String email);
 }

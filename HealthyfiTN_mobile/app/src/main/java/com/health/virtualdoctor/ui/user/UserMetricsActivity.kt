@@ -1,10 +1,15 @@
-package com.health.virtualdoctor.ui.user;
+package com.health.virtualdoctor.ui.user
 
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.RotateAnimation
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -16,9 +21,11 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.*
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
-import com.health.virtualdoctor.ui.auth.LoginActivity
+import com.google.android.material.button.MaterialButton
+import com.health.virtualdoctor.ui.chatBot.ChatBotActivity
 import com.health.virtualdoctor.ui.consultation.ConsultationActivity
 import com.health.virtualdoctor.ui.meal.MealAnalysisActivity
+import com.health.virtualdoctor.ui.utils.TokenManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,8 +42,8 @@ import kotlin.math.roundToInt
 import java.util.Locale
 
 class UserMetricsActivity : ComponentActivity() {
+    private lateinit var cardChatbot: androidx.cardview.widget.CardView
     private lateinit var cardAnalyze: androidx.cardview.widget.CardView
-    private lateinit var cardConsult: androidx.cardview.widget.CardView
 
     private lateinit var healthConnectClient: HealthConnectClient
     private lateinit var requestPermissions: ActivityResultLauncher<Set<String>>
@@ -64,6 +71,20 @@ class UserMetricsActivity : ComponentActivity() {
     private lateinit var tvHeight: android.widget.TextView
     private lateinit var dataSummaryContainer: android.widget.LinearLayout
     private lateinit var btnRefresh: android.widget.Button
+    private lateinit var btnAppointments: MaterialButton
+    private lateinit var tokenManager: TokenManager
+
+    // 🆕 Dropdown views
+    private lateinit var dropdownHeader: LinearLayout
+    private lateinit var dropdownContent: LinearLayout
+    private lateinit var dropdownIcon: ImageView
+    private var isDropdownExpanded = false
+
+    // 🆕 Advanced feature buttons
+    private lateinit var btnHealthAnalysis: MaterialButton
+    private lateinit var btnAlerts: MaterialButton
+    private lateinit var btnTrends: MaterialButton
+    private lateinit var btnGoals: MaterialButton
 
 
     private val permissions = setOf(
@@ -97,6 +118,7 @@ class UserMetricsActivity : ComponentActivity() {
             navigateToWelcome()
         }
         setupProfileButton()
+        tokenManager = TokenManager(this)
 
         // Initialiser les vues
         tvStatus = findViewById(R.id.tvStatus)
@@ -115,18 +137,55 @@ class UserMetricsActivity : ComponentActivity() {
         tvHeight = findViewById(R.id.tvHeight)
         dataSummaryContainer = findViewById(R.id.dataSummaryContainer)
         btnRefresh = findViewById(R.id.btnRefresh)
+        btnAppointments = findViewById(R.id.btnAppointments)
+
+        // 🆕 Dropdown views
+        dropdownHeader = findViewById(R.id.dropdownHeader)
+        dropdownContent = findViewById(R.id.dropdownContent)
+        dropdownIcon = findViewById(R.id.dropdownIcon)
+
+        // 🆕 Advanced feature buttons
+        btnHealthAnalysis = findViewById(R.id.btnHealthAnalysis)
+        btnAlerts = findViewById(R.id.btnAlerts)
+        btnTrends = findViewById(R.id.btnTrends)
+        btnGoals = findViewById(R.id.btnGoals)
 
         btnRefresh.setOnClickListener {
             checkPermissions()
         }
+        btnAppointments.setOnClickListener {
+            navigateToAppointments()
+        }
         // Initialiser les boutons
+        cardChatbot = findViewById(R.id.cardChatbot)
         cardAnalyze = findViewById(R.id.cardAnalyze)
-        cardConsult = findViewById(R.id.cardConsult)
         avatarContainer = findViewById(R.id.avatarContainer)
         humanBodyRenderer = HumanBodyRenderer(this)
 
+        // 🆕 Setup dropdown
+        setupDropdown()
+
+        // 🆕 Setup advanced feature buttons
+        setupAdvancedFeatureButtons()
+
 
 // Click listeners avec animations
+        cardChatbot.setOnClickListener {
+            it.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction {
+                    it.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(100)
+                        .withEndAction {
+                            navigateToChatBot()
+                        }
+                }
+        }
+
         cardAnalyze.setOnClickListener {
             it.animate()
                 .scaleX(0.95f)
@@ -139,22 +198,6 @@ class UserMetricsActivity : ComponentActivity() {
                         .setDuration(100)
                         .withEndAction {
                             navigateToMealAnalysis()
-                        }
-                }
-        }
-
-        cardConsult.setOnClickListener {
-            it.animate()
-                .scaleX(0.95f)
-                .scaleY(0.95f)
-                .setDuration(100)
-                .withEndAction {
-                    it.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .setDuration(100)
-                        .withEndAction {
-                            navigateToConsultation()
                         }
                 }
         }
@@ -253,6 +296,148 @@ class UserMetricsActivity : ComponentActivity() {
 
         checkPermissions()
     }
+    // 🆕 Setup dropdown functionality
+    private fun setupDropdown() {
+        dropdownHeader.setOnClickListener {
+            toggleDropdown()
+        }
+    }
+    // 🆕 Toggle dropdown with animation
+    private fun toggleDropdown() {
+        isDropdownExpanded = !isDropdownExpanded
+
+        if (isDropdownExpanded) {
+            // Expand
+            dropdownContent.visibility = View.VISIBLE
+            animateDropdownIcon(0f, 180f)
+        } else {
+            // Collapse
+            dropdownContent.visibility = View.GONE
+            animateDropdownIcon(180f, 0f)
+        }
+    }
+    // 🆕 Animate dropdown icon rotation
+    private fun animateDropdownIcon(fromDegrees: Float, toDegrees: Float) {
+        val rotate = RotateAnimation(
+            fromDegrees, toDegrees,
+            Animation.RELATIVE_TO_SELF, 0.5f,
+            Animation.RELATIVE_TO_SELF, 0.5f
+        )
+        rotate.duration = 300
+        rotate.fillAfter = true
+        dropdownIcon.startAnimation(rotate)
+    }
+
+    // 🆕 Setup advanced feature buttons
+    private fun setupAdvancedFeatureButtons() {
+        // Health Analysis Button
+        btnHealthAnalysis.setOnClickListener {
+            navigateToHealthAnalysis()
+        }
+
+        // Alerts Button
+        btnAlerts.setOnClickListener {
+            navigateToAlerts()
+        }
+
+        // Trends Button
+        btnTrends.setOnClickListener {
+            navigateToTrends()
+        }
+
+        // Goals Button
+        btnGoals.setOnClickListener {
+            navigateToGoals()
+        }
+    }
+    // 🆕 Navigation vers Health Analysis
+    private fun navigateToHealthAnalysis() {
+        try {
+            // Créer le JSON à partir des données actuelles de l'UI
+            val biometricJson = JSONObject().apply {
+                // Récupérer depuis les TextViews
+                val steps = tvSteps.text.toString().toIntOrNull() ?: 0
+                val heartRate = tvHeartRate.text.toString().replace(" bpm", "").toIntOrNull() ?: 70
+                val sleepHours = tvSleep.text.toString().replace(" h", "").toDoubleOrNull() ?: 7.0
+                val hydration = tvHydration.text.toString().replace(" L", "").toDoubleOrNull() ?: 2.0
+                val distance = tvDistance.text.toString().replace(" km", "").toDoubleOrNull() ?: 0.0
+
+                put("totalSteps", steps)
+                put("avgHeartRate", heartRate)
+                put("minHeartRate", heartRate - 10) // Estimation
+                put("maxHeartRate", heartRate + 20) // Estimation
+                put("totalDistanceKm", distance)
+                put("totalSleepHours", sleepHours)
+                put("totalHydrationLiters", hydration)
+                put("stressLevel", tvStress.text.toString())
+                put("stressScore", calculateStressScoreFromLevel(tvStress.text.toString()))
+
+                // Ajouter tableaux vides pour l'instant
+                put("oxygenSaturation", JSONArray())
+                put("bodyTemperature", JSONArray())
+                put("bloodPressure", JSONArray())
+                put("weight", JSONArray())
+                put("height", JSONArray())
+                put("exercise", JSONArray())
+            }
+
+            val intent = Intent(this, HealthAnalysisActivity::class.java)
+            intent.putExtra("biometric_data", biometricJson.toString())
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
+
+    private fun calculateStressScoreFromLevel(level: String): Int {
+        return when (level.lowercase()) {
+            "très élevé" -> 80
+            "élevé" -> 60
+            "modéré" -> 40
+            "faible" -> 20
+            else -> 50
+        }
+    }
+
+    // 🆕 Navigation vers Alerts
+    private fun navigateToAlerts() {
+        try {
+            val intent = Intent(this, MedicalAlertsActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Page Alertes Médicales en développement", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
+
+    // 🆕 Navigation vers Trends
+    private fun navigateToTrends() {
+        try {
+            val intent = Intent(this, HealthTrendsActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Page Tendances en développement", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
+
+    // 🆕 Navigation vers Goals
+    private fun navigateToGoals() {
+        try {
+            val intent = Intent(this, HealthGoalsActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Page Objectifs en développement", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
+
 
     private fun checkPermissions() {
         lifecycleScope.launch {
@@ -377,14 +562,26 @@ class UserMetricsActivity : ComponentActivity() {
             else -> "Activité ($type)"
         }
     }
+    private fun navigateToChatBot() {
+        try {
+            val intent = Intent(this, ChatBotActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun navigateToMealAnalysis() {
         val intent = Intent(this, MealAnalysisActivity::class.java)
         startActivity(intent)
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
     }
 
-    private fun navigateToConsultation() {
-        val intent = Intent(this, ConsultationActivity::class.java)
+    
+    private fun navigateToAppointments() {
+        val intent = Intent(this, PatientAppointmentsActivity::class.java)
         startActivity(intent)
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
     }
@@ -392,6 +589,8 @@ class UserMetricsActivity : ComponentActivity() {
     private fun readAndSendData() {
         lifecycleScope.launch {
             try {
+                Toast.makeText(this@UserMetricsActivity, "🔄 Lecture des données de 7 jours...", Toast.LENGTH_SHORT).show()
+
                 val json = JSONObject()
                 val today = LocalDate.now()
                 val daysData = JSONArray()
@@ -404,8 +603,6 @@ class UserMetricsActivity : ComponentActivity() {
 
                     val dayJson = JSONObject()
                     dayJson.put("date", targetDate.toString())
-
-                    Toast.makeText(this@UserMetricsActivity, "🔄 Lecture du $targetDate...", Toast.LENGTH_SHORT).show()
 
                     // 1️⃣ Steps
                     val stepsRecords = healthConnectClient.readRecords(
@@ -1216,11 +1413,25 @@ class UserMetricsActivity : ComponentActivity() {
                 Toast.makeText(this@UserMetricsActivity, "🔄 Connexion au serveur...", Toast.LENGTH_SHORT).show()
 
                 val result = withContext(Dispatchers.IO) {
-                    val serverUrl = "https://pleuropneumonic-ferromagnetic-conrad.ngrok-free.dev/fetch"
+                    val serverUrl = "https://squad-six-bon-labor.trycloudflare.com/fetch"
 
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@UserMetricsActivity, "📡 POST vers: $serverUrl", Toast.LENGTH_SHORT).show()
-                    }
+                    // 👉 Récupérer l'email des SharedPreferences
+                    val userEmail = tokenManager.getUserEmail() ?: "unknown@noemail.com"
+
+                    // ✅ Log au lieu de Toast
+                    Log.d("HealthSync", "📡 POST vers: $userEmail")
+
+                    // 👉 Modifier ton JSON pour y injecter l'email
+                    val jsonObject = JSONObject(jsonData)
+                    jsonObject.put("email", userEmail)
+
+                    // ❌ RETIRER ce withContext(Dispatchers.Main) imbriqué
+                    // withContext(Dispatchers.Main) {
+                    //     Toast.makeText(this@UserMetricsActivity, "📡 POST vers: $serverUrl", Toast.LENGTH_SHORT).show()
+                    // }
+
+                    // ✅ Log au lieu de Toast
+                    Log.d("HealthSync", "📡 POST vers: $serverUrl")
 
                     val client = OkHttpClient.Builder()
                         .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -1228,7 +1439,8 @@ class UserMetricsActivity : ComponentActivity() {
                         .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                         .build()
 
-                    val requestBody = jsonData.toRequestBody("application/json".toMediaType())
+                    val requestBody = jsonObject.toString().toRequestBody("application/json".toMediaType())
+
                     val request = Request.Builder()
                         .url(serverUrl)
                         .post(requestBody)
@@ -1247,6 +1459,7 @@ class UserMetricsActivity : ComponentActivity() {
                     Pair(responseCode, responseBody)
                 }
 
+                // ✅ Ici on est de retour sur le thread principal (UI thread)
                 val (responseCode, responseBody) = result
 
                 if (responseCode in 200..299) {
@@ -1273,6 +1486,7 @@ class UserMetricsActivity : ComponentActivity() {
             }
         }
     }
+
     // ⭐ NOUVELLE FONCTION : Configuration du bouton profil
     private fun setupProfileButton() {
         btnProfile.setOnClickListener {

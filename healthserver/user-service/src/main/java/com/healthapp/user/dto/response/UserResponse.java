@@ -26,6 +26,7 @@ public class UserResponse {
     private String fullName;
     private LocalDate birthDate;
     private Gender gender;
+    private Double score;
     private String phoneNumber;
     private String profilePictureUrl;
     private Set<UserRole> roles;

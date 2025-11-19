@@ -59,4 +59,23 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Password changed", null));
     }
 
+    @PutMapping("/{email}/score")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserScore(
+            @PathVariable String email,
+            @RequestBody Map<String, Double> request) {
+
+        log.info("Updating score for user {}", email);
+
+        if (!request.containsKey("score")) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Score is required"));
+        }
+
+        Double score = request.get("score");
+        UserResponse updated = userService.updateUserScore(email, score);
+
+        return ResponseEntity.ok(ApiResponse.success("Score updated", updated));
+    }
+
+
 }
