@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F4F8">
+
+    <!-- App Bar avec dégradé -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/gradient_goals"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back"
+                android:contentDescription="Retour"
+                app:tint="@android:color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎯 Objectifs Santé"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp" />
+
+        </androidx.appcompat.widget.Toolbar>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Contenu principal -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- 🎯 Configuration des objectifs -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="8dp"
+                app:cardBackgroundColor="@android:color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎯 Configurez vos objectifs"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#6A1B9A"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Sélection des objectifs -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Choisissez vos objectifs"
+                        android:textSize="14sp"
+                        android:textColor="#5F6368"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupGoals"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:chipSpacingHorizontal="8dp">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipActivity"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🚶 Activité"
+                            android:checked="true"
+                            app:chipBackgroundColor="@color/chip_goal_selector"
+                            android:textColor="@color/chip_text_goal_selector" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipSleep"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💤 Sommeil"
+                            android:checked="true"
+                            app:chipBackgroundColor="@color/chip_goal_selector"
+                            android:textColor="@color/chip_text_goal_selector" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipHydration"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💧 Hydratation"
+                            android:checked="true"
+                            app:chipBackgroundColor="@color/chip_goal_selector"
+                            android:textColor="@color/chip_text_goal_selector" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipStress"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🧠 Stress"
+                            android:checked="true"
+                            app:chipBackgroundColor="@color/chip_goal_selector"
+                            android:textColor="@color/chip_text_goal_selector" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipCardio"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="❤️ Cardio"
+                            android:checked="true"
+                            app:chipBackgroundColor="@color/chip_goal_selector"
+                            android:textColor="@color/chip_text_goal_selector" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <!-- Délai -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⏱️ Délai pour atteindre vos objectifs"
+                        android:textSize="14sp"
+                        android:textColor="#5F6368"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderTimeframe"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:valueFrom="0"
+                        android:valueTo="84"
+                        android:value="14"
+                        android:stepSize="7"
+                        app:labelBehavior="floating"
+                        app:thumbColor="#6A1B9A"
+                        app:trackColorActive="#6A1B9A"
+                        app:trackColorInactive="#E1BEE7" />
+
+                    <TextView
+                        android:id="@+id/tvTimeframeValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="14 jours"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#6A1B9A"
+                        android:layout_gravity="center"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Difficulté -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎚️ Niveau de difficulté"
+                        android:textSize="14sp"
+                        android:textColor="#5F6368"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupDifficulty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipEasy"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="😊 Facile (+10%)"
+                            app:chipBackgroundColor="@color/chip_difficulty_selector"
+                            android:textColor="@color/chip_text_difficulty_selector" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipModerate"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💪 Modéré (+25%)"
+                            android:checked="true"
+                            app:chipBackgroundColor="@color/chip_difficulty_selector"
+                            android:textColor="@color/chip_text_difficulty_selector" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipChallenging"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔥 Difficile (+50%)"
+                            app:chipBackgroundColor="@color/chip_difficulty_selector"
+                            android:textColor="@color/chip_text_difficulty_selector" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <!-- Bouton Générer -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGenerateGoals"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:text="✨ Générer mes objectifs"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="16dp"
+                        app:backgroundTint="#6A1B9A"
+                        app:icon="@drawable/ic_goal"
+                        app:iconGravity="textStart"
+                        app:iconSize="24dp" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- ProgressBar -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:indeterminate="true"
+                android:indeterminateTint="#6A1B9A" />
+
+            <!-- Container de résultats -->
+            <LinearLayout
+                android:id="@+id/resultsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- 📊 Résumé global -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="24dp"
+                        android:background="@drawable/gradient_goals_light">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎯 Votre Plan Personnalisé"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#6A1B9A"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- Score actuel vs projeté -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center"
+                            android:layout_marginBottom="16dp">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Score actuel"
+                                    android:textSize="12sp"
+                                    android:textColor="#78909C" />
+
+                                <TextView
+                                    android:id="@+id/tvCurrentScore"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textSize="32sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FF6F00"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="→"
+                                android:textSize="32sp"
+                                android:textColor="#6A1B9A"
+                                android:layout_marginStart="16dp"
+                                android:layout_marginEnd="16dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Score projeté"
+                                    android:textSize="12sp"
+                                    android:textColor="#78909C" />
+
+                                <TextView
+                                    android:id="@+id/tvProjectedScore"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textSize="32sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#4CAF50"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Stats -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="12dp"
+                                android:background="@drawable/bg_rounded_white">
+
+                                <TextView
+                                    android:id="@+id/tvTotalGoals"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#6A1B9A" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Objectifs"
+                                    android:textSize="12sp"
+                                    android:textColor="#78909C" />
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="12dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="8dp"
+                                android:background="@drawable/bg_rounded_white">
+
+                                <TextView
+                                    android:id="@+id/tvTimeframe"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#6A1B9A" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Jours"
+                                    android:textSize="12sp"
+                                    android:textColor="#78909C" />
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="12dp"
+                                android:background="@drawable/bg_rounded_white">
+
+                                <TextView
+                                    android:id="@+id/tvImprovement"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#4CAF50" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Points"
+                                    android:textSize="12sp"
+                                    android:textColor="#78909C" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <!-- 🎯 Liste des objectifs -->
+                <LinearLayout
+                    android:id="@+id/goalsListContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+            <!-- Message d'erreur -->
+            <TextView
+                android:id="@+id/tvError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Erreur de chargement"
+                android:textSize="16sp"
+                android:textColor="#D32F2F"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

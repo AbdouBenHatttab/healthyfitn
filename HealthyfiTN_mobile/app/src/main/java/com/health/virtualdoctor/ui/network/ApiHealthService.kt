@@ -126,11 +126,11 @@ interface ApiHealthService {
      * Objectifs personnalisés
      * POST /personalized-goals/{email}
      */
-    @POST("personalized-goals/{user_id}")
+    @POST("personalized-goals/{email}")
     suspend fun getPersonalizedGoals(
-        @Path("user_id") email: String,
+        @Path("email") email: String,
         @Body preferences: Any
-    ): Response<Any>
+    ): Response<PersonalizedGoalsResponse>
 
     /**
      * Résumé complet
