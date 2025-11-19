@@ -165,6 +165,34 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: FCMTokenRequest
     ): Response<Map<String, String>>
+
+
+    /**
+     * Get pending appointments (need doctor response)
+     */
+    @GET("api/doctors/appointments/pending")
+    suspend fun getPendingAppointments(
+        @Header("Authorization") token: String
+    ): Response<List<AppointmentResponse>>
+
+    /**
+     * Accept a pending appointment
+     */
+    @POST("api/doctors/appointments/{appointmentId}/accept")
+    suspend fun acceptAppointment(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String
+    ): Response<AppointmentResponse>
+
+    /**
+     * Reject a pending appointment with reason
+     */
+    @POST("api/doctors/appointments/{appointmentId}/reject")
+    suspend fun rejectAppointment(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String,
+        @Body request: Map<String, String>
+    ): Response<AppointmentResponse>
     // ==========================================
     // APPOINTMENT SERVICE
     // ==========================================
