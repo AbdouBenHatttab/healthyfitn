@@ -16,6 +16,8 @@ import com.health.virtualdoctor.ui.utils.TokenManager
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import android.view.LayoutInflater
+import com.health.virtualdoctor.ui.data.models.AppointmentResponseRequest
 
 class DoctorAppointmentsActivity : AppCompatActivity() {
 
@@ -67,7 +69,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
     private fun handleAppointmentAction(appointment: AppointmentResponse, action: String) {
         when (action) {
             "accept" -> acceptAppointment(appointment)
-            "reject" -> rejectAppointment(appointment)
+            "reject" -> showRejectAppointmentDialog(appointment)
             "view_details" -> showAppointmentDetails(appointment)
             "complete" -> showCompleteAppointmentDialog(appointment)
             "cancel" -> showCancelAppointmentDialog(appointment)
@@ -89,16 +91,99 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
         }
     }
 
-    private fun rejectAppointment(appointment: AppointmentResponse) {
+
+    private fun showRejectAppointmentDialog(appointment: AppointmentResponse) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_reject_appointment, null)
+
+        // Set patient name
+        val tvPatientName = dialogView.findViewById<TextView>(R.id.tvPatientNameReject)
+        tvPatientName.text = appointment.patientName
+
+        val etRejectReason = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etRejectReason)
+        val etAvailableHours = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etAvailableHours)
+        val btnCancelReject = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancelReject)
+        val btnConfirmReject = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnConfirmReject)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        btnCancelReject.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnConfirmReject.setOnClickListener {
+            val reason = etRejectReason.text.toString().trim()
+            val availableHoursText = etAvailableHours.text.toString().trim()
+
+            if (reason.isEmpty()) {
+                etRejectReason.error = "La raison du refus est obligatoire"
+                return@setOnClickListener
+            }
+
+            // Convert available hours text to list if provided
+            val availableHours = if (availableHoursText.isNotEmpty()) {
+                listOf(availableHoursText)
+            } else {
+                null
+            }
+
+            rejectAppointmentWithReason(appointment, reason, availableHours)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+    private fun rejectAppointmentWithReason(
+        appointment: AppointmentResponse,
+        reason: String,
+        availableHours: List<String>? = null  // Keep parameter as List for now, we'll handle conversion
+    ) {
         lifecycleScope.launch {
             try {
+                progressBar.visibility = View.VISIBLE
                 val token = "Bearer ${tokenManager.getAccessToken()}"
+
+                // Convert List<String> to String (join with comma if multiple)
+                val availableHoursString = if (availableHours != null && availableHours.isNotEmpty()) {
+                    availableHours.joinToString(", ")
+                } else {
+                    null
+                }
+
+                val rejectRequest = AppointmentResponseRequest(
+                    reason = reason,
+                    availableHours = availableHoursString  // Send as String
+                )
+
+                Log.d("REJECT_DEBUG", "Sending request: $rejectRequest")
+
                 val response = RetrofitClient.getDoctorService(this@DoctorAppointmentsActivity)
-                    .rejectAppointment(token, appointment.id)
-                showResponseToast(response.isSuccessful, "Rendez-vous rejeté", response.code())
-                if (response.isSuccessful) loadAppointments()
+                    .rejectAppointment(token, appointment.id, rejectRequest)
+
+                if (response.isSuccessful) {
+                    Log.d("REJECT_DEBUG", "✅ SUCCESS: ${response.body()}")
+                    Toast.makeText(
+                        this@DoctorAppointmentsActivity,
+                        "✅ Rendez-vous refusé avec succès",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    loadAppointments()
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "No error body"
+                    Log.e("REJECT_DEBUG", "❌ ERROR ${response.code()}: $errorBody")
+                    Toast.makeText(
+                        this@DoctorAppointmentsActivity,
+                        "❌ Erreur ${response.code()}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             } catch (e: Exception) {
+                Log.e("REJECT_DEBUG", "🚨 EXCEPTION: ${e.message}", e)
                 showErrorToast(e)
+            } finally {
+                progressBar.visibility = View.GONE
             }
         }
     }

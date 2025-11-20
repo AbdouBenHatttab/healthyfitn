@@ -190,7 +190,8 @@ interface ApiService {
     @POST("api/doctors/appointments/{appointmentId}/reject")
     suspend fun rejectAppointment(
         @Header("Authorization") token: String,
-        @Path("appointmentId") appointmentId: String
+        @Path("appointmentId") appointmentId: String,
+        @Body request: AppointmentResponseRequest  // Add request body
     ): Response<AppointmentResponse>
 
     // ==========================================
@@ -397,4 +398,9 @@ data class NutritionInfo(
 data class Alternative(
     val name: String,
     val confidence: Double
+)
+
+data class AppointmentResponseRequest(
+    val reason: String,
+    val availableHours: String? = null
 )
