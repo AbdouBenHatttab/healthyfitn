@@ -61,7 +61,7 @@
                 android:id="@+id/tvPatientNameReject"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="John Doe"
+                android:text=""
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
@@ -70,38 +70,13 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Warning Notice -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="#FFEBEE"
-        android:padding="12dp"
-        android:layout_marginBottom="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ℹ️"
-            android:textSize="20sp"
-            android:layout_marginEnd="10dp" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Le patient sera notifié de votre refus par email"
-            android:textSize="12sp"
-            android:textColor="@android:color/holo_red_dark"
-            android:fontFamily="sans-serif" />
-    </LinearLayout>
 
     <!-- Rejection Reason -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="📝 Raison du refus *"
+        android:hint=""
         android:layout_marginBottom="16dp"
         app:counterEnabled="true"
         app:counterMaxLength="200"
@@ -124,7 +99,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="🕐 Heures disponibles (optionnel)"
+        android:hint=""
         android:layout_marginBottom="20dp"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
