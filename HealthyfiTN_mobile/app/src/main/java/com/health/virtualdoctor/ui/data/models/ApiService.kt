@@ -190,9 +190,9 @@ interface ApiService {
     @POST("api/doctors/appointments/{appointmentId}/reject")
     suspend fun rejectAppointment(
         @Header("Authorization") token: String,
-        @Path("appointmentId") appointmentId: String,
-        @Body request: Map<String, String>
+        @Path("appointmentId") appointmentId: String
     ): Response<AppointmentResponse>
+
     // ==========================================
     // APPOINTMENT SERVICE
     // ==========================================
@@ -246,7 +246,7 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("appointmentId") appointmentId: String,
         @Body request: Map<String, String>
-    ): Response<Map<String, String>>
+    ): Response<AppointmentResponse> // change Map to AppointmentResponse
     // ==========================================
     // NUTRITION SERVICE
     // ==========================================

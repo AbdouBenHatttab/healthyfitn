@@ -181,69 +181,112 @@
             </LinearLayout>
         </LinearLayout>
 
+
         <!-- Action Buttons (Visible only for SCHEDULED) -->
         <LinearLayout
             android:id="@+id/llActionButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:layout_marginTop="12dp"
             android:visibility="visible">
 
-            <!-- View Details Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnViewDetails"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:text="👁️ Détails"
-                android:textSize="13sp"
-                android:textColor="@color/primary"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:layout_marginEnd="6dp"
-                app:cornerRadius="10dp"
-                app:backgroundTint="@android:color/transparent"
-                app:strokeColor="@color/primary"
-                app:strokeWidth="1dp"
-                app:elevation="0dp"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
+            <!-- Row 1: Accept + Reject -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
 
-            <!-- Complete Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnComplete"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:text="✅ Terminer"
-                android:textSize="13sp"
-                android:textColor="@color/white"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:layout_marginStart="3dp"
-                android:layout_marginEnd="3dp"
-                app:cornerRadius="10dp"
-                app:backgroundTint="@android:color/holo_green_light"
-                app:elevation="2dp"
-                style="@style/Widget.Material3.Button" />
+                <!-- Accept Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAccept"
+                    android:visibility="gone"
 
-            <!-- Cancel Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCancelAppt"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:text="❌ Annuler"
-                android:textSize="13sp"
-                android:textColor="@color/white"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:layout_marginStart="6dp"
-                app:cornerRadius="10dp"
-                app:backgroundTint="@android:color/holo_red_dark"
-                app:elevation="2dp"
-                style="@style/Widget.Material3.Button" />
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="✔ Accepter"
+                    android:textSize="13sp"
+                    android:textColor="@color/white"
+                    android:layout_marginEnd="6dp"
+                    app:cornerRadius="10dp"
+                    app:backgroundTint="@android:color/holo_green_dark"
+                    style="@style/Widget.Material3.Button" />
+
+                <!-- Reject Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnReject"
+                    android:visibility="gone"
+
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="❌ Rejeter"
+                    android:textSize="13sp"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="6dp"
+                    app:cornerRadius="10dp"
+                    app:backgroundTint="@android:color/holo_red_dark"
+                    style="@style/Widget.Material3.Button" />
+            </LinearLayout>
+
+            <!-- Row 2: View Details + Complete + Cancel -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <!-- View Details Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnViewDetails"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="👁️ Détails"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary"
+                    android:layout_marginEnd="6dp"
+                    app:cornerRadius="10dp"
+                    app:backgroundTint="@android:color/transparent"
+                    app:strokeColor="@color/primary"
+                    app:strokeWidth="1dp"
+                    style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                <!-- Complete Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnComplete"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="✅ Terminer"
+                    android:textSize="13sp"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="3dp"
+                    app:cornerRadius="10dp"
+                    app:backgroundTint="@android:color/holo_green_light"
+                    style="@style/Widget.Material3.Button" />
+
+                <!-- Cancel Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCancelAppt"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="❌ Annuler"
+                    android:textSize="13sp"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="6dp"
+                    app:cornerRadius="10dp"
+                    app:backgroundTint="@android:color/holo_red_dark"
+                    style="@style/Widget.Material3.Button" />
+            </LinearLayout>
+
         </LinearLayout>
+
 
         <!-- Only View Details for Completed/Cancelled -->
         <com.google.android.material.button.MaterialButton

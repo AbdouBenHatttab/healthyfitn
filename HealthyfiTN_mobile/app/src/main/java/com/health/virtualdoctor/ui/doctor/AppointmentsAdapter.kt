@@ -24,6 +24,13 @@ class AppointmentsAdapter(
         val tvAppointmentTime: TextView = view.findViewById(R.id.tvAppointmentTime)
         val tvAppointmentDate: TextView = view.findViewById(R.id.tvAppointmentDate)
         val tvAppointmentReason: TextView = view.findViewById(R.id.tvAppointmentReason)
+
+        // 🔥 These were missing — YOU MUST ADD THEM
+        val btnAccept: MaterialButton = view.findViewById(R.id.btnAccept)
+        val btnReject: MaterialButton = view.findViewById(R.id.btnReject)
+        val btnComplete: MaterialButton = view.findViewById(R.id.btnComplete)
+        val btnCancel: MaterialButton = view.findViewById(R.id.btnCancel)
+
         val btnViewDetails: MaterialButton = view.findViewById(R.id.btnViewDetails)
         val btnStartConsultation: MaterialButton = view.findViewById(R.id.btnStartConsultation)
     }
@@ -43,22 +50,52 @@ class AppointmentsAdapter(
         holder.tvAppointmentDate.text = appointment.date
         holder.tvAppointmentReason.text = appointment.reason
 
-        // Status chip styling
+        // STATUS CHIP
         holder.chipStatus.text = appointment.status
-        holder.chipStatus.setChipBackgroundColorResource(android.R.color.transparent)
-        holder.chipStatus.chipBackgroundColor = android.content.res.ColorStateList.valueOf(
-            Color.parseColor(appointment.statusColor)
-        )
+        holder.chipStatus.chipBackgroundColor =
+            android.content.res.ColorStateList.valueOf(Color.parseColor(appointment.statusColor))
         holder.chipStatus.setTextColor(Color.parseColor(appointment.statusTextColor))
 
-        // Button listeners
-        holder.btnViewDetails.setOnClickListener {
-            onActionClick(appointment, "view_details")
+        // ----- BUTTON VISIBILITY BASED ON STATUS -----
+        when (appointment.status.uppercase()) {
+
+            "PENDING" -> {
+                holder.btnAccept.visibility = View.VISIBLE
+                holder.btnReject.visibility = View.VISIBLE
+
+                holder.btnViewDetails.visibility = View.GONE
+                holder.btnComplete.visibility = View.GONE
+                holder.btnCancel.visibility = View.GONE
+                holder.btnStartConsultation.visibility = View.GONE
+            }
+
+            "ACCEPTED" -> {
+                holder.btnAccept.visibility = View.GONE
+                holder.btnReject.visibility = View.GONE
+
+                holder.btnViewDetails.visibility = View.VISIBLE
+                holder.btnComplete.visibility = View.VISIBLE
+                holder.btnCancel.visibility = View.VISIBLE
+                holder.btnStartConsultation.visibility = View.GONE
+            }
+
+            "COMPLETED", "CANCELED" -> {
+                holder.btnAccept.visibility = View.GONE
+                holder.btnReject.visibility = View.GONE
+                holder.btnComplete.visibility = View.GONE
+                holder.btnCancel.visibility = View.GONE
+
+                holder.btnViewDetails.visibility = View.VISIBLE
+                holder.btnStartConsultation.visibility = View.GONE
+            }
         }
 
-        holder.btnStartConsultation.setOnClickListener {
-            onActionClick(appointment, "start_consultation")
-        }
+        // ----- BUTTON ACTIONS -----
+        holder.btnAccept.setOnClickListener { onActionClick(appointment, "accept") }
+        holder.btnReject.setOnClickListener { onActionClick(appointment, "reject") }
+        holder.btnViewDetails.setOnClickListener { onActionClick(appointment, "view_details") }
+        holder.btnComplete.setOnClickListener { onActionClick(appointment, "complete") }
+        holder.btnCancel.setOnClickListener { onActionClick(appointment, "cancel") }
     }
 
     override fun getItemCount() = appointments.size
