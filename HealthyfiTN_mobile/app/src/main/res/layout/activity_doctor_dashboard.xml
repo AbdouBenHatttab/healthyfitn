@@ -501,7 +501,7 @@
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
-            <!-- En-tête section consultations -->
+            <!-- En-tête section patients -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -514,36 +514,35 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Consultations à venir"
+                    android:text="👥 Mes Patients"
                     android:textSize="18sp"
                     android:textColor="@color/text_primary"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipFilter"
+                <TextView
+                    android:id="@+id/tvPatientsCount"
                     android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:text="Aujourd'hui"
+                    android:layout_height="wrap_content"
+                    android:text="0 patients"
                     android:textSize="12sp"
-                    app:chipBackgroundColor="@color/primary"
-                    app:chipStrokeWidth="0dp"
-                    android:textColor="@color/white"
-                    app:chipIconTint="@color/white"
-                    app:chipIcon="@drawable/ic_filter" />
+                    android:textColor="@color/text_secondary"
+                    android:background="@drawable/rounded_bg"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp" />
             </LinearLayout>
 
-            <!-- Liste des consultations -->
+            <!-- Liste des patients -->
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvAppointments"
+                android:id="@+id/rvPatients"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
                 android:clipToPadding="false" />
 
-            <!-- État vide -->
+            <!-- État vide patients -->
             <LinearLayout
-                android:id="@+id/llEmptyState"
+                android:id="@+id/llEmptyPatients"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 android:orientation="vertical"
@@ -553,14 +552,14 @@
                 <ImageView
                     android:layout_width="80dp"
                     android:layout_height="80dp"
-                    android:src="@drawable/ic_calendar"
+                    android:src="@drawable/ic_people"
                     android:alpha="0.3"
                     app:tint="@color/text_secondary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Aucune consultation prévue"
+                    android:text="Aucun patient trouvé"
                     android:textSize="16sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="@dimen/spacing_md"

@@ -32,12 +32,14 @@ import com.health.virtualdoctor.ui.data.models.UpdateDoctorProfileRequest
 import com.health.virtualdoctor.ui.utils.ImageUploadHelper
 import com.health.virtualdoctor.ui.utils.TokenManager
 import kotlinx.coroutines.launch
+import com.health.virtualdoctor.ui.data.models.PatientInfoResponse
 
 class DoctorDashboardActivity : AppCompatActivity() {
 
     private lateinit var tokenManager: TokenManager
 
     private lateinit var btnManageAppointments: MaterialButton
+
     // Views - Profile Section
     private lateinit var ivDoctorProfile: ImageView
     private lateinit var tvDoctorName: TextView
@@ -64,9 +66,10 @@ class DoctorDashboardActivity : AppCompatActivity() {
     private lateinit var tvRevenue: TextView
 
     // Views - Appointments Section
-    private lateinit var rvAppointments: RecyclerView
-    private lateinit var llEmptyState: LinearLayout
-    private lateinit var appointmentsAdapter: DoctorAppointmentsAdapter
+    private lateinit var rvPatients: RecyclerView
+    private lateinit var llEmptyPatients: LinearLayout
+    private lateinit var tvPatientsCount: TextView
+    private lateinit var patientsAdapter: DoctorPatientsAdapter
 
     // Image handling
     private var selectedImageBitmap: Bitmap? = null
@@ -110,14 +113,14 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
         loadDoctorProfile()
         loadDashboardStats()
-        loadAppointments()
+        loadPatients()
     }
 
     private fun initViews() {
 
 
         // Back button
-       //
+        //
 
         // ➕ Add this (Manage Appointments button)
         btnManageAppointments = findViewById(R.id.btnManageAppointments)
@@ -149,8 +152,10 @@ class DoctorDashboardActivity : AppCompatActivity() {
         tvRevenue = findViewById(R.id.tvRevenue)
 
         // Appointments views
-        rvAppointments = findViewById(R.id.rvAppointments)
-        llEmptyState = findViewById(R.id.llEmptyState)
+        rvPatients = findViewById(R.id.rvPatients)
+        llEmptyPatients = findViewById(R.id.llEmptyPatients)
+        tvPatientsCount = findViewById(R.id.tvPatientsCount)
+
     }
 
     private fun setupToolbar() {
@@ -169,14 +174,17 @@ class DoctorDashboardActivity : AppCompatActivity() {
                 Toast.makeText(this, "🔔 Notifications", Toast.LENGTH_SHORT).show()
                 true
             }
+
             R.id.action_settings -> {
                 Toast.makeText(this, "⚙️ Paramètres", Toast.LENGTH_SHORT).show()
                 true
             }
+
             R.id.action_logout -> {
                 showLogoutDialog()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -221,251 +229,87 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
 
     private fun setupRecyclerView() {
-        appointmentsAdapter = DoctorAppointmentsAdapter(emptyList()) { appointment, action ->
-            handleAppointmentAction(appointment, action)
+        patientsAdapter = DoctorPatientsAdapter(emptyList()) { patient ->
+            showPatientDetails(patient)
         }
 
-        rvAppointments.apply {
+        rvPatients.apply {
             layoutManager = LinearLayoutManager(this@DoctorDashboardActivity)
-            adapter = appointmentsAdapter
+            adapter = patientsAdapter
         }
     }
 
-    private fun handleAppointmentAction(appointment: AppointmentResponse, action: String) {
-        when (action) {
-            "view_details" -> showAppointmentDetails(appointment)
-            "start_consultation" -> showConsultationOptions(appointment)
-        }
-    }
 
-    private fun showAppointmentDetails(appointment: AppointmentResponse) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_appointment_details, null)
-
-        dialogView.findViewById<TextView>(R.id.tvPatientNameDialog).text = appointment.patientName
-        dialogView.findViewById<TextView>(R.id.tvPatientEmailDialog).text = appointment.patientEmail
-        dialogView.findViewById<TextView>(R.id.tvPatientPhoneDialog).text = appointment.patientPhone ?: "N/A"
-
-        try {
-            val dateTime = java.time.LocalDateTime.parse(appointment.appointmentDateTime)
-            val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
-
-            dialogView.findViewById<TextView>(R.id.tvAppointmentDateDialog).text = dateTime.format(dateFormatter)
-            dialogView.findViewById<TextView>(R.id.tvAppointmentTimeDialog).text = dateTime.format(timeFormatter)
-        } catch (e: Exception) {
-            dialogView.findViewById<TextView>(R.id.tvAppointmentDateDialog).text = appointment.appointmentDateTime.substringBefore("T")
-            dialogView.findViewById<TextView>(R.id.tvAppointmentTimeDialog).text = appointment.appointmentDateTime.substringAfter("T").take(5)
-        }
-
-        dialogView.findViewById<TextView>(R.id.tvAppointmentTypeDialog).text = appointment.appointmentType
-        dialogView.findViewById<TextView>(R.id.tvReasonDialog).text = appointment.reason
-
-        val chipStatus = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.chipStatusDialog)
-        chipStatus.text = appointment.status
-
-        if (!appointment.notes.isNullOrEmpty()) {
-            dialogView.findViewById<TextView>(R.id.tvNotesDialog).text = appointment.notes
-            dialogView.findViewById<View>(R.id.cardNotesDialog).visibility = View.VISIBLE
-        }
-
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(dialogView)
-            .create()
-
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCloseDialog)
-            .setOnClickListener {
-                dialog.dismiss()
-            }
-
-        dialog.show()
-    }
-
-    private fun showConsultationOptions(appointment: AppointmentResponse) {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Options de Consultation")
-            .setItems(arrayOf(
-                "✅ Compléter la consultation",
-                "❌ Annuler le rendez-vous"
-            )) { _, which ->
-                when (which) {
-                    0 -> showCompleteAppointmentDialog(appointment)
-                    1 -> showCancelAppointmentDialog(appointment)
-                }
-            }
-            .setNegativeButton("Retour", null)
-            .show()
-    }
-
-    private fun showCompleteAppointmentDialog(appointment: AppointmentResponse) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_complete_appointment, null)
-
-        dialogView.findViewById<TextView>(R.id.tvPatientNameComplete).text =
-            "Patient: ${appointment.patientName}"
-
-        val etDiagnosis = dialogView.findViewById<EditText>(R.id.etDiagnosis)
-        val etPrescription = dialogView.findViewById<EditText>(R.id.etPrescription)
-        val etNotes = dialogView.findViewById<EditText>(R.id.etConsultationNotes)
-
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(dialogView)
-            .create()
-
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancelComplete)
-            .setOnClickListener {
-                dialog.dismiss()
-            }
-
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnConfirmComplete)
-            .setOnClickListener {
-                val diagnosis = etDiagnosis.text.toString().trim()
-                val prescription = etPrescription.text.toString().trim()
-                val notes = etNotes.text.toString().trim()
-
-                if (diagnosis.isEmpty() || prescription.isEmpty()) {
-                    Toast.makeText(this, "⚠️ Diagnostic et prescription requis", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                completeAppointment(appointment.id, diagnosis, prescription, notes)
-                dialog.dismiss()
-            }
-
-        dialog.show()
-    }
-
-    private fun showCancelAppointmentDialog(appointment: AppointmentResponse) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_cancel_appointment, null)
-
-        dialogView.findViewById<TextView>(R.id.tvPatientNameCancel).text =
-            "Patient: ${appointment.patientName}"
-
-        val etReason = dialogView.findViewById<EditText>(R.id.etCancelReason)
-
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(dialogView)
-            .create()
-
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancelDialogCancel)
-            .setOnClickListener {
-                dialog.dismiss()
-            }
-
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnConfirmCancel)
-            .setOnClickListener {
-                val reason = etReason.text.toString().trim().ifEmpty { "No reason provided" }
-
-                cancelAppointment(appointment.id, reason)
-                dialog.dismiss()
-            }
-
-        dialog.show()
-    }
-
-    private fun completeAppointment(appointmentId: String, diagnosis: String, prescription: String, notes: String) {
-        lifecycleScope.launch {
-            try {
-                val token = "Bearer ${tokenManager.getAccessToken()}"
-
-                val request = mapOf(
-                    "diagnosis" to diagnosis,
-                    "prescription" to prescription,
-                    "notes" to notes
-                )
-
-                val response = RetrofitClient.getDoctorService(this@DoctorDashboardActivity)
-                    .completeAppointment(token, appointmentId, request)
-
-                if (response.isSuccessful) {
-                    Toast.makeText(
-                        this@DoctorDashboardActivity,
-                        "✅ Consultation complétée avec succès",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    loadAppointments()
-                    loadDashboardStats()
-                } else {
-                    Toast.makeText(
-                        this@DoctorDashboardActivity,
-                        "❌ Erreur ${response.code()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } catch (e: Exception) {
-                Log.e("DoctorDashboard", "Error completing appointment: ${e.message}", e)
-                Toast.makeText(
-                    this@DoctorDashboardActivity,
-                    "❌ Erreur: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
-    }
-
-    private fun cancelAppointment(appointmentId: String, reason: String) {
-        lifecycleScope.launch {
-            try {
-                val token = "Bearer ${tokenManager.getAccessToken()}"
-
-                val request = mapOf("reason" to reason)
-
-                val response = RetrofitClient.getDoctorService(this@DoctorDashboardActivity)
-                    .cancelAppointmentByDoctor(token, appointmentId, request)
-
-                if (response.isSuccessful) {
-                    Toast.makeText(
-                        this@DoctorDashboardActivity,
-                        "✅ Rendez-vous annulé",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    loadAppointments()
-                    loadDashboardStats()
-                } else {
-                    Toast.makeText(
-                        this@DoctorDashboardActivity,
-                        "❌ Erreur ${response.code()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } catch (e: Exception) {
-                Log.e("DoctorDashboard", "Error cancelling appointment: ${e.message}", e)
-                Toast.makeText(
-                    this@DoctorDashboardActivity,
-                    "❌ Erreur: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
-    }
-
-    private fun loadAppointments() {
+    private fun loadPatients() {
         lifecycleScope.launch {
             try {
                 val token = "Bearer ${tokenManager.getAccessToken()}"
 
                 val response = RetrofitClient.getDoctorService(this@DoctorDashboardActivity)
-                    .getDoctorAppointments(token)
+                    .getDoctorPatients(token)
 
                 if (response.isSuccessful && response.body() != null) {
-                    val appointments = response.body()!!
+                    val patients = response.body()!!
 
                     runOnUiThread {
-                        if (appointments.isEmpty()) {
-                            rvAppointments.visibility = View.GONE
-                            llEmptyState.visibility = View.VISIBLE
+                        if (patients.isEmpty()) {
+                            rvPatients.visibility = View.GONE
+                            llEmptyPatients.visibility = View.VISIBLE
+                            tvPatientsCount.text = "0 patients"
                         } else {
-                            rvAppointments.visibility = View.VISIBLE
-                            llEmptyState.visibility = View.GONE
-                            appointmentsAdapter.updateAppointments(appointments)
+                            rvPatients.visibility = View.VISIBLE
+                            llEmptyPatients.visibility = View.GONE
+                            patientsAdapter.updatePatients(patients)
+                            tvPatientsCount.text = "${patients.size} patients"
                         }
+                    }
+                } else {
+                    runOnUiThread {
+                        rvPatients.visibility = View.GONE
+                        llEmptyPatients.visibility = View.VISIBLE
+                        tvPatientsCount.text = "0 patients"
                     }
                 }
             } catch (e: Exception) {
-                Log.e("DoctorDashboard", "Error loading appointments: ${e.message}", e)
+                Log.e("DoctorDashboard", "Error loading patients: ${e.message}", e)
+                runOnUiThread {
+                    rvPatients.visibility = View.GONE
+                    llEmptyPatients.visibility = View.VISIBLE
+                    tvPatientsCount.text = "0 patients"
+                }
             }
         }
     }
+
+    private fun showPatientDetails(patient: PatientInfoResponse) {
+        val message = """
+        👤 ${patient.patientName}
+        📧 ${patient.patientEmail}
+        📞 ${patient.patientPhone ?: "Non disponible"}
+        
+        📊 Statistiques des rendez-vous:
+        • Total: ${patient.totalAppointments}
+        • Complétés: ${patient.completedAppointments}
+        • Annulés: ${patient.cancelledAppointments}
+        
+        📅 Dates importantes:
+        • Première visite: ${patient.firstVisitDate?.substringBefore("T") ?: "Non disponible"}
+        • Dernier RDV: ${patient.lastAppointmentDate?.substringBefore("T") ?: "Aucun"}
+        • Prochain RDV: ${patient.nextAppointmentDate?.substringBefore("T") ?: "Aucun"}
+    """.trimIndent()
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Détails du patient")
+            .setMessage(message)
+            .setPositiveButton("Fermer") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+
+
+
 
     private fun loadDashboardStats() {
         lifecycleScope.launch {
@@ -482,7 +326,8 @@ class DoctorDashboardActivity : AppCompatActivity() {
                         tvTodayAppointments.text = stats.todayAppointments.toString()
                         tvTotalPatients.text = stats.totalPatients.toString()
                         // Revenue calculation would go here if needed
-                        tvRevenue.text = "${stats.completedAppointments * 50}€" // Example calculation
+                        tvRevenue.text =
+                            "${stats.completedAppointments * 50}€" // Example calculation
                     }
                 }
             } catch (e: Exception) {
@@ -530,7 +375,8 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     Log.d("DoctorDashboard", "✅ Profile loaded: ${profile.email}")
                 } else {
                     val error = response.errorBody()?.string() ?: "Error loading profile"
-                    Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG)
+                        .show()
                 }
 
             } catch (e: Exception) {
@@ -579,20 +425,32 @@ class DoctorDashboardActivity : AppCompatActivity() {
                 var imageUrl = currentProfileImageUrl
 
                 if (selectedImageBitmap != null) {
-                    Toast.makeText(this@DoctorDashboardActivity, "📤 Uploading image...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@DoctorDashboardActivity,
+                        "📤 Uploading image...",
+                        Toast.LENGTH_SHORT
+                    ).show()
 
                     imageUrl = ImageUploadHelper.uploadImage(selectedImageBitmap!!, "doctors")
 
                     if (imageUrl != null) {
                         Log.d("DoctorDashboard", "✅ Image uploaded: $imageUrl")
-                        Toast.makeText(this@DoctorDashboardActivity, "✅ Image uploaded!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@DoctorDashboardActivity,
+                            "✅ Image uploaded!",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
                         runOnUiThread {
                             loadProfileImage(imageUrl)
                         }
                     } else {
                         Log.e("DoctorDashboard", "❌ Image upload failed")
-                        Toast.makeText(this@DoctorDashboardActivity, "⚠️ Image upload failed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@DoctorDashboardActivity,
+                            "⚠️ Image upload failed",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
 
@@ -641,7 +499,8 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     Log.d("DoctorDashboard", "✅ Profile updated: ${updatedProfile.email}")
                 } else {
                     val error = response.errorBody()?.string() ?: "Update failed"
-                    Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG)
+                        .show()
                 }
 
             } catch (e: Exception) {
@@ -680,7 +539,8 @@ class DoctorDashboardActivity : AppCompatActivity() {
                 }
 
                 if (newPassword != confirmPassword) {
-                    Toast.makeText(this, "⚠️ Mots de passe non identiques", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "⚠️ Mots de passe non identiques", Toast.LENGTH_SHORT)
+                        .show()
                     return@setPositiveButton
                 }
 
@@ -756,13 +616,15 @@ class DoctorDashboardActivity : AppCompatActivity() {
                             "⏳ $message"
                         }
 
-                        Toast.makeText(this@DoctorDashboardActivity, message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@DoctorDashboardActivity, message, Toast.LENGTH_LONG)
+                            .show()
                     }
 
                     Log.d("DoctorDashboard", "✅ Activation status: $isActivated")
                 } else {
                     val error = response.errorBody()?.string() ?: "Failed to check status"
-                    Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG)
+                        .show()
                 }
 
             } catch (e: Exception) {
@@ -801,7 +663,12 @@ class DoctorDashboardActivity : AppCompatActivity() {
             .setItems(options) { dialog, which ->
                 when (which) {
                     0 -> checkPermissionAndPickImage()
-                    1 -> Toast.makeText(this, "📷 Appareil photo (à implémenter)", Toast.LENGTH_SHORT).show()
+                    1 -> Toast.makeText(
+                        this,
+                        "📷 Appareil photo (à implémenter)",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
                     2 -> dialog.dismiss()
                 }
             }
@@ -816,6 +683,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED -> {
                 pickImage()
             }
+
             else -> {
                 requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
             }
@@ -842,7 +710,11 @@ class DoctorDashboardActivity : AppCompatActivity() {
             try {
                 tokenManager.clearTokens()
                 Log.d("DoctorDashboard", "✅ Logout successful")
-                Toast.makeText(this@DoctorDashboardActivity, "👋 Déconnecté avec succès", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@DoctorDashboardActivity,
+                    "👋 Déconnecté avec succès",
+                    Toast.LENGTH_SHORT
+                ).show()
 
                 val intent = Intent(this@DoctorDashboardActivity, LoginActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -851,72 +723,18 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 Log.e("DoctorDashboard", "❌ Logout error: ${e.message}", e)
-                Toast.makeText(this@DoctorDashboardActivity, "❌ Erreur lors de la déconnexion", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@DoctorDashboardActivity,
+                    "❌ Erreur lors de la déconnexion",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        loadAppointments()
+        loadPatients()
         loadDashboardStats()
     }
 }
-//```
-//
-//---
-//
-//## Step 7: Summary of Changes
-//
-//### Files Created:
-//1. **XML Layouts:**
-//- `dialog_appointment_details.xml` - Shows appointment details
-//- `dialog_complete_appointment.xml` - Form to complete consultation
-//- `dialog_cancel_appointment.xml` - Form to cancel appointment
-//
-//2. **Data Models:**
-//- `AppointmentResponse.kt` - Appointment data structure
-//- `DoctorStatsResponse.kt` - Dashboard statistics
-//- `PatientInfoResponse.kt` - Patient information
-//
-//3. **Adapter:**
-//- `DoctorAppointmentsAdapter.kt` - RecyclerView adapter for appointments list
-//
-//4. **Updated Files:**
-//- `ApiService.kt` - Added 6 new endpoints for appointments
-//- `DoctorDashboardActivity.kt` - Complete rewrite with full functionality
-//
-//### Features Implemented:
-//
-//✅ **View Appointments**
-//- Display all doctor's appointments
-//- Show appointment details
-//- Filter by upcoming/completed
-//
-//✅ **Complete Appointments**
-//- Add diagnosis
-//- Add prescription
-//- Add consultation notes
-//
-//✅ **Cancel Appointments**
-//- Cancel with reason
-//- Updates status
-//
-//✅ **Dashboard Statistics**
-//- Today's appointments
-//- Total patients
-//- Revenue calculation
-//
-//✅ **Profile Management**
-//- Update profile
-//- Change password
-//- Upload profile picture
-//
-//### API Endpoints Used:
-//```
-//GET  /api/doctors/appointments              - Get all appointments
-//GET  /api/doctors/appointments/upcoming     - Get upcoming only
-//GET  /api/doctors/appointments/patients     - Get patient list
-//GET  /api/doctors/appointments/dashboard/stats - Get statistics
-//POST /api/doctors/appointments/{id}/complete - Complete appointment
-//POST /api/doctors/appointments/{id}/cancel   - Cancel appointment
