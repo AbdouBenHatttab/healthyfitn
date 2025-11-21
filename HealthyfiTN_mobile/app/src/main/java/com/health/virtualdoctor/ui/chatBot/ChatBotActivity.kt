@@ -27,7 +27,7 @@ class ChatBotActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     // CONFIG
-    private val BASE_URL = "https://ruinous-loma-nondipterous.ngrok-free.dev"
+    private val BASE_URL = "https://brother-representative-next-heard.trycloudflare.com"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // ✅ URLs des services via Cloudflare Tunnels
-    private const val AUTH_BASE_URL = "https://atomic-soil-balanced-unless.trycloudflare.com" // Port 8082
+    private const val AUTH_BASE_URL = "https://detective-arrived-hans-slim.trycloudflare.com" // Port 8082
     private const val DOCTOR_BASE_URL = "https://questions-sitemap-published-won.trycloudflare.com" // Port 8083
     private const val NOTIFICATION_BASE_URL = "https://normal-maintaining-antenna-his.trycloudflare.com" // Port 8084
     private const val USER_BASE_URL = "https://compaq-around-yes-trends.trycloudflare.com" // Port 8085
