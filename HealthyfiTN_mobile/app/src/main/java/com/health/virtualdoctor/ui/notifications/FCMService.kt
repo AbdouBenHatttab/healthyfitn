@@ -18,28 +18,28 @@ class FCMService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d("FCM", "🔑 New FCM Token: $token")
+        Log.d("FCM", "🔑 Nouveau token FCM : $token")
 
-        // ✅ Send token to backend
+        // ✅ Envoyer le token au backend
         sendTokenToBackend(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        Log.d("FCM", "📩 Message received from: ${message.from}")
+        Log.d("FCM", "📩 Message reçu de : ${message.from}")
 
-        // Check if message contains notification payload
+        // Vérifier si le message contient une notification
         message.notification?.let {
-            Log.d("FCM", "📬 Notification Title: ${it.title}")
-            Log.d("FCM", "📬 Notification Body: ${it.body}")
+            Log.d("FCM", "📬 Titre de la notification : ${it.title}")
+            Log.d("FCM", "📬 Contenu de la notification : ${it.body}")
 
             showNotification(it.title ?: "", it.body ?: "")
         }
 
-        // Check if message contains data payload
+        // Vérifier si le message contient des données
         message.data.isNotEmpty().let {
-            Log.d("FCM", "📦 Data: ${message.data}")
+            Log.d("FCM", "📦 Données : ${message.data}")
 
             val type = message.data["type"]
             val action = message.data["action"]
@@ -64,7 +64,7 @@ class FCMService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notifications) // ✅ Create this icon
+            .setSmallIcon(R.drawable.ic_notifications) // ✅ Créez cette icône
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
@@ -74,11 +74,11 @@ class FCMService : FirebaseMessagingService() {
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create notification channel for Android O+
+        // Créer le canal de notification pour Android O+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Health Notifications",
+                "Notifications Santé",
                 NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
@@ -90,22 +90,22 @@ class FCMService : FirebaseMessagingService() {
     private fun handleDataPayload(type: String?, action: String?, data: Map<String, String>) {
         when (type) {
             "DOCTOR_REGISTRATION" -> {
-                Log.d("FCM", "🩺 New doctor registration notification")
+                Log.d("FCM", "🩺 Nouvelle inscription de médecin")
             }
             "DOCTOR_APPROVED" -> {
-                Log.d("FCM", "✅ Doctor approved notification")
+                Log.d("FCM", "✅ Médecin approuvé")
             }
             else -> {
-                Log.d("FCM", "📦 Unknown notification type: $type")
+                Log.d("FCM", "📦 Type de notification inconnu : $type")
             }
         }
     }
 
     private fun sendTokenToBackend(token: String) {
-        // ✅ TODO: Send FCM token to your backend
-        Log.d("FCM", "📤 TODO: Send token to backend: $token")
+        // ✅ TODO : Envoyer le token FCM à votre backend
+        Log.d("FCM", "📤 TODO : Envoyer le token au backend : $token")
 
-        // Example:
+        // Exemple :
         // lifecycleScope.launch {
         //     val request = FCMTokenRequest(token, "ANDROID", Build.MODEL)
         //     RetrofitClient.getNotificationService(this).saveFcmToken(request)

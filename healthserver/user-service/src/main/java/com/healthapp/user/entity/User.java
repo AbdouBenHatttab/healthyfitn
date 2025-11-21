@@ -3,6 +3,7 @@ package com.healthapp.user.entity;
 import com.healthapp.user.Enums.AccountStatus;
 import com.healthapp.user.Enums.Gender;
 import com.healthapp.user.Enums.UserRole;
+import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,6 +42,8 @@ public class User {
     private Gender gender = Gender.MALE;
     
     private String phoneNumber;
+    @Nullable
+    private Double score;
     private String profilePictureUrl;
     
     @Builder.Default

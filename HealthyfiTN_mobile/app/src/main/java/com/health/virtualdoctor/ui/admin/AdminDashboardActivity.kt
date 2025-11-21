@@ -79,7 +79,7 @@ class AdminDashboardActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         setSupportActionBar(toolbar)
-        supportActionBar?.title = "👨‍⚕️ Admin Dashboard"
+        supportActionBar?.title = "👨‍⚕️ Tableau de bord Admin"
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -142,7 +142,7 @@ class AdminDashboardActivity : AppCompatActivity() {
             try {
                 val token = "Bearer ${tokenManager.getAccessToken()}"
 
-                // Compter les doctors en attente
+                // Compter les médecins en attente
                 val pendingResponse = RetrofitClient.getDoctorService(this@AdminDashboardActivity)
                     .getPendingDoctorsCount(token)
 
@@ -151,11 +151,11 @@ class AdminDashboardActivity : AppCompatActivity() {
                     tvPendingCount.text = count.toString()
                 }
 
-                // Charger tous les doctors pour le total
+                // Charger tous les médecins pour le total
                 loadTotalDoctorsCount()
 
             } catch (e: Exception) {
-                Log.e("AdminDashboard", "Error loading statistics: ${e.message}")
+                Log.e("AdminDashboard", "Erreur lors du chargement des statistiques: ${e.message}")
             }
         }
     }
@@ -186,7 +186,7 @@ class AdminDashboardActivity : AppCompatActivity() {
                 }
 
             } catch (e: Exception) {
-                Log.e("AdminDashboard", "Error loading total count: ${e.message}")
+                Log.e("AdminDashboard", "Erreur lors du chargement du total: ${e.message}")
             }
         }
     }
@@ -228,7 +228,7 @@ class AdminDashboardActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 runOnUiThread {
                     showLoading(false)
-                    Log.e("AdminDashboard", "Error: ${e.message}", e)
+                    Log.e("AdminDashboard", "Erreur: ${e.message}", e)
                     Toast.makeText(
                         this@AdminDashboardActivity,
                         "❌ Erreur: ${e.message}",
@@ -274,7 +274,7 @@ class AdminDashboardActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 runOnUiThread {
                     showLoading(false)
-                    Log.e("AdminDashboard", "Error: ${e.message}", e)
+                    Log.e("AdminDashboard", "Erreur: ${e.message}", e)
                     Toast.makeText(
                         this@AdminDashboardActivity,
                         "❌ Erreur: ${e.message}",
@@ -313,7 +313,7 @@ class AdminDashboardActivity : AppCompatActivity() {
             .setMessage("Voulez-vous rejeter le Dr. ${doctor.fullName} ?")
             .setView(input)
             .setPositiveButton("Rejeter") { _, _ ->
-                val reason = input.text.toString().ifEmpty { "Credentials could not be verified" }
+                val reason = input.text.toString().ifEmpty { "Les informations n'ont pas pu être vérifiées" }
                 approveDoctorRequest(doctor.doctorId, "REJECT", reason)
             }
             .setNegativeButton("Annuler", null)
@@ -371,7 +371,7 @@ class AdminDashboardActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 runOnUiThread {
-                    Log.e("AdminDashboard", "Error: ${e.message}", e)
+                    Log.e("AdminDashboard", "Erreur: ${e.message}", e)
                     Toast.makeText(
                         this@AdminDashboardActivity,
                         "❌ Erreur: ${e.message}",

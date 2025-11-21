@@ -381,7 +381,10 @@
                 app:strokeWidth="2dp" />
 
             <!-- Login Link -->
+            <!-- Dans votre activity_welcome.xml, ajoutez l'ID au LinearLayout -->
+
             <LinearLayout
+                android:id="@+id/loginSection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"

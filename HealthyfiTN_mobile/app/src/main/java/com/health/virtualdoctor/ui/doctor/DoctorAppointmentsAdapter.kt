@@ -21,6 +21,7 @@ class DoctorAppointmentsAdapter(
 ) : RecyclerView.Adapter<DoctorAppointmentsAdapter.AppointmentViewHolder>() {
 
     inner class AppointmentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        // Patient info
         val ivPatientAvatar: ImageView = view.findViewById(R.id.ivPatientAvatar)
         val tvPatientName: TextView = view.findViewById(R.id.tvPatientName)
         val tvPatientAge: TextView = view.findViewById(R.id.tvPatientAge)
@@ -28,10 +29,18 @@ class DoctorAppointmentsAdapter(
         val tvAppointmentTime: TextView = view.findViewById(R.id.tvAppointmentTime)
         val tvAppointmentDate: TextView = view.findViewById(R.id.tvAppointmentDate)
         val tvAppointmentReason: TextView = view.findViewById(R.id.tvAppointmentReason)
+
+        // Button containers
+        val llActionButtons: LinearLayout = view.findViewById(R.id.llActionButtons)
+        val rowAcceptReject: LinearLayout = view.findViewById(R.id.rowAcceptReject)
+        val rowActionButtons: LinearLayout = view.findViewById(R.id.rowActionButtons)
+
+        // Individual buttons
+        val btnAccept: MaterialButton = view.findViewById(R.id.btnAccept)
+        val btnReject: MaterialButton = view.findViewById(R.id.btnReject)
         val btnViewDetails: MaterialButton = view.findViewById(R.id.btnViewDetails)
         val btnComplete: MaterialButton = view.findViewById(R.id.btnComplete)
         val btnCancelAppt: MaterialButton = view.findViewById(R.id.btnCancelAppt)
-        val llActionButtons: LinearLayout = view.findViewById(R.id.llActionButtons)
         val btnStartConsultation: MaterialButton = view.findViewById(R.id.btnStartConsultation)
     }
 
@@ -53,7 +62,6 @@ class DoctorAppointmentsAdapter(
             val dateTime = LocalDateTime.parse(appointment.appointmentDateTime)
             val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
             val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
             holder.tvAppointmentDate.text = dateTime.format(dateFormatter)
             holder.tvAppointmentTime.text = dateTime.format(timeFormatter)
         } catch (e: Exception) {
@@ -64,65 +72,79 @@ class DoctorAppointmentsAdapter(
         // Reason
         holder.tvAppointmentReason.text = appointment.reason
 
-        // Status chip and button visibility
-        when (appointment.status) {
+        // Reset all button visibility
+        holder.llActionButtons.visibility = View.GONE
+        holder.rowAcceptReject.visibility = View.GONE
+        holder.rowActionButtons.visibility = View.GONE
+        holder.btnStartConsultation.visibility = View.GONE
+
+        when (appointment.status.uppercase()) {
+            "PENDING" -> {
+                holder.chipStatus.text = "⏳ En attente"
+                holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_blue_light)
+                holder.chipStatus.setTextColor(Color.WHITE)
+
+                // Show accept/reject buttons
+                holder.llActionButtons.visibility = View.VISIBLE
+                holder.rowAcceptReject.visibility = View.VISIBLE
+
+                holder.btnAccept.setOnClickListener {
+                    onActionClick(appointment, "accept")
+                }
+                holder.btnReject.setOnClickListener {
+                    onActionClick(appointment, "reject")
+                }
+            }
+
             "SCHEDULED" -> {
-                // Status chip
                 holder.chipStatus.text = "⏰ Programmé"
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_orange_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
 
-                // Show all action buttons
+                // Show action buttons (View Details + Complete + Cancel)
                 holder.llActionButtons.visibility = View.VISIBLE
-                holder.btnStartConsultation.visibility = View.GONE
+                holder.rowActionButtons.visibility = View.VISIBLE
 
-                // Set button listeners
                 holder.btnViewDetails.setOnClickListener {
                     onActionClick(appointment, "view_details")
                 }
-
                 holder.btnComplete.setOnClickListener {
                     onActionClick(appointment, "complete")
                 }
-
                 holder.btnCancelAppt.setOnClickListener {
                     onActionClick(appointment, "cancel")
                 }
             }
+
             "COMPLETED" -> {
-                // Status chip
                 holder.chipStatus.text = "✅ Terminé"
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_green_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
 
-                // Only show view details button
-                holder.llActionButtons.visibility = View.GONE
+                // Show only "Voir les détails" button
                 holder.btnStartConsultation.visibility = View.VISIBLE
-                holder.btnStartConsultation.text = "👁️ Voir les détails"
                 holder.btnStartConsultation.setOnClickListener {
                     onActionClick(appointment, "view_details")
                 }
             }
+
             "CANCELLED" -> {
-                // Status chip
                 holder.chipStatus.text = "❌ Annulé"
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_red_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
 
-                // Only show view details button
-                holder.llActionButtons.visibility = View.GONE
+                // Show only "Voir les détails" button
                 holder.btnStartConsultation.visibility = View.VISIBLE
-                holder.btnStartConsultation.text = "👁️ Voir les détails"
                 holder.btnStartConsultation.setOnClickListener {
                     onActionClick(appointment, "view_details")
                 }
             }
+
             else -> {
                 holder.chipStatus.text = appointment.status
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.darker_gray)
                 holder.chipStatus.setTextColor(Color.WHITE)
 
-                holder.llActionButtons.visibility = View.GONE
                 holder.btnStartConsultation.visibility = View.VISIBLE
                 holder.btnStartConsultation.setOnClickListener {
                     onActionClick(appointment, "view_details")

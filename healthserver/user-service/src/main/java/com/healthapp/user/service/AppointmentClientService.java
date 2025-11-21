@@ -36,16 +36,28 @@ public class AppointmentClientService {
         appointmentData.put("patientId", user.getId());
         appointmentData.put("patientEmail", user.getEmail());
         appointmentData.put("patientName", user.getFullName());
-        appointmentData.put("patientPhone", user.getPhoneNumber());
-        appointmentData.put("appointmentDateTime", request.getAppointmentDateTime().toString());
+        appointmentData.put("patientPhone", user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
+
+
+        // ✅ CRITICAL FIX: Use ISO-8601 format with milliseconds
+        appointmentData.put("appointmentDateTime",
+                request.getAppointmentDateTime().toString());
+
         appointmentData.put("appointmentType", request.getAppointmentType());
         appointmentData.put("reason", request.getReason());
         appointmentData.put("notes", request.getNotes());
 
-        Map<String, Object> response = doctorServiceClient.createAppointmentFromPatient(appointmentData);
-        return mapToAppointmentResponse(response);
-    }
+        log.info("📤 Sending appointment data to doctor-service: {}", appointmentData);
 
+        try {
+            Map<String, Object> response = doctorServiceClient.createAppointmentFromPatient(appointmentData);
+            log.info("✅ Appointment created successfully: {}", response);
+            return mapToAppointmentResponse(response);
+        } catch (Exception e) {
+            log.error("❌ Failed to create appointment: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to create appointment: " + e.getMessage());
+        }
+    }
     /**
      * Get all appointments for a patient (from doctor-service)
      */
@@ -87,7 +99,7 @@ public class AppointmentClientService {
                 .patientId((String) data.get("patientId"))
                 .patientEmail((String) data.get("patientEmail"))
                 .patientName((String) data.get("patientName"))
-                .patientPhone((String) data.get("patientPhone"))
+                .patientPhone(data.get("patientPhone") != null ? (String) data.get("patientPhone") : "")
                 .doctorId((String) data.get("doctorId"))
                 .doctorEmail((String) data.get("doctorEmail"))
                 .doctorName((String) data.get("doctorName"))

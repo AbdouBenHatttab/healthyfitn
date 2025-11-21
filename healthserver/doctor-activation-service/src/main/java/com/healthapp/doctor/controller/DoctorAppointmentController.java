@@ -1,5 +1,6 @@
 package com.healthapp.doctor.controller;
 
+import com.healthapp.doctor.dto.request.AppointmentResponseRequest;
 import com.healthapp.doctor.dto.response.AppointmentResponse;
 import com.healthapp.doctor.dto.response.DoctorStatsResponse;
 import com.healthapp.doctor.dto.response.PatientInfoResponse;
@@ -62,6 +63,70 @@ public class DoctorAppointmentController {
         List<AppointmentResponse> appointments = appointmentService.getUpcomingAppointments(doctor.getId());
 
         return ResponseEntity.ok(appointments);
+    }
+
+    /**
+     * ✅ NEW: Get pending appointments (need response)
+     */
+    @GetMapping("/pending")
+    public ResponseEntity<List<AppointmentResponse>> getPendingAppointments(Authentication auth) {
+        String email = auth.getName();
+        log.info("📋 Doctor {} requesting pending appointments", email);
+
+        Doctor doctor = doctorRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        List<AppointmentResponse> appointments = appointmentService.getPendingAppointments(doctor.getId());
+
+        return ResponseEntity.ok(appointments);
+    }
+
+    /**
+     * ✅ NEW: Accept a pending appointment
+     */
+    @PostMapping("/{appointmentId}/accept")
+    public ResponseEntity<AppointmentResponse> acceptAppointment(
+            @PathVariable String appointmentId,
+            Authentication auth) {
+
+        String email = auth.getName();
+        log.info("✅ Doctor {} accepting appointment {}", email, appointmentId);
+
+        Doctor doctor = doctorRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        AppointmentResponse response = appointmentService.acceptAppointment(
+                appointmentId, doctor.getId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * ✅ NEW: Reject a pending appointment with reason
+     */
+    @PostMapping("/{appointmentId}/reject")
+    public ResponseEntity<AppointmentResponse> rejectAppointment(
+            @PathVariable String appointmentId,
+            @RequestBody AppointmentResponseRequest request,
+            Authentication auth) {
+
+        String email = auth.getName();
+        log.info("❌ Doctor {} rejecting appointment {}", email, appointmentId);
+
+        Doctor doctor = doctorRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        if (request.getReason() == null || request.getReason().isBlank()) {
+            throw new RuntimeException("Reason is required for rejection");
+        }
+
+        AppointmentResponse response = appointmentService.rejectAppointment(
+                appointmentId,
+                doctor.getId(),
+                request.getReason(),
+                request.getAvailableHours());
+
+        return ResponseEntity.ok(response);
     }
 
     /**
