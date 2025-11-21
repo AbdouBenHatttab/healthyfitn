@@ -9,6 +9,8 @@ public class HealthData {
 
     @JsonProperty("dailyData")
     private List<DailyData> dailyData;
+    @JsonProperty("email")
+    private String email;
 
     @Data
     public static class DailyData {

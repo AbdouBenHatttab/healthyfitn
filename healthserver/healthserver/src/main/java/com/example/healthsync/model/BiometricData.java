@@ -18,7 +18,7 @@ public class BiometricData {
     @Id
     private String id;  // MongoDB génère automatiquement
 
-    private String userId;  // Clé étrangère vers User (temporairement aléatoire)
+    private String email;  // Clé étrangère vers User (temporairement aléatoire)
 
     private LocalDateTime receivedAt;  // Date de réception
 

@@ -165,6 +165,35 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: FCMTokenRequest
     ): Response<Map<String, String>>
+
+
+    /**
+     * Get pending appointments (need doctor response)
+     */
+    @GET("api/doctors/appointments/pending")
+    suspend fun getPendingAppointments(
+        @Header("Authorization") token: String
+    ): Response<List<AppointmentResponse>>
+
+    /**
+     * Accept a pending appointment
+     */
+    @POST("api/doctors/appointments/{appointmentId}/accept")
+    suspend fun acceptAppointment(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String
+    ): Response<AppointmentResponse>
+
+    /**
+     * Reject a pending appointment with reason
+     */
+    @POST("api/doctors/appointments/{appointmentId}/reject")
+    suspend fun rejectAppointment(
+        @Header("Authorization") token: String,
+        @Path("appointmentId") appointmentId: String,
+        @Body request: AppointmentResponseRequest  // Add request body
+    ): Response<AppointmentResponse>
+
     // ==========================================
     // APPOINTMENT SERVICE
     // ==========================================
@@ -218,7 +247,7 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("appointmentId") appointmentId: String,
         @Body request: Map<String, String>
-    ): Response<Map<String, String>>
+    ): Response<AppointmentResponse> // change Map to AppointmentResponse
     // ==========================================
     // NUTRITION SERVICE
     // ==========================================
@@ -253,11 +282,23 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
+
+    // Set score for patient
+    @PUT("api/v1/users/{email}/score")
+    suspend fun setScorePatient(
+        @Header("Authorization") token: String,
+        @Path("email") email: String,
+        @Body scoreRequest: ScoreRequest
+    ): Response<ApiResponse<UserProfileResponse>>
+
 }
 
 // ==========================================
 // WRAPPER FOR USER SERVICE RESPONSES
 // ==========================================
+data class ScoreRequest(
+    val score: Double
+)
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String?,
@@ -357,4 +398,9 @@ data class NutritionInfo(
 data class Alternative(
     val name: String,
     val confidence: Double
+)
+
+data class AppointmentResponseRequest(
+    val reason: String,
+    val availableHours: String? = null
 )

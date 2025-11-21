@@ -440,22 +440,24 @@ class TrendsAnalyzer:
     """Analyse les tendances de santé sur plusieurs jours"""
 
     @staticmethod
-    def get_user_trends(user_id: str, days: int = 30) -> Dict:
+    def get_user_trends(email: str, days: int = 30) -> Dict:
         """Récupère et analyse les tendances d'un utilisateur sur plusieurs jours"""
 
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
 
-        # 🔍 Récupération des enregistrements depuis MongoDB
-        cursor = collection.find({
-            "userId": user_id,
-            "date": {
-                "$gte": start_date.strftime("%Y-%m-%d"),
-                "$lte": end_date.strftime("%Y-%m-%d")
-            }
-        }).sort("date", 1)
+        # ✅ Exclure le jour actuel pour avoir exactement N jours
+        end_date = end_date - timedelta(days=1)
 
-        records = list(cursor)
+        # Convertir en strings
+        start_date_str = start_date.strftime("%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+
+        print(f"🔍 Recherche de {start_date_str} à {end_date_str} pour {email}")
+
+        records = get_unique_daily_data(email, start_date_str, end_date_str)
+
+        print(f"📊 Nombre d'enregistrements trouvés: {len(records)}")
 
         if len(records) < 2:
             raise HTTPException(
@@ -545,7 +547,7 @@ class TrendsAnalyzer:
                 }
 
         return {
-            'user_id': user_id,
+            'email': email,
             'period_days': days,
             'data_points': len(records),
             'trends': trends,
@@ -575,73 +577,107 @@ class TrendsAnalyzer:
 # =====================================================
 # 🚨 ANALYSEUR D'ALERTES
 # =====================================================
+def get_unique_daily_data(email, start_date, end_date):
+    """
+    Récupère les données uniques par jour pour un utilisateur
+    Args:
+        email: str - email de l'utilisateur
+        start_date: str - date de début au format "YYYY-MM-DD"
+        end_date: str - date de fin au format "YYYY-MM-DD"
+    """
+
+    print(f"🔍 Query MongoDB: email={email}, date>={start_date}, date<={end_date}")
+
+    pipeline = [
+        {
+            "$match": {
+                "email": email,
+                "date": {"$gte": start_date, "$lte": end_date}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$date",
+                "doc": {"$first": "$$ROOT"}
+            }
+        },
+        {
+            "$replaceRoot": {"newRoot": "$doc"}
+        },
+        {
+            "$sort": {"date": 1}
+        }
+    ]
+
+    results = list(collection.aggregate(pipeline))
+    print(f"✅ Documents trouvés: {len(results)}")
+
+    if len(results) > 0:
+        print(f"📅 Première date: {results[0].get('date')}")
+        print(f"📅 Dernière date: {results[-1].get('date')}")
+
+    return results
 
 class RiskAlertsAnalyzer:
     """Génère des alertes de risque intelligentes"""
-    
+
     @staticmethod
-    def generate_alerts(user_id: str, period_days: int = 7, specific_date: Optional[str] = None) -> Dict:
+    def generate_alerts(email: str, period_days: int = 7, specific_date: Optional[str] = None) -> Dict:
         """
         Génère des alertes basées sur les données récentes
-        
-        Args:
-            user_id: ID de l'utilisateur
-            period_days: Nombre de jours à analyser (1, 7, 30)
-            specific_date: Date spécifique au format "YYYY-MM-DD" (optionnel)
         """
-        
-        # Si date spécifique fournie, analyser uniquement ce jour
+
+        # --- 1️⃣ Sélection des données à analyser ---
         if specific_date:
-            cursor = collection.find({
-                "userId": user_id,
-                "date": specific_date
-            })
+            start_date_str = end_date_str = specific_date
+            # éliminer les doublons par date comme pour une période
+            records = get_unique_daily_data(email, start_date_str, end_date_str)
             analysis_mode = "specific_date"
-            end_date = datetime.strptime(specific_date, "%Y-%m-%d")
-            start_date = end_date
+
         else:
-            # 🔥 CORRECTION : Partir de la date actuelle et remonter dans le temps
+            # Cas 2 : analyse sur une période
             end_date = datetime.now()
             start_date = end_date - timedelta(days=period_days - 1)
-            
-            cursor = collection.find({
-                "userId": user_id,
-                "date": {
-                    "$gte": start_date.strftime("%Y-%m-%d"),
-                    "$lte": end_date.strftime("%Y-%m-%d")
-                }
-            }).sort("date", -1)
+
+            start_date_str = start_date.strftime("%Y-%m-%d")
+            end_date_str = end_date.strftime("%Y-%m-%d")
+
+            # 🔥 correction : éliminer les doublons par date
+            records = get_unique_daily_data(email, start_date_str, end_date_str)
+
             analysis_mode = "period_average"
-        
-        records = list(cursor)
-        
+
+        # Aucun document trouvé ?
         if len(records) == 0:
             raise HTTPException(status_code=404, detail="Aucune donnée trouvée pour cette période")
-        
+
         latest = records[0]
         alerts = []
         risk_factors = []
         action_priorities = []
-        
-        # 🔥 CORRECTION : Calculer MOYENNES sur la période (pas juste dernier jour)
+
+        # --- 2️⃣ Calcul des moyennes sur la période ---
         if len(records) > 1 and analysis_mode == "period_average":
-            # Moyennes sur toute la période
             current_steps = int(np.mean([r.get('totalSteps', 0) for r in records]))
             current_sleep = float(np.mean([float(r.get('totalSleepHours', '7')) for r in records]))
             current_hr = int(np.mean([r.get('avgHeartRate', 70) for r in records]))
             current_stress = int(np.mean([r.get('stressScore', 50) for r in records]))
             current_hydration = float(np.mean([float(r.get('totalHydrationLiters', '2')) for r in records]))
+
             analysis_type = f"Moyennes sur {len(records)} jours"
+
         else:
-            # Un seul jour ou date spécifique
+            # Si analyse d'un seul jour
             current_steps = latest.get('totalSteps', 0)
             current_sleep = float(latest.get('totalSleepHours', '7'))
             current_hr = latest.get('avgHeartRate', 70)
             current_stress = latest.get('stressScore', 50)
             current_hydration = float(latest.get('totalHydrationLiters', '2'))
+
             analysis_type = "Données du jour"
-        
-        # 1. SOMMEIL
+
+        # --- 3️⃣ Détection des alertes ---
+        # SOMMEIL
         if current_sleep < 6:
             alerts.append("🚨 CRITIQUE: Sommeil insuffisant (< 6h)")
             risk_factors.append({
@@ -661,6 +697,7 @@ class RiskAlertsAnalyzer:
                 'urgency': 'high',
                 'impact': 'Réduction de risque de 90%'
             })
+
         elif current_sleep < 7:
             alerts.append("⚠️ ATTENTION: Sommeil sous-optimal")
             risk_factors.append({
@@ -676,8 +713,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Amélioration de 60%'
             })
-        
-        # 2. ACTIVITÉ PHYSIQUE
+
+        # ACTIVITÉ
         if current_steps < 2000:
             alerts.append("🚨 CRITIQUE: Sédentarité extrême")
             risk_factors.append({
@@ -697,6 +734,7 @@ class RiskAlertsAnalyzer:
                 'urgency': 'high',
                 'impact': 'Réduction de risque de 85%'
             })
+
         elif current_steps < 5000:
             alerts.append("⚠️ ATTENTION: Activité insuffisante")
             risk_factors.append({
@@ -712,8 +750,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Amélioration de 40%'
             })
-        
-        # 3. STRESS
+
+        # STRESS
         if current_stress >= 80:
             alerts.append("🚨 CRITIQUE: Stress très élevé")
             risk_factors.append({
@@ -733,6 +771,7 @@ class RiskAlertsAnalyzer:
                 'urgency': 'high',
                 'impact': 'Réduction de risque de 80%'
             })
+
         elif current_stress >= 60:
             alerts.append("⚠️ Stress modéré à élevé")
             risk_factors.append({
@@ -751,8 +790,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Réduction de risque de 60%'
             })
-        
-        # 4. HYDRATATION
+
+        # HYDRATATION
         if current_hydration < 1.0:
             alerts.append("⚠️ Déshydratation probable")
             risk_factors.append({
@@ -768,64 +807,8 @@ class RiskAlertsAnalyzer:
                 'urgency': 'medium',
                 'impact': 'Réduction de risque de 70%'
             })
-        
-        # 5. FRÉQUENCE CARDIAQUE
-        if current_hr > 100:
-            alerts.append("⚠️ Tachycardie détectée")
-            risk_factors.append({
-                'type': 'elevated_heart_rate',
-                'severity': 'medium',
-                'description': f'FC à {current_hr} bpm (normal: 60-100)',
-                'probability': 60.0,
-                'actions': [
-                    'Exercices de relaxation',
-                    'Consultez un médecin'
-                ]
-            })
-            action_priorities.append({
-                'action': 'Consultation médicale + gestion stress',
-                'category': 'elevated_heart_rate',
-                'urgency': 'medium',
-                'impact': 'Réduction de risque de 60%'
-            })
-        
-        # 6. TENDANCES (si données suffisantes)
-        if len(records) >= 5:
-            recent_steps = [r.get('totalSteps', 0) for r in records[:5]]
-            if len(recent_steps) == 5 and np.mean(recent_steps[:3]) < np.mean(recent_steps[3:]) * 0.7:
-                alerts.append("📉 TENDANCE: Déclin d'activité sur 5 jours")
-                risk_factors.append({
-                    'type': 'activity_declining',
-                    'severity': 'medium',
-                    'description': 'Activité en baisse significative',
-                    'probability': 70.0,
-                    'actions': ['Reprenez activité physique progressive']
-                })
-                action_priorities.append({
-                    'action': 'Rétablir niveau d\'activité antérieur',
-                    'category': 'activity_declining',
-                    'urgency': 'medium',
-                    'impact': 'Amélioration de 70%'
-                })
-            
-            recent_stress = [r.get('stressScore', 50) for r in records[:5]]
-            if len(recent_stress) == 5 and np.mean(recent_stress[:3]) > np.mean(recent_stress[3:]) * 1.3:
-                alerts.append("📈 TENDANCE: Augmentation du stress")
-                risk_factors.append({
-                    'type': 'stress_increasing',
-                    'severity': 'medium',
-                    'description': 'Stress en hausse',
-                    'probability': 65.0,
-                    'actions': ['Identifiez sources de stress', 'Techniques relaxation']
-                })
-                action_priorities.append({
-                    'action': 'Gestion proactive du stress',
-                    'category': 'stress_increasing',
-                    'urgency': 'medium',
-                    'impact': 'Réduction de risque de 65%'
-                })
-        
-        # 7. SIGNES VITAUX CRITIQUES
+
+        # SIGNES VITAUX
         if latest.get('oxygenSaturation') and len(latest['oxygenSaturation']) > 0:
             spo2 = latest['oxygenSaturation'][-1].get('percentage', 100)
             if spo2 < 90:
@@ -833,7 +816,7 @@ class RiskAlertsAnalyzer:
                 risk_factors.append({
                     'type': 'critical_oxygen',
                     'severity': 'critical',
-                    'description': f'SpO2 à {spo2}% (normal: > 95%)',
+                    'description': f'SpO2 à {spo2}%',
                     'probability': 100.0,
                     'actions': ['APPELEZ SAMU IMMÉDIATEMENT']
                 })
@@ -843,7 +826,7 @@ class RiskAlertsAnalyzer:
                     'urgency': 'critical',
                     'impact': 'Vital'
                 })
-        
+
         if latest.get('bodyTemperature') and len(latest['bodyTemperature']) > 0:
             temp = latest['bodyTemperature'][-1].get('temperature', 36.5)
             if temp >= 39:
@@ -865,9 +848,10 @@ class RiskAlertsAnalyzer:
                     'urgency': 'high',
                     'impact': 'Réduction de risque de 80%'
                 })
-        
-        # Niveau d'alerte global
+
+        # --- 4️⃣ Niveau d’alerte global ---
         critical_count = len([a for a in alerts if "🚨" in a])
+
         if critical_count > 0:
             alert_level = "Critique"
         elif len(alerts) >= 3:
@@ -877,23 +861,25 @@ class RiskAlertsAnalyzer:
         else:
             alert_level = "Faible"
             alerts.append("✅ Aucune alerte critique")
-        
-        # Tri des actions par urgence
+
+        # Trier actions
         urgency_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
         action_priorities.sort(key=lambda x: urgency_order.get(x['urgency'], 3))
-        
-        # Date de prochain check-up
+
+        # --- 5️⃣ Résultat final ---
         next_checkup = datetime.now() + timedelta(days=7)
         if critical_count > 0:
             next_checkup = datetime.now() + timedelta(days=3)
-        
+
         return {
-            'user_id': user_id,
+            'email': email,
             'alert_level': alert_level,
-            'analysis_period': f"{start_date.strftime('%Y-%m-%d')} au {end_date.strftime('%Y-%m-%d')}" if not specific_date else f"Date: {specific_date}",
-            'analysis_type': analysis_type,  # 🆕 AJOUTÉ
-            'data_points_analyzed': len(records),  # 🆕 AJOUTÉ
-            'averages_computed': {  # 🆕 AJOUTÉ
+            'analysis_period':
+                f"{start_date.strftime('%Y-%m-%d')} au {end_date.strftime('%Y-%m-%d')}"
+                if not specific_date else f"Date: {specific_date}",
+            'analysis_type': analysis_type,
+            'data_points_analyzed': len(records),
+            'averages_computed': {
                 'steps': current_steps,
                 'sleep_hours': round(current_sleep, 1),
                 'heart_rate': current_hr,
@@ -905,6 +891,7 @@ class RiskAlertsAnalyzer:
             'action_priorities': action_priorities,
             'next_checkup_recommended': next_checkup.isoformat()
         }
+
 # =====================================================
 # 🎯 GÉNÉRATEUR D'OBJECTIFS SMART
 # =====================================================
@@ -913,67 +900,86 @@ class PersonalizedGoalsGenerator:
     """Génère des objectifs SMART personnalisés"""
     
     @staticmethod
-    def generate_goals(user_id: str, preferences: GoalPreferences) -> Dict:
+    def generate_goals(email: str, preferences: GoalPreferences) -> Dict:
         """Génère des objectifs basés sur préférences utilisateur"""
-        # Récupérer données récentes
-        cursor = collection.find({
-            "userId": user_id
-        }).sort("date", -1).limit(7)
-        
-        records = list(cursor)
-        
+
+        # -----------------------
+        # 🔹 1. Charger les données
+        # -----------------------
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = (datetime.now() - timedelta(days=preferences.timeframe_days)).strftime("%Y-%m-%d")
+
+        records = get_unique_daily_data(email, start_date, end_date)
+
         if len(records) == 0:
             raise HTTPException(status_code=404, detail="Aucune donnée trouvée")
-        
+
+        # Sécuriser tri des données (si une date existe)
+        if "date" in records[0]:
+            records.sort(key=lambda x: x.get("date"), reverse=True)
+
         latest = records[0]
+
         goals = []
-        
-        # Moyennes sur 7 jours
-        avg_steps = np.mean([r.get('totalSteps', 0) for r in records])
-        avg_sleep = np.mean([float(r.get('totalSleepHours', '7')) for r in records])
-        avg_hydration = np.mean([float(r.get('totalHydrationLiters', '2')) for r in records])
-        avg_stress = np.mean([r.get('stressScore', 50) for r in records])
-        avg_hr = np.mean([r.get('avgHeartRate', 70) for r in records])
-        
-        # Facteurs de difficulté
+
+        # --------------------------
+        # 🔹 2. Calculs des moyennes
+        # --------------------------
+        avg_steps = np.mean([r.get('totalSteps') or 0 for r in records])
+        avg_sleep = np.mean([float(r.get('totalSleepHours') or 7) for r in records])
+        avg_hydration = np.mean([float(r.get('totalHydrationLiters') or 2) for r in records])
+        avg_stress = np.mean([r.get('stressScore') or 50 for r in records])
+        avg_hr = np.mean([r.get('avgHeartRate') or 70 for r in records])
+
+        # -------------------------------
+        # 🔹 3. Vérifier timeframe correct
+        # -------------------------------
+        if preferences.timeframe_days < 2:
+            raise HTTPException(400, "timeframe_days doit être ≥ 2")
+
+        # ---------------------------------
+        # 🔹 4. Multiplicateur de difficulté
+        # ---------------------------------
         difficulty_multipliers = {
-            'easy': 1.1,      # +10%
-            'moderate': 1.25,  # +25%
-            'challenging': 1.5 # +50%
+            'easy': 1.1,
+            'moderate': 1.25,
+            'challenging': 1.5
         }
         multiplier = difficulty_multipliers.get(preferences.difficulty, 1.25)
-        
-        # 1. OBJECTIF ACTIVITÉ
+
+        days = preferences.timeframe_days
+
+        # ---------------------------------------------------
+        # 🔹 5. OBJECTIF ACTIVITÉ (corrigé + sécurisé)
+        # ---------------------------------------------------
         if 'activity' in preferences.preferred_goals:
             current_steps = int(avg_steps)
-            
-            # Calculer cible réaliste
+
             if current_steps < 5000:
                 target_steps = min(int(current_steps * multiplier), 5000)
             elif current_steps < 8000:
                 target_steps = min(int(current_steps * multiplier), 10000)
             else:
                 target_steps = min(int(current_steps * multiplier), 12000)
-            
-            # Générer milestones
+
+            # éviter division par zéro
+            step_increment = (target_steps - current_steps) / max(1, days / 2)
+
             milestones = []
-            days = preferences.timeframe_days
-            step_increment = (target_steps - current_steps) / (days / 2)
-            
             for day in [days // 3, 2 * days // 3, days]:
-                milestone_target = current_steps + (step_increment * (day / (days / 2)))
+                milestone_target = current_steps + (step_increment * (day / max(1, days / 2)))
                 milestones.append({
                     'day': day,
                     'target': round(milestone_target, 1),
                     'description': f'Atteindre {int(milestone_target)} pas'
                 })
-            
+
             goals.append({
                 'category': 'activity',
                 'title': f'Atteindre {target_steps} pas par jour',
                 'current': current_steps,
                 'target': target_steps,
-                'timeframe': f'{preferences.timeframe_days} jours',
+                'timeframe': f'{days} jours',
                 'priority': 'high' if current_steps < 5000 else 'medium',
                 'tips': [
                     'Marchez 10 min après chaque repas',
@@ -984,11 +990,13 @@ class PersonalizedGoalsGenerator:
                 'milestones': milestones,
                 'expected_improvement': '+15 points au score santé'
             })
-        
-        # 2. OBJECTIF SOMMEIL
+
+        # ---------------------------------------------------
+        # 🔹 6. OBJECTIF SOMMEIL
+        # ---------------------------------------------------
         if 'sleep' in preferences.preferred_goals:
             current_sleep = float(avg_sleep)
-            
+
             if current_sleep < 7:
                 target_sleep = 7.5
                 priority = 'high'
@@ -998,13 +1006,13 @@ class PersonalizedGoalsGenerator:
             else:
                 target_sleep = 8.0
                 priority = 'low'
-            
+
             goals.append({
                 'category': 'sleep',
                 'title': f'Dormir {target_sleep}h par nuit',
                 'current': round(current_sleep, 1),
                 'target': target_sleep,
-                'timeframe': f'{preferences.timeframe_days} jours',
+                'timeframe': f'{days} jours',
                 'priority': priority,
                 'tips': [
                     'Couchez-vous à heure fixe (22h-23h)',
@@ -1015,37 +1023,39 @@ class PersonalizedGoalsGenerator:
                 ],
                 'milestones': [
                     {
-                        'day': preferences.timeframe_days // 2,
+                        'day': days // 2,
                         'target': (current_sleep + target_sleep) / 2,
                         'description': f'Atteindre {(current_sleep + target_sleep) / 2:.1f}h'
                     },
                     {
-                        'day': preferences.timeframe_days,
+                        'day': days,
                         'target': target_sleep,
                         'description': f'Atteindre {target_sleep}h'
                     }
                 ],
                 'expected_improvement': '+12 points au score santé'
             })
-        
-        # 3. OBJECTIF HYDRATATION
+
+        # ---------------------------------------------------
+        # 🔹 7. OBJECTIF HYDRATATION
+        # ---------------------------------------------------
         if 'hydration' in preferences.preferred_goals:
             current_hydration = float(avg_hydration)
             target_hydration = 2.5
-            
+
             if current_hydration < 1.5:
                 priority = 'high'
             elif current_hydration < 2.0:
                 priority = 'medium'
             else:
                 priority = 'low'
-            
+
             goals.append({
                 'category': 'hydration',
                 'title': f'Boire {target_hydration}L d\'eau par jour',
                 'current': round(current_hydration, 1),
                 'target': target_hydration,
-                'timeframe': f'{preferences.timeframe_days} jours',
+                'timeframe': f'{days} jours',
                 'priority': priority,
                 'tips': [
                     'Buvez 1 verre au réveil',
@@ -1056,23 +1066,25 @@ class PersonalizedGoalsGenerator:
                 ],
                 'milestones': [
                     {
-                        'day': preferences.timeframe_days // 3,
+                        'day': days // 3,
                         'target': current_hydration + (target_hydration - current_hydration) / 3,
                         'description': 'Premier palier'
                     },
                     {
-                        'day': preferences.timeframe_days,
+                        'day': days,
                         'target': target_hydration,
                         'description': f'Atteindre {target_hydration}L/jour'
                     }
                 ],
                 'expected_improvement': '+5 points au score santé'
             })
-        
-        # 4. OBJECTIF STRESS
+
+        # ---------------------------------------------------
+        # 🔹 8. OBJECTIF STRESS
+        # ---------------------------------------------------
         if 'stress' in preferences.preferred_goals:
             current_stress = int(avg_stress)
-            
+
             if current_stress >= 70:
                 target_stress = 50
                 priority = 'high'
@@ -1082,13 +1094,13 @@ class PersonalizedGoalsGenerator:
             else:
                 target_stress = 30
                 priority = 'low'
-            
+
             goals.append({
                 'category': 'stress',
                 'title': f'Réduire stress à {target_stress}/100',
                 'current': current_stress,
                 'target': target_stress,
-                'timeframe': f'{preferences.timeframe_days} jours',
+                'timeframe': f'{days} jours',
                 'priority': priority,
                 'tips': [
                     'Méditation guidée (10 min/jour)',
@@ -1100,23 +1112,25 @@ class PersonalizedGoalsGenerator:
                 ],
                 'milestones': [
                     {
-                        'day': preferences.timeframe_days // 2,
+                        'day': days // 2,
                         'target': (current_stress + target_stress) / 2,
                         'description': f'Réduire à {int((current_stress + target_stress) / 2)}/100'
                     },
                     {
-                        'day': preferences.timeframe_days,
+                        'day': days,
                         'target': target_stress,
                         'description': f'Atteindre {target_stress}/100'
                     }
                 ],
                 'expected_improvement': '+8 points au score santé'
             })
-        
-        # 5. OBJECTIF CARDIOVASCULAIRE
+
+        # ---------------------------------------------------
+        # 🔹 9. OBJECTIF CARDIOVASCULAIRE
+        # ---------------------------------------------------
         if 'cardiovascular' in preferences.preferred_goals:
             current_hr = int(avg_hr)
-            
+
             if current_hr > 85:
                 target_hr = 75
                 priority = 'high'
@@ -1140,69 +1154,74 @@ class PersonalizedGoalsGenerator:
                     'Maintenez exercices réguliers',
                     'Alimentation équilibrée'
                 ]
-            
+
             goals.append({
                 'category': 'cardiovascular',
                 'title': f'Optimiser FC moyenne à {target_hr} bpm',
                 'current': current_hr,
                 'target': target_hr,
-                'timeframe': f'{preferences.timeframe_days} jours',
+                'timeframe': f'{days} jours',
                 'priority': priority,
                 'tips': tips,
                 'milestones': [
                     {
-                        'day': preferences.timeframe_days,
+                        'day': days,
                         'target': target_hr,
                         'description': f'FC stable à {target_hr} bpm'
                     }
                 ],
                 'expected_improvement': '+10 points au score santé'
             })
-        
-        # Calculer amélioration totale estimée
-        total_improvement = sum(float(g['expected_improvement'].split('+')[1].split(' ')[0]) for g in goals)
-        
-        # Compter objectifs haute priorité
+
+        # --------------------------------------
+        # 🔹 10. Calcul estimations générales
+        # --------------------------------------
+        def extract_improvement(s: str) -> float:
+            return float(s.replace("+", "").split()[0])
+
+        total_improvement = sum(extract_improvement(g['expected_improvement']) for g in goals)
         high_priority_count = len([g for g in goals if g['priority'] == 'high'])
 
-        # Récupérer le score santé moyen actuel à partir des 7 derniers jours
-        avg_health_score = np.mean([
-        AdvancedHealthAnalyzer().calculate_health_score(
-            BiometricData(**{
-                'totalSteps': r.get('totalSteps', 0),
-                'avgHeartRate': r.get('avgHeartRate', 70),
-                'minHeartRate': r.get('minHeartRate', 60),
-                'maxHeartRate': r.get('maxHeartRate', 90),
-                'totalDistanceKm': float(r.get('totalDistanceKm', '0')),
-                'totalSleepHours': float(r.get('totalSleepHours', '7')),
-                'totalHydrationLiters': float(r.get('totalHydrationLiters', '2')),
-                'stressLevel': r.get('stressLevel', 'Modéré'),
-                'stressScore': r.get('stressScore', 50),
-                'oxygenSaturation': r.get('oxygenSaturation', []),
-                'bodyTemperature': r.get('bodyTemperature', []),
-                'bloodPressure': r.get('bloodPressure', []),
-                'weight': r.get('weight', []),
-                'height': r.get('height', []),
-                'exercise': r.get('exercise', [])
-            })
-        )['total_score']
-        for r in records if r.get('totalSteps') is not None
-    ])
+        # Optimiser calcul health score
+        analyzer = AdvancedHealthAnalyzer()
 
+        avg_health_score = np.mean([
+            analyzer.calculate_health_score(
+                BiometricData(**{
+                    'totalSteps': r.get('totalSteps') or 0,
+                    'avgHeartRate': r.get('avgHeartRate') or 70,
+                    'minHeartRate': r.get('minHeartRate') or 60,
+                    'maxHeartRate': r.get('maxHeartRate') or 90,
+                    'totalDistanceKm': float(r.get('totalDistanceKm') or 0),
+                    'totalSleepHours': float(r.get('totalSleepHours') or 7),
+                    'totalHydrationLiters': float(r.get('totalHydrationLiters') or 2),
+                    'stressLevel': r.get('stressLevel') or 'Modéré',
+                    'stressScore': r.get('stressScore') or 50,
+                    'oxygenSaturation': r.get('oxygenSaturation') or [],
+                    'bodyTemperature': r.get('bodyTemperature') or [],
+                    'bloodPressure': r.get('bloodPressure') or [],
+                    'weight': r.get('weight') or [],
+                    'height': r.get('height') or [],
+                    'exercise': r.get('exercise') or []
+                })
+            )['total_score']
+            for r in records
+        ])
 
         projected_health_score = min(100, avg_health_score + total_improvement)
 
         return {
-            'user_id': user_id,
+            'email': email,
             'total_goals': len(goals),
             'high_priority_count': high_priority_count,
-            'timeframe_days': preferences.timeframe_days,
+            'timeframe_days': days,
             'difficulty': preferences.difficulty,
             'estimated_improvement': round(total_improvement, 1),
             "average_current_health_score": f"{round(avg_health_score, 1)} pour les 7 derniers jours",
-            "projected_health_score": f"{round(projected_health_score, 1)} après atteinte des objectifs dans {preferences.timeframe_days} jours",
+            "projected_health_score": f"{round(projected_health_score, 1)} après atteinte des objectifs dans {days} jours",
             'goals': goals
         }
+
 
 
 # =====================================================
@@ -1275,14 +1294,14 @@ async def analyze_health(data: BiometricData):
         raise HTTPException(status_code=500, detail=f"Erreur d'analyse: {str(e)}")
 
 # 🆕 ENDPOINT 1: TENDANCES
-@app.get("/health-trends/{user_id}")
+@app.get("/health-trends/{email}")
 async def get_health_trends(
-    user_id: str,
+    email: str,
     days: int = Query(default=30, ge=2, le=90, description="Nombre de jours d'historique")
 ):
     """Analyse des tendances de santé sur plusieurs jours"""
     try:
-        trends = TrendsAnalyzer.get_user_trends(user_id, days)
+        trends = TrendsAnalyzer.get_user_trends(email, days)
         return trends
     except HTTPException as e:
         raise e
@@ -1290,9 +1309,9 @@ async def get_health_trends(
         raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
 
 # 🆕 ENDPOINT 2: ALERTES DE RISQUE
-@app.get("/risk-alerts/{user_id}")
+@app.get("/risk-alerts/{email}")
 async def get_risk_alerts(
-    user_id: str,
+    email: str,
     period_days: Optional[int] = 7,
     specific_date: Optional[str] = None
 ):
@@ -1300,12 +1319,12 @@ async def get_risk_alerts(
     Génère des alertes de risque personnalisées
     
     Args:
-        user_id: ID de l'utilisateur
+        email: email de l'utilisateur
         period_days: Nombre de jours (1, 7, 30) - défaut: 7
         specific_date: Date spécifique "YYYY-MM-DD" (optionnel)
     """
     try:
-        alerts = RiskAlertsAnalyzer.generate_alerts(user_id, period_days, specific_date)
+        alerts = RiskAlertsAnalyzer.generate_alerts(email, period_days, specific_date)
         return alerts
     except HTTPException as e:
         raise e
@@ -1313,14 +1332,14 @@ async def get_risk_alerts(
         raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
     
 # 🆕 ENDPOINT 3: OBJECTIFS PERSONNALISÉS
-@app.post("/personalized-goals/{user_id}")
+@app.post("/personalized-goals/{email}")
 async def get_personalized_goals(
-    user_id: str,
+    email: str,
     preferences: GoalPreferences = GoalPreferences()
 ):
     """Génère des objectifs SMART personnalisés avec préférences utilisateur"""
     try:
-        goals = PersonalizedGoalsGenerator.generate_goals(user_id, preferences)
+        goals = PersonalizedGoalsGenerator.generate_goals(email, preferences)
         return goals
     except HTTPException as e:
         raise e
