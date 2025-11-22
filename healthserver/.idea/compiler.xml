@@ -11,6 +11,7 @@
         <module name="doctor-activation-service" />
         <module name="auth-service" />
         <module name="config-service" />
+        <module name="eureka-server" />
         <module name="shared-library" />
       </profile>
       <profile name="Annotation profile for healthserver" enabled="true">
@@ -49,6 +50,7 @@
       <module name="auth-service" options="-parameters" />
       <module name="config-service" options="-parameters" />
       <module name="doctor-activation-service" options="-parameters" />
+      <module name="eureka-server" options="-parameters" />
       <module name="health-app-microservices" options="-parameters" />
       <module name="healthserver" options="-parameters" />
       <module name="notification-service" options="-parameters" />
