@@ -10,6 +10,7 @@ material = "1.13.0"
 activity = "1.11.0"
 constraintlayout = "2.2.1"
 volley = "1.2.1"
+pdfViewer = "1.0.0-alpha11"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -23,6 +24,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "5.2.1" }
 desugar = { group = "com.android.tools", name = "desugar_jdk_libs", version = "2.1.5" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+androidx-pdf-viewer = { group = "androidx.pdf", name = "pdf-viewer", version.ref = "pdfViewer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

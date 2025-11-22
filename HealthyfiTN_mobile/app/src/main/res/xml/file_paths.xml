@@ -5,4 +5,6 @@
 
     <!-- External storage si nécessaire -->
     <external-path name="external_files" path="." />
+
+    <external-files-path name="documents" path="Documents/" />
 </paths>
