@@ -25,6 +25,7 @@
         <module>api-gateway</module>
         <module>config-service</module>
         <module>auth-service</module>
+        <module>health-server</module>
         <module>user-service</module>
         <module>notification-service</module>
 

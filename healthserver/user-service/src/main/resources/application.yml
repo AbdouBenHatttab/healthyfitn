@@ -58,7 +58,9 @@ logging:
 
 eureka:
   client:
-    enabled: false
+    enabled: true
+    register-with-eureka: true       # ← OBLIGATOIRE
+    fetch-registry: true             # ← OBLIGATOIRE
     service-url:
       defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
   instance:

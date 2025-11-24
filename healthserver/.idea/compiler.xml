@@ -7,12 +7,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="api-gateway" />
         <module name="doctor-activation-service" />
         <module name="auth-service" />
         <module name="config-service" />
-        <module name="eureka-server" />
         <module name="shared-library" />
+        <module name="api-gateway" />
+        <module name="eureka-server" />
+        <module name="discovery-service" />
       </profile>
       <profile name="Annotation profile for healthserver" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -28,7 +29,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar" />
         </processorPath>
         <module name="user-service" />
       </profile>
@@ -38,6 +39,7 @@
         <outputRelativeToContentRoot value="true" />
         <processor name="lombok.launch.AnnotationProcessorHider$AnnotationProcessor" />
         <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
         </processorPath>
         <module name="notification-service" />
@@ -49,6 +51,7 @@
       <module name="api-gateway" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="config-service" options="-parameters" />
+      <module name="discovery-service" options="-parameters" />
       <module name="doctor-activation-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="health-app-microservices" options="-parameters" />
