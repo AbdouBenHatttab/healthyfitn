@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitHealthClient {
 
-    private const val BASE_URL = "https://strap-duncan-appliances-twice.trycloudflare.com/model-ai-service/" //PORT 8000
+    private const val BASE_URL = "https://halifax-councils-bluetooth-eligibility.trycloudflare.com/model-ai-service/" //PORT 8000
 
     // 📝 Logging interceptor pour debug
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
