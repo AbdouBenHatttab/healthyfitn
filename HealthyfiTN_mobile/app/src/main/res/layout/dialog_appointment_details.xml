@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white">
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:text="📋 Détails du Rendez-vous"
             android:textSize="20sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
 
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="Médecin"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold" />
 
         <TextView
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:text="Dr. John Doe"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:text="John Doe"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
@@ -58,7 +58,7 @@
             android:layout_height="wrap_content"
             android:text="Email"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold"
             android:id="@+id/lblPatientEmail"
             android:visibility="gone" />
@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:text="patient@example.com"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
@@ -80,7 +80,7 @@
             android:layout_height="wrap_content"
             android:text="Téléphone"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold"
             android:id="@+id/lblPatientPhone"
             android:visibility="gone" />
@@ -91,7 +91,7 @@
             android:layout_height="wrap_content"
             android:text="+33 6 12 34 56 78"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
@@ -102,7 +102,7 @@
             android:layout_height="wrap_content"
             android:text="Date"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold" />
 
         <TextView
@@ -111,7 +111,7 @@
             android:layout_height="wrap_content"
             android:text="15/11/2025"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
@@ -122,7 +122,7 @@
             android:layout_height="wrap_content"
             android:text="15/11/2025"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
@@ -133,7 +133,7 @@
             android:layout_height="wrap_content"
             android:text="Heure"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold" />
 
         <TextView
@@ -142,7 +142,7 @@
             android:layout_height="wrap_content"
             android:text="10:00"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
@@ -153,7 +153,7 @@
             android:layout_height="wrap_content"
             android:text="10:00"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
@@ -164,7 +164,7 @@
             android:layout_height="wrap_content"
             android:text="Type"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold" />
 
         <com.google.android.material.chip.Chip
@@ -182,7 +182,7 @@
             android:layout_height="wrap_content"
             android:text="VIDEO_CALL"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
@@ -193,7 +193,7 @@
             android:layout_height="wrap_content"
             android:text="Motif"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold" />
 
         <TextView
@@ -202,7 +202,7 @@
             android:layout_height="wrap_content"
             android:text="Consultation de routine"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
@@ -213,7 +213,7 @@
             android:layout_height="wrap_content"
             android:text="Consultation de routine"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
@@ -224,7 +224,7 @@
             android:layout_height="wrap_content"
             android:text="Statut"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:textStyle="bold" />
 
         <TextView
@@ -233,7 +233,7 @@
             android:layout_height="wrap_content"
             android:text="SCHEDULED"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#212121"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
@@ -246,6 +246,100 @@
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone" />
+
+        <!-- Rejection Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardRejectionDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#FFEBEE"
+            app:cardCornerRadius="8dp"
+            app:strokeColor="#F44336"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Rendez-vous Refusé"
+                    android:textColor="#F44336"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvRejectionReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Raison du refus"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvAvailableHours"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Heures disponibles suggérées"
+                    android:textSize="14sp"
+                    android:textStyle="italic" />
+
+                <TextView
+                    android:id="@+id/tvRespondedAt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Date de réponse"
+                    android:textSize="12sp"
+                    android:textColor="#757575" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Cancellation Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCancellationDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#FFF3E0"
+            app:cardCornerRadius="8dp"
+            app:strokeColor="#FF9800"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Rendez-vous Annulé"
+                    android:textColor="#FF9800"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvCancellationReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Raison de l'annulation"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Notes Card (Optional - For Doctor View) -->
         <androidx.cardview.widget.CardView
@@ -268,7 +362,7 @@
                     android:layout_height="wrap_content"
                     android:text="Notes"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="#757575"
                     android:textStyle="bold" />
 
                 <TextView
@@ -277,7 +371,7 @@
                     android:layout_height="wrap_content"
                     android:text="Notes du rendez-vous"
                     android:textSize="14sp"
-                    android:textColor="@color/text_primary"
+                    android:textColor="#212121"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
