@@ -403,4 +403,6 @@ data class Alternative(
 data class AppointmentResponseRequest(
     val reason: String,
     val availableHours: String? = null
+
+
 )

@@ -58,5 +58,21 @@ data class AppointmentResponse(
     val completedAt: String?,
 
     @SerializedName("createdAt")
-    val createdAt: String
+    val createdAt: String,
+
+    // CORRECT SERIALIZED NAMES FOR SNAKE_CASE FIELDS:
+    @SerializedName("doctor_response")
+    val doctorResponse: String? = null,
+
+    @SerializedName("doctor_response_reason")
+    val doctorResponseReason: String? = null,
+
+    @SerializedName("available_hours_suggestion")
+    val availableHoursSuggestion: String? = null,
+
+    @SerializedName("responded_at")
+    val respondedAt: String? = null,
+
+    @SerializedName("cancellation_reason")
+    val cancellationReason: String? = null
 )

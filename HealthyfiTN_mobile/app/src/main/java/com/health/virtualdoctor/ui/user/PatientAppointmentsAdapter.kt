@@ -45,7 +45,7 @@ class PatientAppointmentsAdapter(
 
         // Parse and format date/time
         try {
-            val dateTime = LocalDateTime.parse(appointment.appointmentDateTime)
+            val dateTime = LocalDateTime.parse(appointment.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
             val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
             val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -57,10 +57,10 @@ class PatientAppointmentsAdapter(
         }
 
         // Status chip styling
-        when (appointment.status) {
+        when (appointment.status.uppercase()) {
             "SCHEDULED" -> {
                 holder.chipStatus.text = "⏰ Programmé"
-                holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_orange_light)
+                holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_blue_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
                 holder.btnCancel.visibility = View.VISIBLE
             }
@@ -72,6 +72,12 @@ class PatientAppointmentsAdapter(
             }
             "CANCELLED" -> {
                 holder.chipStatus.text = "❌ Annulé"
+                holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_orange_light)
+                holder.chipStatus.setTextColor(Color.WHITE)
+                holder.btnCancel.visibility = View.GONE
+            }
+            "REJECTED" -> {
+                holder.chipStatus.text = "🚫 Refusé"
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.holo_red_light)
                 holder.chipStatus.setTextColor(Color.WHITE)
                 holder.btnCancel.visibility = View.GONE

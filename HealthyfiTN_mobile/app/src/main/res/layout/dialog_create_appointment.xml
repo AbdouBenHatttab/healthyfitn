@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:hint="Sélectionner un médecin"
             android:layout_marginBottom="12dp"
-            app:boxBackgroundColor="@color/white"
+            app:boxBackgroundColor="@color/input_background"
             app:boxStrokeColor="@color/primary"
             app:hintTextColor="@color/text_secondary">
 

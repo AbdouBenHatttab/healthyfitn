@@ -2,6 +2,7 @@ package com.health.virtualdoctor.ui.user
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,10 +16,12 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -33,7 +36,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
-
 
 class PatientAppointmentsActivity : AppCompatActivity() {
 
@@ -127,9 +129,24 @@ class PatientAppointmentsActivity : AppCompatActivity() {
                         LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
                     } ?: emptyList()
 
+                    // DEBUG: Log rejected appointments with their details
+                    val rejectedAppointments = allAppointments.filter { it.status == "REJECTED" }
+                    Log.d("PatientAppointments", "🔍 Found ${rejectedAppointments.size} rejected appointments")
+
+                    rejectedAppointments.forEach { appointment ->
+                        Log.d("PatientAppointments", "🔍 Rejected Appointment Debug:")
+                        Log.d("PatientAppointments", "   - ID: ${appointment.id}")
+                        Log.d("PatientAppointments", "   - Status: ${appointment.status}")
+                        Log.d("PatientAppointments", "   - Doctor Response: ${appointment.doctorResponse}")
+                        Log.d("PatientAppointments", "   - Response Reason: ${appointment.doctorResponseReason}")
+                        Log.d("PatientAppointments", "   - Available Hours: ${appointment.availableHoursSuggestion}")
+                        Log.d("PatientAppointments", "   - Responded At: ${appointment.respondedAt}")
+                    }
+
                     filterAppointments(chipGroupFilter.checkedChipId)
 
                     Log.d("PatientAppointments", "✅ Loaded ${allAppointments.size} appointments")
+                    Log.d("PatientAppointments", "Rejected appointments: ${allAppointments.count { it.status == "REJECTED" }}")
                 } else {
                     Toast.makeText(
                         this@PatientAppointmentsActivity,
@@ -188,7 +205,10 @@ class PatientAppointmentsActivity : AppCompatActivity() {
             }
             R.id.chipPast -> allAppointments.filter {
                 val apptDateTime = LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
-                apptDateTime.isBefore(now) || !it.status.equals("SCHEDULED", ignoreCase = true)
+                apptDateTime.isBefore(now) ||
+                        it.status.equals("COMPLETED", ignoreCase = true) ||
+                        it.status.equals("REJECTED", ignoreCase = true) ||
+                        it.status.equals("CANCELLED", ignoreCase = true)
             }
             R.id.chipAll -> allAppointments
             else -> allAppointments
@@ -202,6 +222,7 @@ class PatientAppointmentsActivity : AppCompatActivity() {
     private fun showAppointmentDetails(appointment: AppointmentResponse) {
         val detailsView = LayoutInflater.from(this).inflate(R.layout.dialog_appointment_details, null)
 
+        // Hide patient info for patient view
         detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails).visibility = View.VISIBLE
         detailsView.findViewById<TextView>(R.id.tvPatientNameDialog).visibility = View.GONE
         detailsView.findViewById<TextView>(R.id.lblPatientEmail)?.visibility = View.GONE
@@ -221,12 +242,30 @@ class PatientAppointmentsActivity : AppCompatActivity() {
         detailsView.findViewById<View>(R.id.cardNotesDialog).visibility = View.GONE
         detailsView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCloseDialog).visibility = View.GONE
 
+        // Set basic appointment info
         detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails).text = "Dr. ${appointment.doctorName}"
         detailsView.findViewById<TextView>(R.id.tvAppointmentDateDetails).text = formatDisplayDate(appointment.appointmentDateTime)
         detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDetails).text = formatDisplayTime(appointment.appointmentDateTime)
         detailsView.findViewById<TextView>(R.id.tvAppointmentReasonDetails).text = appointment.reason
-        detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails).text = appointment.status
+        detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails).text = getStatusDisplayText(appointment.status)
         detailsView.findViewById<com.google.android.material.chip.Chip>(R.id.chipAppointmentTypeDetails).text = appointment.appointmentType
+
+        // Set status color
+        val statusTextView = detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails)
+        statusTextView.setTextColor(getStatusColor(appointment.status))
+
+        // Check if appointment was rejected or cancelled and show relevant details
+        if (appointment.status.equals("REJECTED", ignoreCase = true) ||
+            (appointment.doctorResponse != null && appointment.doctorResponse.equals("REJECTED", ignoreCase = true))) {
+            showRejectionDetails(detailsView, appointment)
+            hideCancellationDetails(detailsView) // Hide cancellation details if rejected
+        } else if (appointment.status.equals("CANCELLED", ignoreCase = true)) {
+            showCancellationDetails(detailsView, appointment)
+            hideRejectionDetails(detailsView) // Hide rejection details if cancelled
+        } else {
+            hideRejectionDetails(detailsView)
+            hideCancellationDetails(detailsView) // Hide both if neither rejected nor cancelled
+        }
 
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(detailsView)
@@ -236,7 +275,100 @@ class PatientAppointmentsActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    private fun showRejectionDetails(detailsView: View, appointment: AppointmentResponse) {
+        Log.d("PatientAppointments", "🔍 showRejectionDetails called for appointment: ${appointment.id}")
+        Log.d("PatientAppointments", "   - Status: ${appointment.status}")
+        Log.d("PatientAppointments", "   - Doctor Response: ${appointment.doctorResponse}")
+        Log.d("PatientAppointments", "   - Response Reason: ${appointment.doctorResponseReason}")
+        Log.d("PatientAppointments", "   - Available Hours: ${appointment.availableHoursSuggestion}")
+        Log.d("PatientAppointments", "   - Responded At: ${appointment.respondedAt}")
+
+        // Make sure these views exist in your dialog_appointment_details.xml
+        val rejectionCard = detailsView.findViewById<MaterialCardView>(R.id.cardRejectionDetails) ?: return
+        val tvRejectionReason = detailsView.findViewById<TextView>(R.id.tvRejectionReason) ?: return
+        val tvAvailableHours = detailsView.findViewById<TextView>(R.id.tvAvailableHours) ?: return
+        val tvRespondedAt = detailsView.findViewById<TextView>(R.id.tvRespondedAt) ?: return
+
+        rejectionCard.visibility = View.VISIBLE
+
+        // Set rejection details
+        tvRejectionReason.text = appointment.doctorResponseReason.let {
+            if (it.isNullOrBlank()) "Aucune raison fournie" else it
+        }
+        tvAvailableHours.text = appointment.availableHoursSuggestion.let {
+            if (it.isNullOrBlank()) "Heures suggérées: N/A" else "Heures suggérées: $it"
+        }
+        tvRespondedAt.text = appointment.respondedAt.let {
+            if (it.isNullOrBlank()) "Date de réponse: N/A" else "Date de réponse: ${formatDateTime(it)}"
+        }
+
+        // Show available hours suggestion if available
+        if (appointment.availableHoursSuggestion != null && appointment.availableHoursSuggestion.isNotEmpty()) {
+            tvAvailableHours.text = "Heures suggérées: ${appointment.availableHoursSuggestion}"
+            tvAvailableHours.visibility = View.VISIBLE
+        } else {
+            tvAvailableHours.visibility = View.GONE
+        }
+
+        // Show response date if available
+        if (appointment.respondedAt != null && appointment.respondedAt.isNotEmpty()) {
+            tvRespondedAt.text = "Répondu le: ${formatDisplayDate(appointment.respondedAt)} à ${formatDisplayTime(appointment.respondedAt)}"
+            tvRespondedAt.visibility = View.VISIBLE
+        } else {
+            tvRespondedAt.visibility = View.GONE
+        }
+    }
+
+    private fun hideRejectionDetails(detailsView: View) {
+        val rejectionCard = detailsView.findViewById<MaterialCardView>(R.id.cardRejectionDetails)
+        rejectionCard?.visibility = View.GONE
+    }
+
+    private fun showCancellationDetails(detailsView: View, appointment: AppointmentResponse) {
+        val cancellationCard = detailsView.findViewById<MaterialCardView>(R.id.cardCancellationDetails) ?: return
+        val tvCancellationReason = detailsView.findViewById<TextView>(R.id.tvCancellationReason) ?: return
+
+        cancellationCard.visibility = View.VISIBLE
+        tvCancellationReason.text = appointment.cancellationReason.let {
+            if (it.isNullOrBlank()) "Aucune raison fournie" else it
+        }
+    }
+
+    private fun hideCancellationDetails(detailsView: View) {
+        val cancellationCard = detailsView.findViewById<MaterialCardView>(R.id.cardCancellationDetails)
+        cancellationCard?.visibility = View.GONE
+    }
+
+    private fun getStatusDisplayText(status: String): String {
+        return when (status.uppercase()) {
+            "SCHEDULED" -> "Planifié"
+            "REJECTED" -> "Refusé"
+            "CANCELLED" -> "Annulé"
+            "COMPLETED" -> "Terminé"
+            "PENDING" -> "En attente"
+            else -> status
+        }
+    }
+
+    private fun getStatusColor(status: String): Int {
+        return when (status.uppercase()) {
+            "SCHEDULED" -> Color.parseColor("#2196F3") // Blue
+            "REJECTED" -> Color.parseColor("#F44336")  // Red
+            "CANCELLED" -> Color.parseColor("#FF9800") // Orange
+            "COMPLETED" -> Color.parseColor("#4CAF50") // Green
+            "PENDING" -> Color.parseColor("#FF9800")   // Orange
+            else -> Color.BLACK
+        }
+    }
+
     private fun showCancelDialog(appointment: AppointmentResponse) {
+        // Don't allow cancellation of rejected or completed appointments
+        if (appointment.status.equals("REJECTED", ignoreCase = true) ||
+            appointment.status.equals("COMPLETED", ignoreCase = true)) {
+            Toast.makeText(this, "Impossible d'annuler un rendez-vous ${getStatusDisplayText(appointment.status).lowercase()}", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_cancel_appointment, null)
         val etCancelReason = dialogView.findViewById<EditText>(R.id.etCancelReason)
         val tvPatientName = dialogView.findViewById<TextView>(R.id.tvPatientNameCancel)
@@ -434,9 +566,6 @@ class PatientAppointmentsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    // REPLACE ONLY the createAppointment function in your PatientAppointmentsActivity.kt
-// Starting around line 416
-
     private fun createAppointment(request: AppointmentRequest) {
         Log.d("APPT_CREATE", "════════════════════════════════")
         Log.d("APPT_CREATE", "📤 SENDING REQUEST TO BACKEND")
@@ -540,60 +669,6 @@ class PatientAppointmentsActivity : AppCompatActivity() {
         }
     }
 
-
-
-
-
-    private fun handleServerError(response: retrofit2.Response<*>) {
-        val errorBody = response.errorBody()?.string()
-        android.util.Log.e("APPT_DEBUG", "❌ SERVER ERROR ${response.code()}")
-        android.util.Log.e("APPT_DEBUG", "Error body: $errorBody")
-
-        // Try to extract meaningful error message
-        val errorMessage = extractErrorMessage(errorBody, response.code())
-
-        runOnUiThread {
-            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun extractErrorMessage(errorBody: String?, statusCode: Int): String {
-        return try {
-            if (!errorBody.isNullOrEmpty()) {
-                // Try to parse as JSON first
-                if (errorBody.trim().startsWith("{")) {
-                    val errorJson = org.json.JSONObject(errorBody)
-
-                    // Check common error field names
-                    listOf("message", "error", "detail", "reason", "errorMessage").forEach { field ->
-                        if (errorJson.has(field)) {
-                            val value = errorJson.optString(field, "")
-                            if (value.isNotEmpty()) {
-                                android.util.Log.e("APPT_DEBUG", "Found error in field '$field': $value")
-                                return value
-                            }
-                        }
-                    }
-
-                    // If no specific field found, return the whole JSON
-                    errorJson.toString()
-                } else {
-                    // Not JSON, return raw body
-                    errorBody
-                }
-            } else {
-                when (statusCode) {
-                    500 -> "Erreur interne du serveur. Veuillez réessayer plus tard."
-                    400 -> "Données invalides envoyées au serveur."
-                    else -> "Erreur $statusCode"
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("APPT_DEBUG", "Error parsing error message: ${e.message}")
-            "Erreur $statusCode: ${errorBody ?: "Unknown error"}"
-        }
-    }
-
     private fun formatDisplayDate(isoDateTime: String): String {
         return try {
             val dateTime = LocalDateTime.parse(isoDateTime, DateTimeFormatter.ISO_DATE_TIME)
@@ -609,6 +684,15 @@ class PatientAppointmentsActivity : AppCompatActivity() {
             dateTime.format(DateTimeFormatter.ofPattern("HH:mm", Locale.FRENCH))
         } catch (e: Exception) {
             "Heure invalide"
+        }
+    }
+
+    private fun formatDateTime(isoDateTime: String): String {
+        return try {
+            val dateTime = LocalDateTime.parse(isoDateTime, DateTimeFormatter.ISO_DATE_TIME)
+            dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.FRENCH))
+        } catch (e: Exception) {
+            "Date/Heure invalide"
         }
     }
 

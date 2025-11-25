@@ -14,5 +14,10 @@ data class Appointment(
     val reason: String,
     val notes: String?,
     val status: String,
-    val createdAt: String
+    val createdAt: String,
+
+    val doctorResponse: String? = null,
+    val doctorResponseReason: String? = null,
+    val availableHoursSuggestion: String? = null,
+    val respondedAt: String? = null
 )
