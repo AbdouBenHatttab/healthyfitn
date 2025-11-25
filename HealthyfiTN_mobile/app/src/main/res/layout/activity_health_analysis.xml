@@ -447,6 +447,21 @@
 
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGeneratePdf"
+                android:layout_width="match_parent"
+                android:layout_height="68dp"
+                android:text="Générer mon rapport PDF"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:backgroundTint="#2E7D32"
+                app:cornerRadius="24dp"
+                android:layout_margin="24dp"
+                android:elevation="8dp"
+                app:layout_anchor="@id/contentContainer"
+                app:layout_anchorGravity="bottom|center"
+                android:visibility="gone" />
 
         </LinearLayout>
 

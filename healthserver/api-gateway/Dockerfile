@@ -29,7 +29,7 @@ RUN chown -R appuser:appgroup /app
 # Switch to non-root user
 USER appuser
 
-EXPOSE 8080
+EXPOSE 8888
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \

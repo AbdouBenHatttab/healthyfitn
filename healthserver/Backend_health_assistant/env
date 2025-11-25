@@ -1,0 +1,3 @@
+GEMINI_API_KEY=AIzaSyBqdjVDcdwQNEWkxlDKUfm0XSBZwuHeQMo
+MONGO_URI=mongodb://localhost:27017/healthsync_db
+BASE_URL=http://10.0.2.2:5000

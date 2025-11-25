@@ -27,7 +27,7 @@ class ChatBotActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     // CONFIG
-    private val BASE_URL = "https://ruinous-loma-nondipterous.ngrok-free.dev"
+    private val BASE_URL = "https://halifax-councils-bluetooth-eligibility.trycloudflare.com/health-assistant-service"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,7 +85,7 @@ class ChatBotActivity : AppCompatActivity() {
     }
 
     private fun sendUserMessage(text: String) {
-        val userId = tokenManager.getUserId()
+        val email = tokenManager.getUserEmail()
             ?: run {
                 addBotMessage("Erreur : utilisateur non identifié.")
                 return
@@ -95,7 +95,7 @@ class ChatBotActivity : AppCompatActivity() {
         recyclerView.scrollToPosition(adapter.itemCount - 1)
 
         val json = JSONObject().apply {
-            put("userId", userId)
+            put("email", email)
             put("prompt", text)
         }
 
