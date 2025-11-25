@@ -291,32 +291,15 @@ class PatientAppointmentsActivity : AppCompatActivity() {
 
         rejectionCard.visibility = View.VISIBLE
 
-        // Set rejection details
         tvRejectionReason.text = appointment.doctorResponseReason.let {
             if (it.isNullOrBlank()) "Aucune raison fournie" else it
         }
+
         tvAvailableHours.text = appointment.availableHoursSuggestion.let {
             if (it.isNullOrBlank()) "Heures suggérées: N/A" else "Heures suggérées: $it"
         }
-        tvRespondedAt.text = appointment.respondedAt.let {
-            if (it.isNullOrBlank()) "Date de réponse: N/A" else "Date de réponse: ${formatDateTime(it)}"
-        }
 
-        // Show available hours suggestion if available
-        if (appointment.availableHoursSuggestion != null && appointment.availableHoursSuggestion.isNotEmpty()) {
-            tvAvailableHours.text = "Heures suggérées: ${appointment.availableHoursSuggestion}"
-            tvAvailableHours.visibility = View.VISIBLE
-        } else {
-            tvAvailableHours.visibility = View.GONE
-        }
-
-        // Show response date if available
-        if (appointment.respondedAt != null && appointment.respondedAt.isNotEmpty()) {
-            tvRespondedAt.text = "Répondu le: ${formatDisplayDate(appointment.respondedAt)} à ${formatDisplayTime(appointment.respondedAt)}"
-            tvRespondedAt.visibility = View.VISIBLE
-        } else {
-            tvRespondedAt.visibility = View.GONE
-        }
+        tvRespondedAt.visibility = View.GONE // Hide respondedAt as per user request
     }
 
     private fun hideRejectionDetails(detailsView: View) {
