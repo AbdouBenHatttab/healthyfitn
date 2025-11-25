@@ -1,7 +1,13 @@
 package com.health.virtualdoctor.ui.user
 
+import android.content.Intent
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.graphics.pdf.PdfDocument
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
@@ -11,6 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.cardview.widget.CardView
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.chip.Chip
 import com.health.virtualdoctor.R
@@ -24,9 +31,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HealthAnalysisActivity : ComponentActivity() {
 
+    private lateinit var btnGeneratePdf: com.google.android.material.button.MaterialButton
+    private var currentAnalysisResult: HealthAnalysisResponse? = null
     // Views
     private lateinit var progressBar: ProgressBar
     private lateinit var contentContainer: LinearLayout
@@ -89,6 +103,8 @@ class HealthAnalysisActivity : ComponentActivity() {
         detailsContainer = findViewById(R.id.detailsContainer)
         cardAnomalies = findViewById(R.id.cardAnomalies)
         tokenManager = TokenManager(this)
+
+        btnGeneratePdf = findViewById(R.id.btnGeneratePdf)
     }
 
     private fun parseBiometricData(json: JSONObject): BiometricDataRequest {
@@ -301,8 +317,210 @@ class HealthAnalysisActivity : ComponentActivity() {
 
         // 8. Enregistrer le score sur le serveur
         sendScoreToServer(result.healthScore)
+
+        currentAnalysisResult = result
+        btnGeneratePdf.visibility = View.VISIBLE
+        btnGeneratePdf.setOnClickListener {
+            currentAnalysisResult?.let { result ->
+                generatePdfReport(result)
+                Toast.makeText(this, "Génération du rapport en cours...", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
+    private fun generatePdfReport(analysis: HealthAnalysisResponse) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            var pdfDocument: PdfDocument? = null
+            try {
+                pdfDocument = PdfDocument()
+                val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create() // A4
+                val page = pdfDocument.startPage(pageInfo)
+                val canvas = page.canvas
+                var y = 70f  // On commence plus haut
+
+                val titlePaint = Paint().apply {
+                    color = Color.rgb(46, 125, 50)
+                    textSize = 26f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    isAntiAlias = true
+                }
+                val subtitlePaint = Paint().apply {
+                    color = Color.rgb(76, 175, 80)
+                    textSize = 16f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    isAntiAlias = true
+                }
+                val textPaint = Paint().apply {
+                    color = Color.BLACK
+                    textSize = 12f  // Réduit pour tout faire tenir
+                    isAntiAlias = true
+                }
+                val smallPaint = Paint().apply {
+                    color = Color.BLACK
+                    textSize = 10f
+                    isAntiAlias = true
+                }
+                val redPaint = Paint().apply {
+                    color = Color.rgb(211, 47, 47)
+                    textSize = 13f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    isAntiAlias = true
+                }
+
+                // === En-tête compact ===
+                canvas.drawText("Virtual Doctor - Rapport de Santé", 40f, y, titlePaint)
+                y += 35
+                canvas.drawText("Généré le ${SimpleDateFormat("dd MMMM yyyy 'à' HH:mm", Locale.FRENCH).format(Date())}", 40f, y, smallPaint)
+                y += 45
+
+                // === Score Global ===
+                canvas.drawText("Score Global", 40f, y, subtitlePaint)
+                y += 35
+                textPaint.textSize = 46f
+                textPaint.color = when {
+                    analysis.healthScore >= 80 -> Color.rgb(76, 175, 80)
+                    analysis.healthScore >= 60 -> Color.rgb(255, 152, 0)
+                    else -> Color.rgb(211, 47, 47)
+                }
+                canvas.drawText("%.1f".format(analysis.healthScore), 40f, y, textPaint)
+                textPaint.textSize = 20f
+                canvas.drawText("/ 100", 160f, y - 12f, textPaint)
+                y += 50
+
+                textPaint.textSize = 14f
+                textPaint.color = Color.BLACK
+                canvas.drawText("Niveau de risque : ${analysis.riskLevel.uppercase()}", 40f, y, textPaint)
+                y += 40
+
+                // === Répartition du Score (compact) ===
+                canvas.drawText("Répartition du Score", 40f, y, subtitlePaint)
+                y += 25
+                textPaint.textSize = 11f
+                val breakdown = analysis.insights.score_breakdown
+                val categories = listOf(
+                    Triple("Activité physique", breakdown.activity, 25.0),
+                    Triple("Santé cardiovasculaire", breakdown.cardiovascular, 25.0),
+                    Triple("Qualité du sommeil", breakdown.sleep, 20.0),
+                    Triple("Hydratation", breakdown.hydration, 10.0),
+                    Triple("Gestion du stress", breakdown.stress, 10.0),
+                    Triple("Signes vitaux", breakdown.vitals, 10.0)
+                )
+                for ((label, score, max) in categories) {
+                    val percent = if (max > 0) (score / max) * 100 else 0.0
+                    val pct = percent.toInt().coerceIn(0, 100)
+                    canvas.drawText("• $label : $score/$max ($pct%)", 60f, y, textPaint)
+                    y += 22
+                }
+                y += 25
+
+                // === Analyse IA (texte réduit) ===
+                canvas.drawText("Analyse IA", 40f, y, subtitlePaint)
+                y += 22
+                textPaint.textSize = 10.5f
+                analysis.aiExplanation.split("\n").filter { it.isNotBlank() }.take(6).forEach { line ->
+                    y += drawWrappedText(canvas, "   $line", 60f, y, 480f, textPaint)
+                }
+                if (analysis.aiExplanation.lines().size > 6) {
+                    canvas.drawText("   (... suite dans l'app)", 60f, y, smallPaint)
+                    y += 18
+                }
+
+                // === Anomalies ===
+                if (analysis.anomalies.isNotEmpty()) {
+                    canvas.drawText("Anomalies détectées", 40f, y, redPaint)
+                    y += 22
+                    analysis.anomalies.take(4).forEach {
+                        canvas.drawText("• $it", 60f, y, redPaint)
+                        y += 20
+                    }
+                    if (analysis.anomalies.size > 4) {
+                        canvas.drawText("   + ${analysis.anomalies.size - 4} autre(s)", 60f, y, redPaint)
+                        y += 18
+                    }
+                }
+
+                // === Recommandations (max 5) ===
+                if (analysis.recommendations.isNotEmpty()) {
+                    canvas.drawText("Recommandations", 40f, y, subtitlePaint)
+                    y += 22
+                    analysis.recommendations.take(5).forEach {
+                        canvas.drawText("• $it", 60f, y, textPaint)
+                        y += 20
+                    }
+                }
+
+                // === Métriques (compact) ===
+                if (y < 700) {
+                    canvas.drawText("Métriques clés", 40f, y, subtitlePaint)
+                    y += 22
+                    val d = analysis.insights
+                    listOf(
+                        "Pas : ${d.activity_details.steps}",
+                        "Distance : %.2f km".format(d.activity_details.distance_km),
+                        "FC : ${d.cardiovascular_details.avg_heart_rate} bpm",
+                        "Sommeil : %.1f h".format(d.sleep_details.hours),
+                        "Stress : ${d.stress_details.level}"
+                    ).forEach {
+                        canvas.drawText("• $it", 60f, y, textPaint)
+                        y += 18
+                    }
+                }
+
+                // === Pied de page ===
+                canvas.drawText("Merci d'utiliser Virtual Doctor © 2025", 40f, 820f, smallPaint)
+
+                pdfDocument.finishPage(page)
+
+                // === Sauvegarde ===
+                val fileName = "Rapport_Sante_${SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())}.pdf"
+                val dir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)!!
+                dir.mkdirs()
+                val file = File(dir, fileName)
+                FileOutputStream(file).use { pdfDocument.writeTo(it) }
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@HealthAnalysisActivity, "Rapport PDF généré (1 page) !", Toast.LENGTH_LONG).show()
+                    try {
+                        val uri = FileProvider.getUriForFile(this@HealthAnalysisActivity, "${packageName}.fileprovider", file)
+                        startActivity(Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, "application/pdf")
+                            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                        })
+                    } catch (e: Exception) {
+                        Toast.makeText(this@HealthAnalysisActivity, "Aucun lecteur PDF", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@HealthAnalysisActivity, "Erreur PDF : ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                pdfDocument?.close()
+            }
+        }
+    }
+    private fun drawWrappedText(
+        canvas: Canvas, text: String, x: Float, startY: Float, maxWidth: Float, paint: Paint
+    ): Float {
+        if (text.isBlank()) return 0f
+        var y = startY
+        val words = text.split(" ")
+        var line = ""
+        for (word in words) {
+            val test = if (line.isEmpty()) word else "$line $word"
+            if (paint.measureText(test) > maxWidth) {
+                canvas.drawText(line, x, y, paint)
+                y += paint.textSize + 10f
+                line = word
+            } else line = test
+        }
+        if (line.isNotEmpty()) {
+            canvas.drawText(line, x, y, paint)
+            y += paint.textSize + 10f
+        }
+        return y - startY
+    }
 
     private fun sendScoreToServer(score: Double) {
         val email = tokenManager.getUserEmail() ?: return

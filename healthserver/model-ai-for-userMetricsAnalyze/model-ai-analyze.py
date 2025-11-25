@@ -19,6 +19,8 @@ from sklearn.preprocessing import StandardScaler
 import requests
 import json
 from config import Config
+from eureka_client import eureka_client
+import atexit
 
 app = FastAPI(title="Health AI System", version="2.0.0")
 
@@ -1464,13 +1466,36 @@ async def root():
     }
 
 # =====================================================
-# 🚀 LANCEMENT
+# 🚀 LANCEMENT AVEC EUREKA
 # =====================================================
+
+@app.on_event("startup")
+async def startup_event():
+    """Démarrage de l'application avec enregistrement Eureka"""
+    print("🚀 Démarrage du Health AI System v2.0.0")
+
+    # Enregistrement auprès d'Eureka
+    if eureka_client.register_with_eureka():
+        eureka_client.start_heartbeat()
+    else:
+        print("⚠️ Attention: Échec de l'enregistrement Eureka, mais le service démarre")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Arrêt propre avec désenregistrement Eureka"""
+    print("🛑 Arrêt du Health AI System")
+    eureka_client.unregister()
 
 if __name__ == "__main__":
     import uvicorn
+
+    # Enregistrement pour désenregistrement propre à l'arrêt
+    atexit.register(eureka_client.unregister)
+
     print("🚀 Lancement du Health AI System v2.0.0")
     print("📊 MongoDB: healthsync_db.biometric_data")
     print("🌐 API: http://localhost:8000")
     print("📖 Docs: http://localhost:8000/docs")
+    print("🔗 Eureka: http://localhost:8761")
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
