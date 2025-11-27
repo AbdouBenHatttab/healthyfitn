@@ -305,7 +305,7 @@ class MealAnalysisActivity : ComponentActivity() {
             }
 
             // ✅ URL Cloudflare au lieu de localhost
-            val serverUrl = "https://spending-elderly-change-fin.trycloudflare.com/api/v1/nutrition/analyze"
+            val serverUrl = "https://revised-symphony-connectors-ask.trycloudflare.com/api/v1/nutrition/analyze"
             // Ou si vous avez un tunnel ngrok:
             // val serverUrl = "https://your-ngrok-url.ngrok-free.app/api/v1/nutrition/analyze"
 

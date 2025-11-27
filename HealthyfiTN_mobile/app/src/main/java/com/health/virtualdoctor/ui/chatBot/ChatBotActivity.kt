@@ -27,7 +27,7 @@ class ChatBotActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     // CONFIG
-    private val BASE_URL = "https://halifax-councils-bluetooth-eligibility.trycloudflare.com/health-assistant-service"
+    private val BASE_URL = "https://organic-sussex-horse-pairs.trycloudflare.com/health-assistant-service"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
