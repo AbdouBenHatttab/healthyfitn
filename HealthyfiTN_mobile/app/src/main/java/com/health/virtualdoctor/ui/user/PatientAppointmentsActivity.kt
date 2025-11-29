@@ -195,13 +195,16 @@ class PatientAppointmentsActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun filterAppointments(chipId: Int) {
         val now = LocalDateTime.now()
         val filteredList = when (chipId) {
             R.id.chipUpcoming -> allAppointments.filter {
                 val apptDateTime = LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
-                apptDateTime.isAfter(now) && it.status.equals("SCHEDULED", ignoreCase = true)
+                // ✅ Inclure SCHEDULED et PENDING
+                apptDateTime.isAfter(now) && (
+                        it.status.equals("SCHEDULED", ignoreCase = true) ||
+                                it.status.equals("PENDING", ignoreCase = true)
+                        )
             }
             R.id.chipPast -> allAppointments.filter {
                 val apptDateTime = LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
@@ -217,7 +220,33 @@ class PatientAppointmentsActivity : AppCompatActivity() {
         appointmentsAdapter.updateAppointments(filteredList)
         llEmptyState.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
         rvAppointments.visibility = if (filteredList.isEmpty()) View.GONE else View.VISIBLE
+
+        // ✅ LOG pour débogage
+        Log.d("PatientAppointments", "📊 Filter applied: chipId=$chipId, filtered=${filteredList.size}/${allAppointments.size}")
     }
+
+//    private fun filterAppointments(chipId: Int) {
+//        val now = LocalDateTime.now()
+//        val filteredList = when (chipId) {
+//            R.id.chipUpcoming -> allAppointments.filter {
+//                val apptDateTime = LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
+//                apptDateTime.isAfter(now) && it.status.equals("SCHEDULED", ignoreCase = true)
+//            }
+//            R.id.chipPast -> allAppointments.filter {
+//                val apptDateTime = LocalDateTime.parse(it.appointmentDateTime, DateTimeFormatter.ISO_DATE_TIME)
+//                apptDateTime.isBefore(now) ||
+//                        it.status.equals("COMPLETED", ignoreCase = true) ||
+//                        it.status.equals("REJECTED", ignoreCase = true) ||
+//                        it.status.equals("CANCELLED", ignoreCase = true)
+//            }
+//            R.id.chipAll -> allAppointments
+//            else -> allAppointments
+//        }
+//
+//        appointmentsAdapter.updateAppointments(filteredList)
+//        llEmptyState.visibility = if (filteredList.isEmpty()) View.VISIBLE else View.GONE
+//        rvAppointments.visibility = if (filteredList.isEmpty()) View.GONE else View.VISIBLE
+//    }
 
     private fun showAppointmentDetails(appointment: AppointmentResponse) {
         val detailsView = LayoutInflater.from(this).inflate(R.layout.dialog_appointment_details, null)
