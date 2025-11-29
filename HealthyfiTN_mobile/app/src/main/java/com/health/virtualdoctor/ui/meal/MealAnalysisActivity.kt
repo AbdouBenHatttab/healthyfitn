@@ -26,6 +26,8 @@ import com.health.virtualdoctor.R
 import com.health.virtualdoctor.ui.data.api.RetrofitClient
 import com.health.virtualdoctor.ui.utils.TokenManager
 import com.google.android.material.button.MaterialButton
+import com.health.virtualdoctor.BuildConfig
+import com.health.virtualdoctor.ui.data.api.RetrofitClient.cloudflared
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,6 +44,7 @@ import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
 class MealAnalysisActivity : ComponentActivity() {
+    val cloudflared = BuildConfig.CLOUDFLARED_URL
 
     private lateinit var tokenManager: TokenManager
 
@@ -305,7 +308,7 @@ class MealAnalysisActivity : ComponentActivity() {
             }
 
             // ✅ URL Cloudflare au lieu de localhost
-            val serverUrl = "https://revised-symphony-connectors-ask.trycloudflare.com/api/v1/nutrition/analyze"
+            val serverUrl = "$cloudflared/nutrition-service/api/v1/nutrition/analyze"
             // Ou si vous avez un tunnel ngrok:
             // val serverUrl = "https://your-ngrok-url.ngrok-free.app/api/v1/nutrition/analyze"
 

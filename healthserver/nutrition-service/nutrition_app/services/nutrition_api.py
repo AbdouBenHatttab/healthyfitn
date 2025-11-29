@@ -1,5 +1,5 @@
 import requests
-from app.config import Config
+from nutrition_app.config import Config
 import time
 
 class NutritionAPIService:

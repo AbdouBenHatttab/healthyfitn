@@ -1,7 +1,7 @@
 import jwt
 from functools import wraps
 from flask import request, jsonify
-from app.config import Config
+from nutrition_app.config import Config
 
 class JWTService:
     @staticmethod

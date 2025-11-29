@@ -40,8 +40,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 import java.util.Locale
+import com.health.virtualdoctor.BuildConfig
 
 class UserMetricsActivity : ComponentActivity() {
+    val cloudflared = BuildConfig.CLOUDFLARED_URL
     private lateinit var cardChatbot: androidx.cardview.widget.CardView
     private lateinit var cardAnalyze: androidx.cardview.widget.CardView
 
@@ -1413,7 +1415,7 @@ class UserMetricsActivity : ComponentActivity() {
                 Toast.makeText(this@UserMetricsActivity, "🔄 Connexion au serveur...", Toast.LENGTH_SHORT).show()
 
                 val result = withContext(Dispatchers.IO) {
-                    val serverUrl = "https://organic-sussex-horse-pairs.trycloudflare.com/health-server/fetch"
+                    val serverUrl = "$cloudflared/health-server/fetch"
 
                     // 👉 Récupérer l'email des SharedPreferences
                     val userEmail = tokenManager.getUserEmail() ?: "unknown@noemail.com"

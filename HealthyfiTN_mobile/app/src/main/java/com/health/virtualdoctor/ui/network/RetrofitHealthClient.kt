@@ -5,10 +5,12 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import com.health.virtualdoctor.BuildConfig
 
 object RetrofitHealthClient {
 
-    private const val BASE_URL = "https://organic-sussex-horse-pairs.trycloudflare.com/model-ai-service/" //PORT 8000
+    val cloudflared = BuildConfig.CLOUDFLARED_URL
+    private val BASE_URL = "$cloudflared/model-ai-service/" //PORT 8000
 
     // 📝 Logging interceptor pour debug
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

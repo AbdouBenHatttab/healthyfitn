@@ -3,8 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Backend_health_assistant/Backend_health_assistant.iml" filepath="$PROJECT_DIR$/Backend_health_assistant/Backend_health_assistant.iml" />
+      <module fileurl="file://$PROJECT_DIR$/health-app-microservices.iml" filepath="$PROJECT_DIR$/health-app-microservices.iml" />
       <module fileurl="file://$PROJECT_DIR$/model-ai-for-userMetricsAnalyze/model-ai-for-userMetricsAnalyze.iml" filepath="$PROJECT_DIR$/model-ai-for-userMetricsAnalyze/model-ai-for-userMetricsAnalyze.iml" />
-      <module fileurl="file://$PROJECT_DIR$/nutrition-ai-training/nutrition-ai-training.iml" filepath="$PROJECT_DIR$/nutrition-ai-training/nutrition-ai-training.iml" />
       <module fileurl="file://$PROJECT_DIR$/nutrition-service/nutrition-service.iml" filepath="$PROJECT_DIR$/nutrition-service/nutrition-service.iml" />
     </modules>
   </component>

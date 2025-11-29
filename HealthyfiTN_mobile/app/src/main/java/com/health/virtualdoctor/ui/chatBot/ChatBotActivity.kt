@@ -14,6 +14,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.health.virtualdoctor.R
 import com.health.virtualdoctor.ui.utils.TokenManager
 import org.json.JSONObject
+import com.health.virtualdoctor.BuildConfig
 
 class ChatBotActivity : AppCompatActivity() {
 
@@ -27,7 +28,8 @@ class ChatBotActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     // CONFIG
-    private val BASE_URL = "https://organic-sussex-horse-pairs.trycloudflare.com/health-assistant-service"
+    val cloudflared = BuildConfig.CLOUDFLARED_URL
+    private val BASE_URL = "$cloudflared/health-assistant-service"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

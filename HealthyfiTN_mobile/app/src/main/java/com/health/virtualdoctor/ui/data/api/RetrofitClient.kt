@@ -7,14 +7,16 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import com.health.virtualdoctor.BuildConfig
 
 object RetrofitClient {
 
     // ✅ URLs des services via Cloudflare Tunnels
-    private const val AUTH_BASE_URL = "https://organic-sussex-horse-pairs.trycloudflare.com/auth-service/" // Port 8082
-    private const val DOCTOR_BASE_URL = "https://organic-sussex-horse-pairs.trycloudflare.com/doctor-activation-service/" // Port 8083
-    private const val NOTIFICATION_BASE_URL = "https://organic-sussex-horse-pairs.trycloudflare.com/notification-service/" // Port 8084
-    private const val USER_BASE_URL = "https://organic-sussex-horse-pairs.trycloudflare.com/user-service/" // Port 8085
+    val cloudflared = BuildConfig.CLOUDFLARED_URL
+    private val AUTH_BASE_URL = "$cloudflared/auth-service/" // Port 8082
+    private  val DOCTOR_BASE_URL = "$cloudflared/doctor-activation-service/" // Port 8083
+    private  val NOTIFICATION_BASE_URL = "$cloudflared/notification-service/" // Port 8084
+    private  val USER_BASE_URL = "$cloudflared/user-service/" // Port 8085
 
     private var authRetrofit: Retrofit? = null
     private var doctorRetrofit: Retrofit? = null
