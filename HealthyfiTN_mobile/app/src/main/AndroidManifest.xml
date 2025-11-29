@@ -7,11 +7,31 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+
+
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- ========================================
+             ✅ PERMISSIONS WEBRTC (CRITIQUES)
+             ======================================== -->
+
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- ========================================
+     ✅ PERMISSIONS STOCKAGE
+     ======================================== -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
 
     <!-- ✅ Permissions Health Connect -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
@@ -34,7 +54,15 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -103,12 +131,24 @@
             android:exported="false"
             android:label="Mes Rendez-vous"
             android:theme="@style/Theme.HealthyfiTN" />
-        <activity
-            android:name=".ui.consultation.VideoCallActivity"
-            android:exported="false" />
+        <!-- ========================================
+                  ✅ CONSULTATION ACTIVITIES
+                  ======================================== -->
         <activity
             android:name=".ui.consultation.ConsultationActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.VirtualDoctor" />
+
+        <activity
+            android:name=".ui.consultation.VideoCallActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.VirtualDoctor"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+
+
         <activity
             android:name=".ui.meal.MealAnalysisActivity"
             android:exported="false" />
@@ -134,6 +174,7 @@
             android:name=".ui.user.UserMetricsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
         <activity
             android:name=".ui.meal.MealHistoryActivity"
             android:exported="false"

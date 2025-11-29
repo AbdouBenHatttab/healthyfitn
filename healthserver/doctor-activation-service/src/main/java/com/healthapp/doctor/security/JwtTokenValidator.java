@@ -162,7 +162,8 @@
         @Override
         protected boolean shouldNotFilter(HttpServletRequest request) {
             String path = request.getRequestURI();
-            boolean skip = path.startsWith("/api/doctors/register") ||
+        boolean skip = path.startsWith("/ws/") ||
+              path.startsWith("/api/doctors/register") ||
                    path.startsWith("/api/doctors/login") ||
                    path.startsWith("/api/doctors/health") ||
                    path.startsWith("/api/doctors/forgot-password") ||
@@ -176,4 +177,36 @@
 
             return skip;
         }
+            // Public methods for WebSocket handler to use
+
+    public boolean validateToken(String token) {
+        try {
+            return JwtUtil.validateToken(token, jwtSecret);
+        } catch (Exception e) {
+            log.error("Token validation failed", e);
+            return false;
+        }
+    }
+
+    public String getEmailFromToken(String token) {
+        try {
+            Claims claims = JwtUtil.extractAllClaims(token, jwtSecret);
+            return claims.getSubject();
+        } catch (Exception e) {
+            log.error("Failed to extract email from token", e);
+            return null;
+        }
+    }
+
+    public List<String> getRolesFromToken(String token) {
+        try {
+            Claims claims = JwtUtil.extractAllClaims(token, jwtSecret);
+            @SuppressWarnings("unchecked")
+            List<String> roles = claims.get("roles", List.class);
+            return roles != null ? roles : new ArrayList<>();
+        } catch (Exception e) {
+            log.error("Failed to extract roles from token", e);
+            return new ArrayList<>();
+        }
+    }
     }
