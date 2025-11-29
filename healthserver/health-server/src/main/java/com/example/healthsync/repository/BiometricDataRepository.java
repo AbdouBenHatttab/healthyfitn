@@ -12,9 +12,10 @@ public interface BiometricDataRepository extends MongoRepository<BiometricData, 
 
     List<BiometricData> findByEmail(String email);
 
-    Optional<BiometricData> findByEmailAndDate(String email, String date);
+    BiometricData findByEmailAndDate(String email, String date);
 
     List<BiometricData> findByEmailOrderByReceivedAtDesc(String email);
 
     long countByEmail(String email);
+
 }
