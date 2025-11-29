@@ -38,10 +38,17 @@ public class SecurityConfig {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> 
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
                 .authorizeHttpRequests(auth -> {
                     log.info("🔒 Configuring authorization rules");
 
                     auth
+                        // ✅ CRITICAL: WebSocket paths MUST be permitAll FIRST
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/ws/webrtc/**").permitAll()
+                
                             // Public endpoints - NO AUTHENTICATION
                             .requestMatchers(
                                     "/api/doctors/register",
@@ -56,7 +63,10 @@ public class SecurityConfig {
                                     "/actuator/**",
                                     "/api/public/**"
                             ).permitAll()
-
+                // ✅ WebRTC API - Accessible aux deux rôles
+                .requestMatchers("/api/webrtc/**")
+                    .hasAnyRole("DOCTOR", "USER")
+                
                             // Admin endpoints
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
