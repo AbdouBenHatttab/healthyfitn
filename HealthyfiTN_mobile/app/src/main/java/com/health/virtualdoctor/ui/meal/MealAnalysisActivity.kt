@@ -1,6 +1,7 @@
 package com.health.virtualdoctor.ui.meal
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -73,6 +74,7 @@ class MealAnalysisActivity : ComponentActivity() {
 
     private var currentImageBitmap: Bitmap? = null
     private var currentPhotoPath: String? = null
+    private lateinit var btnHistory: ImageButton
 
     // ========================================
     // CAMERA LAUNCHERS
@@ -150,6 +152,8 @@ class MealAnalysisActivity : ComponentActivity() {
         progressFiber = findViewById(R.id.progressFiber)
         containerAlternatives = findViewById(R.id.containerAlternatives)
         btnScanNewMeal = findViewById(R.id.btnScanNewMeal)
+        btnHistory = findViewById(R.id.btnHistory)
+
     }
 
     private fun setupListeners() {
@@ -166,6 +170,10 @@ class MealAnalysisActivity : ComponentActivity() {
         btnScanNewMeal.setOnClickListener {
             resetView()
         }
+        btnHistory.setOnClickListener {
+            openHistory()
+        }
+
     }
 
     // ========================================
@@ -484,5 +492,9 @@ class MealAnalysisActivity : ComponentActivity() {
     private fun dpToPx(dp: Int): Int {
         val density = resources.displayMetrics.density
         return (dp * density).toInt()
+    }
+    private fun openHistory() {
+        val intent = Intent(this, MealHistoryActivity::class.java)
+        startActivity(intent)
     }
 }

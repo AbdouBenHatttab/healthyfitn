@@ -15,7 +15,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "CLOUDFLARED_URL", "\"https://donate-optics-rapids-organ.trycloudflare.com\"")
+        buildConfigField("String", "CLOUDFLARED_URL", "\"https://vertical-meetup-robinson-weekends.trycloudflare.com\"")
     }
 
     buildTypes {
