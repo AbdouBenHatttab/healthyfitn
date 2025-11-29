@@ -8,11 +8,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="doctor-activation-service" />
+        <module name="api-gateway" />
         <module name="auth-service" />
         <module name="config-service" />
-        <module name="shared-library" />
-        <module name="api-gateway" />
         <module name="eureka-server" />
+        <module name="shared-library" />
       </profile>
       <profile name="Annotation profile for healthserver" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />

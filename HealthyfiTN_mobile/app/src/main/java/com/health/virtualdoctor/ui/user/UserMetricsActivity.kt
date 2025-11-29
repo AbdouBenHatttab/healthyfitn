@@ -11,7 +11,6 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import com.health.virtualdoctor.R
 import androidx.lifecycle.lifecycleScope
@@ -41,8 +40,15 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 import java.util.Locale
 import com.health.virtualdoctor.BuildConfig
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import com.health.virtualdoctor.ui.user.fragments.ExercisesFragment
+import com.health.virtualdoctor.ui.user.fragments.VitalSignsFragment
+import com.health.virtualdoctor.ui.user.fragments.DataSummaryFragment
+import com.health.virtualdoctor.ui.user.fragments.AdvancedFeaturesFragment
 
-class UserMetricsActivity : ComponentActivity() {
+class UserMetricsActivity : AppCompatActivity() {
+    private val healthViewModel: HealthDataViewModel by viewModels()
     val cloudflared = BuildConfig.CLOUDFLARED_URL
     private lateinit var cardChatbot: androidx.cardview.widget.CardView
     private lateinit var cardAnalyze: androidx.cardview.widget.CardView
@@ -66,27 +72,9 @@ class UserMetricsActivity : ComponentActivity() {
     private lateinit var tvStress: android.widget.TextView
     private lateinit var tvExerciseCount: android.widget.TextView
     private lateinit var exerciseContainer: android.widget.LinearLayout
-    private lateinit var tvSpO2: android.widget.TextView
-    private lateinit var tvTemperature: android.widget.TextView
-    private lateinit var tvBloodPressure: android.widget.TextView
-    private lateinit var tvWeight: android.widget.TextView
-    private lateinit var tvHeight: android.widget.TextView
-    private lateinit var dataSummaryContainer: android.widget.LinearLayout
     private lateinit var btnRefresh: android.widget.Button
     private lateinit var btnAppointments: MaterialButton
     private lateinit var tokenManager: TokenManager
-
-    // 🆕 Dropdown views
-    private lateinit var dropdownHeader: LinearLayout
-    private lateinit var dropdownContent: LinearLayout
-    private lateinit var dropdownIcon: ImageView
-    private var isDropdownExpanded = false
-
-    // 🆕 Advanced feature buttons
-    private lateinit var btnHealthAnalysis: MaterialButton
-    private lateinit var btnAlerts: MaterialButton
-    private lateinit var btnTrends: MaterialButton
-    private lateinit var btnGoals: MaterialButton
 
 
     private val permissions = setOf(
@@ -114,6 +102,11 @@ class UserMetricsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_metrics)
+
+        if (savedInstanceState == null) {
+            loadFragments()
+        }
+
         val btnBack: ImageButton = findViewById(R.id.btnBack)
         btnProfile = findViewById(R.id.btnProfile)
         btnBack.setOnClickListener {
@@ -132,25 +125,9 @@ class UserMetricsActivity : ComponentActivity() {
         tvStress = findViewById(R.id.tvStress)
         tvExerciseCount = findViewById(R.id.tvExerciseCount)
         exerciseContainer = findViewById(R.id.exerciseContainer)
-        tvSpO2 = findViewById(R.id.tvSpO2)
-        tvTemperature = findViewById(R.id.tvTemperature)
-        tvBloodPressure = findViewById(R.id.tvBloodPressure)
-        tvWeight = findViewById(R.id.tvWeight)
-        tvHeight = findViewById(R.id.tvHeight)
-        dataSummaryContainer = findViewById(R.id.dataSummaryContainer)
         btnRefresh = findViewById(R.id.btnRefresh)
         btnAppointments = findViewById(R.id.btnAppointments)
 
-        // 🆕 Dropdown views
-        dropdownHeader = findViewById(R.id.dropdownHeader)
-        dropdownContent = findViewById(R.id.dropdownContent)
-        dropdownIcon = findViewById(R.id.dropdownIcon)
-
-        // 🆕 Advanced feature buttons
-        btnHealthAnalysis = findViewById(R.id.btnHealthAnalysis)
-        btnAlerts = findViewById(R.id.btnAlerts)
-        btnTrends = findViewById(R.id.btnTrends)
-        btnGoals = findViewById(R.id.btnGoals)
 
         btnRefresh.setOnClickListener {
             checkPermissions()
@@ -164,11 +141,6 @@ class UserMetricsActivity : ComponentActivity() {
         avatarContainer = findViewById(R.id.avatarContainer)
         humanBodyRenderer = HumanBodyRenderer(this)
 
-        // 🆕 Setup dropdown
-        setupDropdown()
-
-        // 🆕 Setup advanced feature buttons
-        setupAdvancedFeatureButtons()
 
 
 // Click listeners avec animations
@@ -298,148 +270,16 @@ class UserMetricsActivity : ComponentActivity() {
 
         checkPermissions()
     }
-    // 🆕 Setup dropdown functionality
-    private fun setupDropdown() {
-        dropdownHeader.setOnClickListener {
-            toggleDropdown()
+
+    private fun loadFragments() {
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.exercisesFragmentContainer, ExercisesFragment())
+            replace(R.id.vitalSignsFragmentContainer, VitalSignsFragment())
+            replace(R.id.dataSummaryFragmentContainer, DataSummaryFragment())
+            replace(R.id.advancedFeaturesContainer, AdvancedFeaturesFragment())
+            commit()
         }
     }
-    // 🆕 Toggle dropdown with animation
-    private fun toggleDropdown() {
-        isDropdownExpanded = !isDropdownExpanded
-
-        if (isDropdownExpanded) {
-            // Expand
-            dropdownContent.visibility = View.VISIBLE
-            animateDropdownIcon(0f, 180f)
-        } else {
-            // Collapse
-            dropdownContent.visibility = View.GONE
-            animateDropdownIcon(180f, 0f)
-        }
-    }
-    // 🆕 Animate dropdown icon rotation
-    private fun animateDropdownIcon(fromDegrees: Float, toDegrees: Float) {
-        val rotate = RotateAnimation(
-            fromDegrees, toDegrees,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
-        rotate.duration = 300
-        rotate.fillAfter = true
-        dropdownIcon.startAnimation(rotate)
-    }
-
-    // 🆕 Setup advanced feature buttons
-    private fun setupAdvancedFeatureButtons() {
-        // Health Analysis Button
-        btnHealthAnalysis.setOnClickListener {
-            navigateToHealthAnalysis()
-        }
-
-        // Alerts Button
-        btnAlerts.setOnClickListener {
-            navigateToAlerts()
-        }
-
-        // Trends Button
-        btnTrends.setOnClickListener {
-            navigateToTrends()
-        }
-
-        // Goals Button
-        btnGoals.setOnClickListener {
-            navigateToGoals()
-        }
-    }
-    // 🆕 Navigation vers Health Analysis
-    private fun navigateToHealthAnalysis() {
-        try {
-            // Créer le JSON à partir des données actuelles de l'UI
-            val biometricJson = JSONObject().apply {
-                // Récupérer depuis les TextViews
-                val steps = tvSteps.text.toString().toIntOrNull() ?: 0
-                val heartRate = tvHeartRate.text.toString().replace(" bpm", "").toIntOrNull() ?: 70
-                val sleepHours = tvSleep.text.toString().replace(" h", "").toDoubleOrNull() ?: 7.0
-                val hydration = tvHydration.text.toString().replace(" L", "").toDoubleOrNull() ?: 2.0
-                val distance = tvDistance.text.toString().replace(" km", "").toDoubleOrNull() ?: 0.0
-
-                put("totalSteps", steps)
-                put("avgHeartRate", heartRate)
-                put("minHeartRate", heartRate - 10) // Estimation
-                put("maxHeartRate", heartRate + 20) // Estimation
-                put("totalDistanceKm", distance)
-                put("totalSleepHours", sleepHours)
-                put("totalHydrationLiters", hydration)
-                put("stressLevel", tvStress.text.toString())
-                put("stressScore", calculateStressScoreFromLevel(tvStress.text.toString()))
-
-                // Ajouter tableaux vides pour l'instant
-                put("oxygenSaturation", JSONArray())
-                put("bodyTemperature", JSONArray())
-                put("bloodPressure", JSONArray())
-                put("weight", JSONArray())
-                put("height", JSONArray())
-                put("exercise", JSONArray())
-            }
-
-            val intent = Intent(this, HealthAnalysisActivity::class.java)
-            intent.putExtra("biometric_data", biometricJson.toString())
-            startActivity(intent)
-            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-
-        } catch (e: Exception) {
-            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
-        }
-    }
-
-    private fun calculateStressScoreFromLevel(level: String): Int {
-        return when (level.lowercase()) {
-            "très élevé" -> 80
-            "élevé" -> 60
-            "modéré" -> 40
-            "faible" -> 20
-            else -> 50
-        }
-    }
-
-    // 🆕 Navigation vers Alerts
-    private fun navigateToAlerts() {
-        try {
-            val intent = Intent(this, MedicalAlertsActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Page Alertes Médicales en développement", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
-        }
-    }
-
-    // 🆕 Navigation vers Trends
-    private fun navigateToTrends() {
-        try {
-            val intent = Intent(this, HealthTrendsActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Page Tendances en développement", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
-        }
-    }
-
-    // 🆕 Navigation vers Goals
-    private fun navigateToGoals() {
-        try {
-            val intent = Intent(this, HealthGoalsActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Page Objectifs en développement", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
-        }
-    }
-
 
     private fun checkPermissions() {
         lifecycleScope.launch {
@@ -982,389 +822,13 @@ class UserMetricsActivity : ComponentActivity() {
             val stressLevel = dayJson.optString("stressLevel", "Inconnu")
             tvStress.text = "$stressLevel"
 
-            // ✅ NOUVELLE VERSION : Exercices avec détails
-            val exercises = dayJson.optJSONArray("exercise") ?: JSONArray()
-            if (exercises.length() > 0) {
-                tvExerciseCount.text = "${exercises.length()} activité(s) aujourd'hui"
-            } else {
-                tvExerciseCount.text = "Aucun exercice aujourd'hui"
-            }
-
-            exerciseContainer.removeAllViews()
-            for (i in 0 until exercises.length()) {
-                val ex = exercises.getJSONObject(i)
-                val exerciseCard = createExerciseCard(ex)
-                exerciseContainer.addView(exerciseCard)
-            }
-
-            // SpO2
-            val oxygenArray = dayJson.optJSONArray("oxygenSaturation") ?: JSONArray()
-            if (oxygenArray.length() > 0) {
-                val lastO2 = oxygenArray.getJSONObject(oxygenArray.length() - 1)
-                tvSpO2.text = "${String.format(Locale.US, "%.1f", lastO2.optDouble("percentage", 0.0))}%"
-            } else {
-                tvSpO2.text = "--"
-            }
-
-            // Température corporelle
-            val tempArray = dayJson.optJSONArray("bodyTemperature") ?: JSONArray()
-            if (tempArray.length() > 0) {
-                val lastTemp = tempArray.getJSONObject(tempArray.length() - 1)
-                tvTemperature.text = "${String.format(Locale.US, "%.1f", lastTemp.optDouble("temperature", 0.0))}°C"
-            } else {
-                tvTemperature.text = "--"
-            }
-
-            // Pression artérielle
-            val bpArray = dayJson.optJSONArray("bloodPressure") ?: JSONArray()
-            if (bpArray.length() > 0) {
-                val lastBP = bpArray.getJSONObject(bpArray.length() - 1)
-                tvBloodPressure.text = "${lastBP.optInt("systolic", 0)}/${lastBP.optInt("diastolic", 0)}"
-            } else {
-                tvBloodPressure.text = "--/--"
-            }
-
-            // Poids
-            val weightArray = dayJson.optJSONArray("weight") ?: JSONArray()
-            if (weightArray.length() > 0) {
-                val lastWeight = weightArray.getJSONObject(weightArray.length() - 1)
-                tvWeight.text = "${String.format(Locale.US, "%.1f", lastWeight.optDouble("weight", 0.0))} kg"
-            } else {
-                tvWeight.text = "--"
-            }
-
-            // Taille
-            val heightArray = dayJson.optJSONArray("height") ?: JSONArray()
-            if (heightArray.length() > 0) {
-                val lastHeight = heightArray.getJSONObject(heightArray.length() - 1)
-                val heightInCm = lastHeight.optDouble("height", 0.0) * 100
-                tvHeight.text = "${String.format(Locale.US, "%.0f", heightInCm)} cm"
-            } else {
-                tvHeight.text = "--"
-            }
-
-            // Résumé des données
-            updateDataSummary(dayJson)
+            // ✅ AJOUT : Mettre à jour le ViewModel pour le fragment
+            healthViewModel.updateHealthData(dayJson)
             humanBodyRenderer.updateHealthData(dayJson)
 
         } catch (e: Exception) {
             tvStatus.text = "❌ Erreur mise à jour UI : ${e.message}"
             e.printStackTrace()
-        }
-    }
-
-    // ✅ NOUVELLE FONCTION : Créer une carte visuelle pour chaque exercice
-    private fun createExerciseCard(exercise: JSONObject): androidx.cardview.widget.CardView {
-        val cardView = androidx.cardview.widget.CardView(this).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, dpToPx(12))
-            }
-            radius = dpToPx(12).toFloat()
-            cardElevation = dpToPx(2).toFloat()
-            setCardBackgroundColor(getColor(android.R.color.white))
-        }
-
-        val mainLayout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
-        }
-
-        // En-tête : Nom de l'exercice + Durée
-        val headerLayout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        val exerciseName = exercise.optString("exerciseTypeName", "Exercice")
-        val duration = exercise.optLong("durationMinutes", 0)
-
-        val tvName = android.widget.TextView(this).apply {
-            text = "🏃 $exerciseName"
-            textSize = 18f
-            setTextColor(getColor(R.color.text_primary))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                0,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-        }
-
-        val tvDuration = android.widget.TextView(this).apply {
-            text = "$duration min"
-            textSize = 16f
-            setTextColor(getColor(R.color.primary))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        }
-
-        headerLayout.addView(tvName)
-        headerLayout.addView(tvDuration)
-        mainLayout.addView(headerLayout)
-
-        // Ligne de séparation
-        val divider = android.view.View(this).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                1
-            ).apply {
-                setMargins(0, dpToPx(12), 0, dpToPx(12))
-            }
-            setBackgroundColor(getColor(android.R.color.darker_gray))
-        }
-        mainLayout.addView(divider)
-
-        // Grille de statistiques (3 colonnes)
-        val statsGrid = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            weightSum = 3f
-        }
-
-        // Cadence
-        val avgCadence = exercise.optInt("avgCadence", 0)
-        val cadenceText = if (avgCadence > 0) "$avgCadence spm" else "-- spm"
-        val cadenceView = createStatView("🦶 Cadence", cadenceText)
-        statsGrid.addView(cadenceView)
-
-        // BPM moyen
-        val avgBpm = exercise.optInt("avgHeartRate", 0)
-        val bpmText = if (avgBpm > 0) "$avgBpm bpm" else "-- bpm"
-        val bpmView = createStatView("❤️ BPM Moy", bpmText)
-        statsGrid.addView(bpmView)
-
-        // Distance
-        val distanceKm = exercise.optString("distanceKm", "0.00")
-        val distanceMeters = exercise.optDouble("distanceMeters", 0.0)
-        val distanceText = if (distanceMeters >= 1000) {
-            "$distanceKm km"
-        } else if (distanceMeters > 0) {
-            "${String.format(Locale.US, "%.0f", distanceMeters)} m"
-        } else {
-            "-- m"
-        }
-        val distanceView = createStatView("📏 Distance", distanceText)
-        statsGrid.addView(distanceView)
-
-        mainLayout.addView(statsGrid)
-
-        // Statistiques supplémentaires (optionnel)
-        val hasExtraStats = exercise.optInt("steps", 0) > 0 ||
-                exercise.optInt("activeCalories", 0) > 0 ||
-                exercise.optString("avgSpeedKmh", "").isNotEmpty()
-
-        if (hasExtraStats) {
-            val extraStatsLayout = android.widget.LinearLayout(this).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
-                setPadding(0, dpToPx(8), 0, 0)
-            }
-
-            // Pas pendant l'exercice
-            val steps = exercise.optInt("steps", 0)
-            if (steps > 0) {
-                val stepsText = android.widget.TextView(this).apply {
-                    text = "• $steps pas pendant l'exercice"
-                    textSize = 12f
-                    setTextColor(getColor(R.color.text_secondary))
-                    setPadding(0, dpToPx(2), 0, dpToPx(2))
-                }
-                extraStatsLayout.addView(stepsText)
-            }
-
-            // Calories
-            val calories = exercise.optInt("activeCalories", 0)
-            if (calories > 0) {
-                val caloriesText = android.widget.TextView(this).apply {
-                    text = "• $calories kcal brûlées"
-                    textSize = 12f
-                    setTextColor(getColor(R.color.text_secondary))
-                    setPadding(0, dpToPx(2), 0, dpToPx(2))
-                }
-                extraStatsLayout.addView(caloriesText)
-            }
-
-            // Vitesse moyenne
-            val avgSpeed = exercise.optString("avgSpeedKmh", "")
-            if (avgSpeed.isNotEmpty()) {
-                val speedText = android.widget.TextView(this).apply {
-                    text = "• Vitesse moy: $avgSpeed km/h"
-                    textSize = 12f
-                    setTextColor(getColor(R.color.text_secondary))
-                    setPadding(0, dpToPx(2), 0, dpToPx(2))
-                }
-                extraStatsLayout.addView(speedText)
-            }
-
-            mainLayout.addView(extraStatsLayout)
-        }
-
-        cardView.addView(mainLayout)
-        return cardView
-    }
-
-    // ✅ NOUVELLE FONCTION : Créer une vue pour une statistique
-    private fun createStatView(label: String, value: String): android.widget.LinearLayout {
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                0,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-            setPadding(dpToPx(8), dpToPx(8), dpToPx(8), dpToPx(8))
-        }
-
-        val tvLabel = android.widget.TextView(this).apply {
-            text = label
-            textSize = 11f
-            setTextColor(getColor(R.color.text_secondary))
-            gravity = android.view.Gravity.CENTER
-        }
-
-        val tvValue = android.widget.TextView(this).apply {
-            text = value
-            textSize = 14f
-            setTextColor(getColor(R.color.text_primary))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, dpToPx(4), 0, 0)
-        }
-
-        layout.addView(tvLabel)
-        layout.addView(tvValue)
-
-        return layout
-    }
-
-    // ✅ NOUVELLE FONCTION : Convertir dp en pixels
-    private fun dpToPx(dp: Int): Int {
-        val density = resources.displayMetrics.density
-        return (dp * density).toInt()
-    }
-
-    private fun updateDataSummary(dayJson: JSONObject) {
-        dataSummaryContainer.removeAllViews()
-
-        val summaryItems = mutableListOf<Pair<String, String>>()
-
-        // Activité physique
-        val totalSteps = dayJson.optLong("totalSteps", 0)
-        val totalDistance = dayJson.optString("totalDistanceKm", "0.00")
-        summaryItems.add("👣 Activité" to "$totalSteps pas • $totalDistance km parcourus")
-
-        // Sommeil
-        val sleepHours = dayJson.optString("totalSleepHours", "0.0")
-        val sleepArray = dayJson.optJSONArray("sleep")
-        val sleepCount = sleepArray?.length() ?: 0
-        summaryItems.add("💤 Sommeil" to "$sleepHours heures • $sleepCount session(s)")
-
-        // Cardio
-        val avgHR = dayJson.optInt("avgHeartRate", 0)
-        val minHR = dayJson.optInt("minHeartRate", 0)
-        val maxHR = dayJson.optInt("maxHeartRate", 0)
-        if (avgHR > 0) {
-            summaryItems.add("❤️ Fréquence cardiaque" to "Moy: $avgHR bpm • Min: $minHR • Max: $maxHR")
-        }
-
-        // Hydratation
-        val hydration = dayJson.optString("totalHydrationLiters", "0.00")
-        if (hydration.toDouble() > 0) {
-            summaryItems.add("💧 Hydratation" to "$hydration litres consommés")
-        }
-
-        // Exercices
-        val exercises = dayJson.optJSONArray("exercise")
-        if (exercises != null && exercises.length() > 0) {
-            val exerciseNames = mutableListOf<String>()
-            for (i in 0 until exercises.length()) {
-                val ex = exercises.getJSONObject(i)
-                exerciseNames.add(ex.optString("exerciseTypeName"))
-            }
-            summaryItems.add("🏋️ Exercices" to exerciseNames.joinToString(", "))
-        }
-
-        // Signes vitaux
-        val oxygenArray = dayJson.optJSONArray("oxygenSaturation")
-        if (oxygenArray != null && oxygenArray.length() > 0) {
-            val lastO2 = oxygenArray.getJSONObject(oxygenArray.length() - 1)
-            summaryItems.add("🫁 Oxygénation" to "${String.format(Locale.US, "%.1f", lastO2.optDouble("percentage"))}% SpO₂")
-        }
-
-        val tempArray = dayJson.optJSONArray("bodyTemperature")
-        if (tempArray != null && tempArray.length() > 0) {
-            val lastTemp = tempArray.getJSONObject(tempArray.length() - 1)
-            summaryItems.add("🌡️ Température" to "${String.format(Locale.US, "%.1f", lastTemp.optDouble("temperature"))}°C")
-        }
-
-        val bpArray = dayJson.optJSONArray("bloodPressure")
-        if (bpArray != null && bpArray.length() > 0) {
-            val lastBP = bpArray.getJSONObject(bpArray.length() - 1)
-            summaryItems.add("💉 Tension artérielle" to "${lastBP.optInt("systolic")}/${lastBP.optInt("diastolic")} mmHg")
-        }
-
-        val weightArray = dayJson.optJSONArray("weight")
-        if (weightArray != null && weightArray.length() > 0) {
-            val lastWeight = weightArray.getJSONObject(weightArray.length() - 1)
-            summaryItems.add("⚖️ Poids" to "${String.format(Locale.US, "%.1f", lastWeight.optDouble("weight"))} kg")
-        }
-
-        val heightArray = dayJson.optJSONArray("height")
-        if (heightArray != null && heightArray.length() > 0) {
-            val lastHeight = heightArray.getJSONObject(heightArray.length() - 1)
-            val heightInCm = lastHeight.optDouble("height") * 100
-            summaryItems.add("📐 Taille" to "${String.format(Locale.US, "%.0f", heightInCm)} cm")
-        }
-
-        // Stress
-        val stressLevel = dayJson.optString("stressLevel", "Inconnu")
-        val stressScore = dayJson.optInt("stressScore", 0)
-        summaryItems.add("🧠 Niveau de stress" to "$stressLevel (score: $stressScore/100)")
-
-        // Créer les vues
-        for ((label, value) in summaryItems) {
-            val itemLayout = android.widget.LinearLayout(this)
-            itemLayout.orientation = android.widget.LinearLayout.VERTICAL
-            itemLayout.setPadding(0, 12, 0, 12)
-
-            val labelView = android.widget.TextView(this)
-            labelView.text = label
-            labelView.textSize = 14f
-            labelView.setTypeface(null, android.graphics.Typeface.BOLD)
-            labelView.setTextColor(resources.getColor(R.color.text_primary, null))
-
-            val valueView = android.widget.TextView(this)
-            valueView.text = value
-            valueView.textSize = 13f
-            valueView.setTextColor(resources.getColor(R.color.text_secondary, null))
-            valueView.setPadding(0, 4, 0, 0)
-
-            itemLayout.addView(labelView)
-            itemLayout.addView(valueView)
-
-            dataSummaryContainer.addView(itemLayout)
-
-            // Ajouter un séparateur
-            if (summaryItems.indexOf(label to value) < summaryItems.size - 1) {
-                val divider = android.view.View(this)
-                val params = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    1
-                )
-                params.setMargins(0, 8, 0, 8)
-                divider.layoutParams = params
-                divider.setBackgroundColor(resources.getColor(android.R.color.darker_gray, null))
-                divider.alpha = 0.2f
-                dataSummaryContainer.addView(divider)
-            }
         }
     }
 
