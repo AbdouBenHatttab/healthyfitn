@@ -15,7 +15,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "CLOUDFLARED_URL", "\"https://vertical-meetup-robinson-weekends.trycloudflare.com\"")
+        buildConfigField("String", "CLOUDFLARED_URL", "\"https://sunglasses-limitation-sporting-mostly.trycloudflare.com\"")
     }
 
     buildTypes {
@@ -121,4 +121,12 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("com.google.android.material:material:1.9.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+
+    // ✅ WebRTC - Stream IO (MEILLEURE OPTION)
+    implementation("io.getstream:stream-webrtc-android:1.1.3")
+    // Tests
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

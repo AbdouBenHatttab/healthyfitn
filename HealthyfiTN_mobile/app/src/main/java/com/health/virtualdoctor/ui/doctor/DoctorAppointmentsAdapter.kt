@@ -77,6 +77,8 @@ class DoctorAppointmentsAdapter(
         holder.rowAcceptReject.visibility = View.GONE
         holder.rowActionButtons.visibility = View.GONE
         holder.btnStartConsultation.visibility = View.GONE
+        // ✅ FIX: Check if appointment type is VIDEO_CALL and show video button
+        val isVideoCall = appointment.appointmentType.equals("VIDEO_CALL", ignoreCase = true)
 
         when (appointment.status.uppercase()) {
             "PENDING" -> {
@@ -104,13 +106,27 @@ class DoctorAppointmentsAdapter(
                 // Show action buttons (View Details + Complete + Cancel)
                 holder.llActionButtons.visibility = View.VISIBLE
                 holder.rowActionButtons.visibility = View.VISIBLE
+                holder.btnStartConsultation.visibility = View.GONE
+             // ✅ FIX: Add VIDEO CALL button if appointment type is VIDEO_CALL
+                if (isVideoCall) {
+                    // Add video call button
+                    holder.btnComplete.text = "📹 Appel Vidéo"
+                    holder.btnComplete.setOnClickListener {
+                        onActionClick(appointment, "video_call")
+                    }
+                } else {
+                    holder.btnComplete.text = "✅ Compléter"
+                    holder.btnComplete.setOnClickListener {
+                        onActionClick(appointment, "complete")
+                    }
+                }
 
                 holder.btnViewDetails.setOnClickListener {
                     onActionClick(appointment, "view_details")
                 }
-                holder.btnComplete.setOnClickListener {
-                    onActionClick(appointment, "complete")
-                }
+//                holder.btnComplete.setOnClickListener {
+//                    onActionClick(appointment, "complete")
+//                }
                 holder.btnCancelAppt.setOnClickListener {
                     onActionClick(appointment, "cancel")
                 }
@@ -134,7 +150,9 @@ class DoctorAppointmentsAdapter(
                 holder.chipStatus.setTextColor(Color.WHITE)
 
                 // Show only "Voir les détails" button
+                holder.llActionButtons.visibility = View.GONE
                 holder.btnStartConsultation.visibility = View.VISIBLE
+                holder.btnStartConsultation.text = "👁️ Voir les détails"
                 holder.btnStartConsultation.setOnClickListener {
                     onActionClick(appointment, "view_details")
                 }
@@ -144,6 +162,7 @@ class DoctorAppointmentsAdapter(
                 holder.chipStatus.text = appointment.status
                 holder.chipStatus.setChipBackgroundColorResource(android.R.color.darker_gray)
                 holder.chipStatus.setTextColor(Color.WHITE)
+                holder.llActionButtons.visibility = View.GONE
 
                 holder.btnStartConsultation.visibility = View.VISIBLE
                 holder.btnStartConsultation.setOnClickListener {

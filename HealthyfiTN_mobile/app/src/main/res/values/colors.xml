@@ -67,4 +67,5 @@
     <color name="trend_up">#4CAF50</color>
     <color name="trend_down">#F44336</color>
     <color name="trend_stable">#9E9E9E</color>
+    <color name="white_20">#33FFFFFF</color>
 </resources>

@@ -103,3 +103,13 @@ logging:
     org.springframework.web.servlet.handler: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# ============================================================
+# WebRTC Configuration avec Metered.ca (TURN temporaire)
+# ============================================================
+webrtc:
+  metered:
+    domain: web_rtc.metered.live
+    secret-key: 4a562d19fd3a2762f0135ec749763bde501d
+    credential-ttl: 86400  # 24 heures (en secondes)
+

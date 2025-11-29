@@ -1,5 +1,6 @@
 package com.health.virtualdoctor.ui.doctor
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -18,6 +19,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import android.view.LayoutInflater
 import com.health.virtualdoctor.ui.data.models.AppointmentResponseRequest
+import com.health.virtualdoctor.ui.consultation.VideoCallActivity
+
 
 class DoctorAppointmentsActivity : AppCompatActivity() {
 
@@ -74,7 +77,14 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
             "complete" -> showCompleteAppointmentDialog(appointment)
             "cancel" -> showCancelAppointmentDialog(appointment)
             "start_consultation" -> showConsultationOptions(appointment)
+            "video_call" -> startVideoCall(appointment)
+
         }
+    }
+    private fun startVideoCall(appointment: AppointmentResponse) {
+        val intent = Intent(this, VideoCallActivity::class.java)
+        intent.putExtra("appointmentId", appointment.id)
+        startActivity(intent)
     }
 
     private fun acceptAppointment(appointment: AppointmentResponse) {
