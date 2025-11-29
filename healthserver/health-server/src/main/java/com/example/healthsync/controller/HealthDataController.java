@@ -248,4 +248,26 @@ public class HealthDataController {
                     .body("❌ Erreur: " + e.getMessage());
         }
     }
+
+    // ✅ Récupérer les données biométriques pour la date du jour
+    @GetMapping("/user/{userId}/today")
+    public ResponseEntity<?> getTodayBiometricData(@PathVariable String userId) {
+        try {
+            log.info("Fetching today's data for user: {}", userId);
+            BiometricData data = biometricDataService.getTodayData(userId);
+
+            if (data == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Aucune donnée biométrique trouvée pour aujourd'hui");
+            }
+
+            return ResponseEntity.ok(data);
+
+        } catch (Exception e) {
+            log.error("Error fetching today's biometric data: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ Erreur: " + e.getMessage());
+        }
+    }
+
 }

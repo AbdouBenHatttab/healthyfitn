@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -163,5 +165,13 @@ public class BiometricDataService {
     public String getUserStats(String email) {
         long total = repository.countByEmail(email);
         return String.format("👤 User %s: %d enregistrements", email, total);
+    }
+
+    public BiometricData getTodayData(String userId) {
+        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        log.info("Recherche des données biométriques pour {} à la date {}", userId, today);
+
+        return repository.findByEmailAndDate(userId, today);
     }
 }
