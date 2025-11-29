@@ -1,4 +1,4 @@
-venv/Scripts/activate          # ou dans Git Bash : source venv/Scripts/activate
+hivenv/Scripts/activate          # ou dans Git Bash : source venv/Scripts/activate
 python app/main.py
 
 # puis
@@ -53,7 +53,80 @@ Le **Nutrition Service** est un microservice Python/Flask qui analyse les photos
 - **MinIO** - Stockage des images
 - **OpenCV + Pillow** - Traitement d'images
 - **Open Food Facts API** - Données nutritionnelles
+✅ TensorFlow 2.15 — Détection alimentaire (Machine Learning)
 
+TensorFlow est une bibliothèque de Machine Learning.
+Dans ton projet, il sert à :
+
+entraîner un modèle de détection alimentaire (identifier un plat ou un aliment dans une image)
+
+faire des prédictions à partir d’images (exemple : reconnaître que la photo contient “pasta”, “banane”, “pizza”, etc.)
+
+En résumé : TensorFlow = cerveau du système qui reconnaît les aliments.
+
+✅ MinIO — Stockage d’images (Object Storage)
+
+MinIO est une solution de stockage d’objets (comme Amazon S3).
+Il sert à stocker :
+
+les images uploadées par l’utilisateur
+
+les images utilisées par le modèle
+
+éventuellement les résultats ou fichiers volumineux
+
+Avantages : rapide, compatible S3, facile à utiliser avec Flask.
+
+👉 MinIO = disque dur cloud pour stocker les images.
+
+✅ OpenCV — Traitement d’images (Computer Vision)
+
+OpenCV est une bibliothèque très connue pour le traitement d’images :
+
+redimensionner les images avant de les analyser
+
+détecter les contours, couleurs, formes
+
+nettoyer ou améliorer les images
+
+préparer l’image pour TensorFlow
+
+👉 OpenCV = outils avancés pour manipuler et analyser les images.
+
+✅ Pillow (PIL) — Manipulation simple d’images
+
+Pillow est une bibliothèque Python pour :
+
+ouvrir des images JPG/PNG
+
+les convertir (RGB, etc.)
+
+les recadrer ou les compresser
+
+les préparer pour TensorFlow ou OpenCV
+
+Souvent OpenCV + Pillow sont complémentaires.
+
+👉 Pillow = petites manipulations d’images faciles.
+
+✅ Open Food Facts API — Données nutritionnelles
+
+Open Food Facts est une base de données mondiale sur les aliments.
+L’API permet de récupérer :
+
+calories
+
+graisses
+
+protéines
+
+sucre
+
+Nutri-Score
+
+liste d’ingrédients
+
+Dans ton système, après que TensorFlow reconnaît l’aliment, tu peux appeler Open Food Facts pour récupérer ses valeurs nutritionnelles.
 ---
 
 ## ✨ Fonctionnalités

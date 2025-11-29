@@ -1,6 +1,6 @@
 from pymongo import MongoClient, DESCENDING
 from datetime import datetime
-from app.config import Config
+from nutrition_app.config import Config
 import uuid
 
 class NutritionAnalysisModel:

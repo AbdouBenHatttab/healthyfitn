@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <!-- ✅ Permissions existantes -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> <!-- Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <!-- ✅ Permissions Health Connect -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
@@ -21,17 +29,11 @@
     <uses-permission android:name="android.permission.health.READ_STEPS_CADENCE" />
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_POWER" />
-    <uses-permission android:name="android.permission.health.READ_HYDRATION" /> <!-- ✅ Permissions caméra et stockage -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" /> <!-- ✅ Pour indiquer que la caméra est optionnelle -->
+    <uses-permission android:name="android.permission.health.READ_HYDRATION" />
+
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:allowBackup="true"
@@ -43,10 +45,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VirtualDoctor"
         tools:targetApi="31">
-        <activity
-            android:name=".ui.chatBot.ChatBotActivity"
-            android:exported="false" />
-        <!-- ✅ FileProvider (doit être à l’intérieur de <application>) -->
+
+        <!-- ✅ IMPORTANT : Référencer les permissions Health Connect -->
+        <meta-data
+            android:name="health_permissions"
+            android:resource="@xml/health_permissions" />
+
+        <!-- FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -55,9 +60,40 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
-        </provider> <!-- Activities -->
+        </provider>
+
+        <!-- Splash (Launcher) -->
+        <activity
+            android:name=".ui.splash.SplashActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.VirtualDoctor">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Autres activities -->
+        <activity
+            android:name=".ui.welcome.WelcomeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.auth.RegisterActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.doctor.DoctorDashboardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.doctor.DoctorAppointmentsActivity"
             android:exported="false" />
         <activity
             android:name=".ui.user.PatientAppointmentsActivity"
@@ -76,53 +112,10 @@
         <activity
             android:name=".ui.user.UserProfileActivity"
             android:exported="false"
-            android:theme="@style/Theme.VirtualDoctor" /> <!-- Splash (Launcher) -->
+            android:theme="@style/Theme.VirtualDoctor" />
         <activity
-            android:name=".ui.splash.SplashActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.VirtualDoctor">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity> <!-- Autres activities -->
-        <activity
-            android:name=".ui.welcome.WelcomeActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.auth.LoginActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.auth.RegisterActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.doctor.DoctorAppointmentsActivity"
+            android:name=".ui.chatBot.ChatBotActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.user.UserMetricsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" /> <!-- Health Connect -->
-        <activity-alias
-            android:name=".ViewPermissionUsageActivity"
-            android:exported="true"
-            android:permission="android.permission.START_VIEW_PERMISSION_USAGE"
-            android:targetActivity=".ui.user.UserMetricsActivity">
-            <intent-filter>
-                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
-            </intent-filter>
-        </activity-alias>
-        <activity android:name=".ui.user.HealthAnalysisActivity" android:exported="false" android:screenOrientation="portrait"/>
-        <activity android:name=".ui.user.MedicalAlertsActivity" android:exported="false" android:screenOrientation="portrait"/>
-        <activity android:name=".ui.user.HealthTrendsActivity" android:exported="false" android:screenOrientation="portrait" android:theme="@style/Theme.VirtualDoctor"/>
-        <activity android:name=".ui.user.HealthGoalsActivity" android:exported="false" android:screenOrientation="portrait"/>
-
         <activity
             android:name=".ui.admin.AdminDashboardActivity"
             android:exported="false"
@@ -131,14 +124,46 @@
         <activity
             android:name=".ui.admin.UserManagementActivity"
             android:exported="false"
-            android:theme="@style/Theme.VirtualDoctor" /> <!-- Firebase Messaging -->
-        <service
-            android:name=".ui.notifications.FCMService"
-            android:exported="false">
+            android:theme="@style/Theme.VirtualDoctor" />
+
+        <!-- ✅ Activity principale Health Connect -->
+        <activity
+            android:name=".ui.user.UserMetricsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- ✅ CORRIGÉ : Activity-alias Health Connect -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".ui.user.UserMetricsActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
-        </service> <!-- Default Notification Meta -->
+        </activity-alias>
+
+        <!-- Nouvelles activities -->
+        <activity
+            android:name=".ui.user.HealthAnalysisActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.user.MedicalAlertsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.user.HealthTrendsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.VirtualDoctor" />
+        <activity
+            android:name=".ui.user.HealthGoalsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Default Notification Meta -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notifications" />

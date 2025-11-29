@@ -1,6 +1,6 @@
 from minio import Minio
 from minio.error import S3Error
-from app.config import Config
+from nutrition_app.config import Config
 import uuid
 from datetime import timedelta
 import io

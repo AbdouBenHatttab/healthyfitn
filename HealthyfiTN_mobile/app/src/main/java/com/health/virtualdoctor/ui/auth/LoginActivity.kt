@@ -23,7 +23,6 @@ import com.health.virtualdoctor.ui.data.api.RetrofitClient
 import com.health.virtualdoctor.ui.data.models.LoginRequest
 import com.health.virtualdoctor.ui.doctor.DoctorDashboardActivity
 import com.health.virtualdoctor.ui.user.UserMetricsActivity
-import com.health.virtualdoctor.ui.utils.FCMHelper
 import com.health.virtualdoctor.ui.utils.TokenManager
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -240,8 +239,6 @@ class LoginActivity : AppCompatActivity() {
             role = role
         )
 
-        FCMHelper.saveFCMToken(this)
-
         Toast.makeText(this, "✅ Connexion réussie!", Toast.LENGTH_SHORT).show()
         navigateByRole(role)
     }
@@ -267,8 +264,6 @@ class LoginActivity : AppCompatActivity() {
             name = fullName,
             role = "DOCTOR"
         )
-
-        FCMHelper.saveFCMToken(this)
 
         Toast.makeText(this, "✅ Bienvenue Dr. $fullName!", Toast.LENGTH_SHORT).show()
         navigateByRole("DOCTOR")
