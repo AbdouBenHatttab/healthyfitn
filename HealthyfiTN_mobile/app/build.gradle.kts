@@ -15,7 +15,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "CLOUDFLARED_URL", "\"https://sunglasses-limitation-sporting-mostly.trycloudflare.com\"")
+        buildConfigField("String", "CLOUDFLARED_URL", "\"https://ruinous-loma-nondipterous.ngrok-free.dev\"")
     }
 
     buildTypes {
@@ -121,4 +121,4 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("com.google.android.material:material:1.9.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-}
+    implementation("io.getstream:stream-webrtc-android:1.1.1")}

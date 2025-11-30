@@ -169,9 +169,7 @@ public class BiometricDataService {
 
     public BiometricData getTodayData(String userId) {
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
         log.info("Recherche des données biométriques pour {} à la date {}", userId, today);
-
-        return repository.findByEmailAndDate(userId, today);
+        return repository.findTopByEmailAndDateOrderByReceivedAtDesc(userId, today);
     }
 }
