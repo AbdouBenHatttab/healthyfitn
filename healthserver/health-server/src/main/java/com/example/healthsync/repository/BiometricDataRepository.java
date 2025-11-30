@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface BiometricDataRepository extends MongoRepository<BiometricData, String> {
 
-    List<BiometricData> findByEmail(String email);
+    BiometricData findTopByEmailAndDateOrderByReceivedAtDesc(String email, String date);
 
     BiometricData findByEmailAndDate(String email, String date);
 
