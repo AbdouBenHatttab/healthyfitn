@@ -14,12 +14,19 @@ import com.health.virtualdoctor.BuildConfig
 object RetrofitClient {
 
     // ✅ URLs des services via Cloudflare Tunnels
+<<<<<<< HEAD
     val cloudflared = BuildConfig.CLOUDFLARED_URL
     private val AUTH_BASE_URL = "$cloudflared/auth-service/" // Port 8082
     private  val DOCTOR_BASE_URL = "$cloudflared/doctor-activation-service/" // Port 8083
     private  val NOTIFICATION_BASE_URL = "$cloudflared/notification-service/" // Port 8084
     private  val USER_BASE_URL = "$cloudflared/user-service/" // Port 8085
     //private const val DOCTOR_SERVICE_BASE_URL = "https://macie-unprognosticative-kylan.ngrok-free.dev"
+=======
+    private const val AUTH_BASE_URL = "https://mini-cap-impose-hobby.trycloudflare.com/auth-service/" // Port 8082
+    private const val DOCTOR_BASE_URL = "https://mini-cap-impose-hobby.trycloudflare.com/doctor-activation-service/" // Port 8083
+    private const val NOTIFICATION_BASE_URL = "https://mini-cap-impose-hobby.trycloudflare.com/notification-service/" // Port 8084
+    private const val USER_BASE_URL = "https://mini-cap-impose-hobby.trycloudflare.com/user-service/" // Port 8085
+>>>>>>> b9f9b4a (working)
 
     private var authRetrofit: Retrofit? = null
     private var doctorRetrofit: Retrofit? = null

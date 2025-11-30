@@ -29,7 +29,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var llEmptyState: LinearLayout
     private lateinit var btnBack: ImageButton
-    private lateinit var btnCreateAppointment: com.google.android.material.button.MaterialButton
+
     private lateinit var appointmentsAdapter: DoctorAppointmentsAdapter
 
     private var allAppointments = listOf<AppointmentResponse>()
@@ -51,12 +51,12 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         llEmptyState = findViewById(R.id.llEmptyState)
         btnBack = findViewById(R.id.btnBack)
-        btnCreateAppointment = findViewById(R.id.btnCreateAppointment)
+
     }
 
     private fun setupListeners() {
         btnBack.setOnClickListener { finish() }
-        btnCreateAppointment.setOnClickListener { showCreateAppointmentDialog() }
+
     }
 
     private fun setupRecyclerView() {
@@ -236,39 +236,85 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
     private fun showAppointmentDetails(appointment: AppointmentResponse) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_appointment_details, null)
 
-        dialogView.findViewById<TextView>(R.id.tvPatientNameDialog).text = appointment.patientName
-        dialogView.findViewById<TextView>(R.id.tvPatientEmailDialog).text = appointment.patientEmail
-        dialogView.findViewById<TextView>(R.id.tvPatientPhoneDialog).text = appointment.patientPhone ?: "Non disponible"
-        dialogView.findViewById<TextView>(R.id.lblPatientEmail)?.visibility = View.VISIBLE
-        dialogView.findViewById<TextView>(R.id.lblPatientPhone)?.visibility = View.VISIBLE
+        // Find all views
+        val tvAppointmentDateDetails = dialogView.findViewById<TextView>(R.id.tvAppointmentDateDetails)
+        val tvAppointmentTimeDetails = dialogView.findViewById<TextView>(R.id.tvAppointmentTimeDetails)
+        val chipAppointmentTypeDetails = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.chipAppointmentTypeDetails)
+        val tvAppointmentReasonDetails = dialogView.findViewById<TextView>(R.id.tvAppointmentReasonDetails)
+        val tvAppointmentStatusDetails = dialogView.findViewById<TextView>(R.id.tvAppointmentStatusDetails)
 
+        val cardRejectionDetails = dialogView.findViewById<View>(R.id.cardRejectionDetails)
+        val tvRejectionReason = dialogView.findViewById<TextView>(R.id.tvRejectionReason)
+        val tvAvailableHours = dialogView.findViewById<TextView>(R.id.tvAvailableHours)
+        val tvRespondedAt = dialogView.findViewById<TextView>(R.id.tvRespondedAt)
+
+        val cardCancellationDetails = dialogView.findViewById<View>(R.id.cardCancellationDetails)
+        val tvCancelledBy = dialogView.findViewById<TextView>(R.id.tvCancelledBy)
+        val tvCancellationReason = dialogView.findViewById<TextView>(R.id.tvCancellationReason)
+
+        val cardCompletedDetails = dialogView.findViewById<View>(R.id.cardCompletedDetails)
+        val tvDiagnosis = dialogView.findViewById<TextView>(R.id.tvDiagnosis)
+        val tvPrescription = dialogView.findViewById<TextView>(R.id.tvPrescription)
+        val tvDoctorNotes = dialogView.findViewById<TextView>(R.id.tvDoctorNotes)
+
+        val cardNotesDialog = dialogView.findViewById<View>(R.id.cardNotesDialog)
+        val tvNotesDialog = dialogView.findViewById<TextView>(R.id.tvNotesDialog)
+
+        val btnCloseDialog = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCloseDialog)
+
+
+        // Populate Patient Details
+        // (Patient details are not displayed in this dialog anymore)
+
+        // Populate Date and Time
         try {
             val dateTime = LocalDateTime.parse(appointment.appointmentDateTime)
             val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
             val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-            dialogView.findViewById<TextView>(R.id.tvAppointmentDateDialog).text = dateTime.format(dateFormatter)
-            dialogView.findViewById<TextView>(R.id.tvAppointmentTimeDialog).text = dateTime.format(timeFormatter)
+            tvAppointmentDateDetails.text = dateTime.format(dateFormatter)
+            tvAppointmentTimeDetails.text = dateTime.format(timeFormatter)
         } catch (_: Exception) {
-            dialogView.findViewById<TextView>(R.id.tvAppointmentDateDialog).text =
-                appointment.appointmentDateTime.substringBefore("T")
-            dialogView.findViewById<TextView>(R.id.tvAppointmentTimeDialog).text =
-                appointment.appointmentDateTime.substringAfter("T").take(5)
+            tvAppointmentDateDetails.text = appointment.appointmentDateTime.substringBefore("T")
+            tvAppointmentTimeDetails.text = appointment.appointmentDateTime.substringAfter("T").take(5)
         }
 
-        dialogView.findViewById<TextView>(R.id.tvAppointmentTypeDialog).text = appointment.appointmentType
-        dialogView.findViewById<TextView>(R.id.tvReasonDialog).text = appointment.reason
+        // Populate Type, Reason, Status
+        chipAppointmentTypeDetails.text = appointment.appointmentType
+        tvAppointmentReasonDetails.text = appointment.reason
+        tvAppointmentStatusDetails.text = appointment.status
 
-        val chipStatus = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.chipStatusDialog)
-        chipStatus.text = appointment.status
 
+        // Handle conditional display based on status
+        when (appointment.status) {
+            "REJECTED" -> {
+                cardRejectionDetails.visibility = View.VISIBLE
+                tvRejectionReason.text = appointment.doctorResponseReason ?: "Non spécifié"
+                tvAvailableHours.text = "Heures suggérées: ${appointment.availableHoursSuggestion ?: "N/A"}"
+                tvRespondedAt.text = "Date de réponse: ${appointment.respondedAt ?: "N/A"}"
+            }
+            "COMPLETED" -> {
+                cardCompletedDetails.visibility = View.VISIBLE
+                tvDiagnosis.text = appointment.diagnosis ?: "Non spécifié"
+                tvPrescription.text = appointment.prescription ?: "Non spécifié"
+
+                val llDoctorNotes = dialogView.findViewById<LinearLayout>(R.id.llDoctorNotes)
+                if (!appointment.doctorNotes.isNullOrBlank()) {
+                    llDoctorNotes.visibility = View.VISIBLE
+                    tvDoctorNotes.text = appointment.doctorNotes
+                } else {
+                    llDoctorNotes.visibility = View.GONE
+                }
+            }
+        }
+
+        // Handle general notes
         if (!appointment.notes.isNullOrEmpty()) {
-            dialogView.findViewById<TextView>(R.id.tvNotesDialog).text = appointment.notes
-            dialogView.findViewById<View>(R.id.cardNotesDialog).visibility = View.VISIBLE
+            cardNotesDialog.visibility = View.VISIBLE
+            tvNotesDialog.text = appointment.notes
         }
 
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).create()
-        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCloseDialog)
-            .setOnClickListener { dialog.dismiss() }
+        btnCloseDialog.setOnClickListener { dialog.dismiss() }
         dialog.show()
     }
 
@@ -368,9 +414,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showCreateAppointmentDialog() {
-        Toast.makeText(this, "Créer un rendez-vous - Fonctionnalité à implémenter", Toast.LENGTH_SHORT).show()
-    }
+
 
     private fun showResponseToast(success: Boolean, message: String, code: Int) {
         Toast.makeText(this, if (success) "✅ $message" else "❌ Erreur $code", Toast.LENGTH_SHORT).show()
