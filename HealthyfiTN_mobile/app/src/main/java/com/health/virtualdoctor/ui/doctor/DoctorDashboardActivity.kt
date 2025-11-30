@@ -63,7 +63,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
     // Views - Statistics Section
     private lateinit var tvTodayAppointments: TextView
     private lateinit var tvTotalPatients: TextView
-    private lateinit var tvRevenue: TextView
+    private lateinit var tvPendingAppointments: TextView
 
     // Views - Appointments Section
     private lateinit var rvPatients: RecyclerView
@@ -149,7 +149,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
         // Statistics views
         tvTodayAppointments = findViewById(R.id.tvTodayAppointments)
         tvTotalPatients = findViewById(R.id.tvTotalPatients)
-        tvRevenue = findViewById(R.id.tvRevenue)
+        tvPendingAppointments = findViewById(R.id.tvPendingAppointments)
 
         // Appointments views
         rvPatients = findViewById(R.id.rvPatients)
@@ -325,9 +325,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     runOnUiThread {
                         tvTodayAppointments.text = stats.todayAppointments.toString()
                         tvTotalPatients.text = stats.totalPatients.toString()
-                        // Revenue calculation would go here if needed
-                        tvRevenue.text =
-                            "${stats.completedAppointments * 50}€" // Example calculation
+                        tvPendingAppointments.text = stats.todayPending.toString()
                     }
                 }
             } catch (e: Exception) {

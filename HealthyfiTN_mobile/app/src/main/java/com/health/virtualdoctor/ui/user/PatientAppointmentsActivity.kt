@@ -251,50 +251,41 @@ class PatientAppointmentsActivity : AppCompatActivity() {
     private fun showAppointmentDetails(appointment: AppointmentResponse) {
         val detailsView = LayoutInflater.from(this).inflate(R.layout.dialog_appointment_details, null)
 
-        // Hide patient info for patient view
-        detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails).visibility = View.VISIBLE
-        detailsView.findViewById<TextView>(R.id.tvPatientNameDialog).visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.lblPatientEmail)?.visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.tvPatientEmailDialog).visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.lblPatientPhone)?.visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.tvPatientPhoneDialog).visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.tvAppointmentDateDetails).visibility = View.VISIBLE
-        detailsView.findViewById<TextView>(R.id.tvAppointmentDateDialog).visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDetails).visibility = View.VISIBLE
-        detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDialog).visibility = View.GONE
-        detailsView.findViewById<com.google.android.material.chip.Chip>(R.id.chipAppointmentTypeDetails).visibility = View.VISIBLE
-        detailsView.findViewById<TextView>(R.id.tvAppointmentTypeDialog).visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.tvAppointmentReasonDetails).visibility = View.VISIBLE
-        detailsView.findViewById<TextView>(R.id.tvReasonDialog).visibility = View.GONE
-        detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails).visibility = View.VISIBLE
-        detailsView.findViewById<com.google.android.material.chip.Chip>(R.id.chipStatusDialog).visibility = View.GONE
-        detailsView.findViewById<View>(R.id.cardNotesDialog).visibility = View.GONE
-        detailsView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCloseDialog).visibility = View.GONE
+        // Find all views
+        val tvDoctorNameDetails = detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails)
+        val tvAppointmentDateDetails = detailsView.findViewById<TextView>(R.id.tvAppointmentDateDetails)
+        val tvAppointmentTimeDetails = detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDetails)
+        val chipAppointmentTypeDetails = detailsView.findViewById<com.google.android.material.chip.Chip>(R.id.chipAppointmentTypeDetails)
+        val tvAppointmentReasonDetails = detailsView.findViewById<TextView>(R.id.tvAppointmentReasonDetails)
+        val tvAppointmentStatusDetails = detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails)
+        val cardNotesDialog = detailsView.findViewById<View>(R.id.cardNotesDialog)
+        val tvNotesDialog = detailsView.findViewById<TextView>(R.id.tvNotesDialog)
+        val btnCloseDialog = detailsView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCloseDialog)
 
         // Set basic appointment info
-        detailsView.findViewById<TextView>(R.id.tvDoctorNameDetails).text = "Dr. ${appointment.doctorName}"
-        detailsView.findViewById<TextView>(R.id.tvAppointmentDateDetails).text = formatDisplayDate(appointment.appointmentDateTime)
-        detailsView.findViewById<TextView>(R.id.tvAppointmentTimeDetails).text = formatDisplayTime(appointment.appointmentDateTime)
-        detailsView.findViewById<TextView>(R.id.tvAppointmentReasonDetails).text = appointment.reason
-        detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails).text = getStatusDisplayText(appointment.status)
-        detailsView.findViewById<com.google.android.material.chip.Chip>(R.id.chipAppointmentTypeDetails).text = appointment.appointmentType
+        tvDoctorNameDetails.text = "Dr. ${appointment.doctorName}"
+        tvAppointmentDateDetails.text = formatDisplayDate(appointment.appointmentDateTime)
+        tvAppointmentTimeDetails.text = formatDisplayTime(appointment.appointmentDateTime)
+        tvAppointmentReasonDetails.text = appointment.reason
+        tvAppointmentStatusDetails.text = getStatusDisplayText(appointment.status)
+        chipAppointmentTypeDetails.text = appointment.appointmentType
 
         // Set status color
-        val statusTextView = detailsView.findViewById<TextView>(R.id.tvAppointmentStatusDetails)
-        statusTextView.setTextColor(getStatusColor(appointment.status))
+        tvAppointmentStatusDetails.setTextColor(getStatusColor(appointment.status))
 
         // Check if appointment was rejected or cancelled and show relevant details
         if (appointment.status.equals("REJECTED", ignoreCase = true) ||
             (appointment.doctorResponse != null && appointment.doctorResponse.equals("REJECTED", ignoreCase = true))) {
             showRejectionDetails(detailsView, appointment)
-            hideCancellationDetails(detailsView) // Hide cancellation details if rejected
-        } else if (appointment.status.equals("CANCELLED", ignoreCase = true)) {
-            showCancellationDetails(detailsView, appointment)
-            hideRejectionDetails(detailsView) // Hide rejection details if cancelled
         } else {
             hideRejectionDetails(detailsView)
-            hideCancellationDetails(detailsView) // Hide both if neither rejected nor cancelled
         }
+
+        if (!appointment.notes.isNullOrEmpty()) {
+            cardNotesDialog.visibility = View.VISIBLE
+            tvNotesDialog.text = appointment.notes
+        }
+
 
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(detailsView)
@@ -320,12 +311,18 @@ class PatientAppointmentsActivity : AppCompatActivity() {
 
         rejectionCard.visibility = View.VISIBLE
 
-        tvRejectionReason.text = appointment.doctorResponseReason.let {
-            if (it.isNullOrBlank()) "Aucune raison fournie" else it
+        if (appointment.doctorResponseReason.isNullOrBlank()) {
+            tvRejectionReason.visibility = View.GONE
+        } else {
+            tvRejectionReason.visibility = View.VISIBLE
+            tvRejectionReason.text = appointment.doctorResponseReason
         }
 
-        tvAvailableHours.text = appointment.availableHoursSuggestion.let {
-            if (it.isNullOrBlank()) "Heures suggérées: N/A" else "Heures suggérées: $it"
+        if (appointment.availableHoursSuggestion.isNullOrBlank()) {
+            tvAvailableHours.visibility = View.GONE
+        } else {
+            tvAvailableHours.visibility = View.VISIBLE
+            tvAvailableHours.text = "Heures suggérées: ${appointment.availableHoursSuggestion}"
         }
 
         tvRespondedAt.visibility = View.GONE // Hide respondedAt as per user request
@@ -336,20 +333,7 @@ class PatientAppointmentsActivity : AppCompatActivity() {
         rejectionCard?.visibility = View.GONE
     }
 
-    private fun showCancellationDetails(detailsView: View, appointment: AppointmentResponse) {
-        val cancellationCard = detailsView.findViewById<MaterialCardView>(R.id.cardCancellationDetails) ?: return
-        val tvCancellationReason = detailsView.findViewById<TextView>(R.id.tvCancellationReason) ?: return
 
-        cancellationCard.visibility = View.VISIBLE
-        tvCancellationReason.text = appointment.cancellationReason.let {
-            if (it.isNullOrBlank()) "Aucune raison fournie" else it
-        }
-    }
-
-    private fun hideCancellationDetails(detailsView: View) {
-        val cancellationCard = detailsView.findViewById<MaterialCardView>(R.id.cardCancellationDetails)
-        cancellationCard?.visibility = View.GONE
-    }
 
     private fun getStatusDisplayText(status: String): String {
         return when (status.uppercase()) {

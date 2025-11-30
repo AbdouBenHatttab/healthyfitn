@@ -479,20 +479,33 @@
                         android:gravity="center"
                         android:padding="@dimen/spacing_md">
 
-                        <TextView
-                            android:id="@+id/tvRevenue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="12.5K"
-                            android:textSize="24sp"
-                            android:textColor="@color/primary"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                                                                                <TextView
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Revenus"
+                                                                                    android:id="@+id/tvPendingAppointments"
+
+                                                                                    android:layout_width="wrap_content"
+
+                                                                                    android:layout_height="wrap_content"
+
+                                                                                    android:text="0"
+
+                                                                                    android:textSize="24sp"
+
+                                                                                    android:textColor="@color/primary"
+
+                                                                                    android:textStyle="bold"
+
+                                                                                    android:fontFamily="sans-serif-medium" />
+
+                                                    
+
+                                                                            <TextView
+
+                                                                                android:layout_width="wrap_content"
+
+                                                                                android:layout_height="wrap_content"
+
+                                                                                android:text="Rendez-vous en attente"
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="4dp"
