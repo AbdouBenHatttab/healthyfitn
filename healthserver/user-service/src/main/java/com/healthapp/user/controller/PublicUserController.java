@@ -15,39 +15,39 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class PublicUserController {
-    
+
     private final PasswordResetService passwordResetService;
-    
+
     /**
-     * ✅ FIXED: Forgot password - Envoie réellement l'email
+     * ✅ Mot de passe oublié - Envoie réellement l'email
      */
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(
             @RequestBody Map<String, String> request) {
-        
+
         String email = request.get("email");
-        
+
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error("Email is required"));
+                    .body(ApiResponse.error("L'email est requis"));
         }
-        
-        log.info("🔐 Password reset requested for user: {}", email);
-        
+
+        log.info("🔐 Réinitialisation du mot de passe demandée pour l'utilisateur : {}", email);
+
         try {
             // ✅ Appeler le service pour envoyer l'email
             passwordResetService.sendPasswordResetEmailForUser(email);
-            
+
             return ResponseEntity.ok(
-                ApiResponse.success("Password reset email sent successfully", null)
+                    ApiResponse.success("Email de réinitialisation du mot de passe envoyé avec succès", null)
             );
-            
+
         } catch (Exception e) {
-            log.error("❌ Failed to send password reset email: {}", e.getMessage());
-            
+            log.error("❌ Échec de l'envoi de l'email de réinitialisation : {}", e.getMessage());
+
             // ⚠️ NE PAS révéler si l'email existe ou pas (sécurité)
             return ResponseEntity.ok(
-                ApiResponse.success("If the email exists, a reset link will be sent", null)
+                    ApiResponse.success("Si l'email existe, un lien de réinitialisation sera envoyé", null)
             );
         }
     }

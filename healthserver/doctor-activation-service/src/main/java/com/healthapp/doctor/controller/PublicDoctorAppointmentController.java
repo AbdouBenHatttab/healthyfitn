@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Contrôleur public pour la gestion des rendez-vous côté patient
+ */
 @RestController
 @RequestMapping("/api/public/doctors/appointments")
 @RequiredArgsConstructor
@@ -17,25 +20,30 @@ public class PublicDoctorAppointmentController {
     private final AppointmentService appointmentService;
 
     /**
-     * Patient cancels their appointment
+     * Annulation d'un rendez-vous par le patient
+     *
+     * @param appointmentId ID du rendez-vous à annuler
+     * @param body Contient la raison de l'annulation (optionnelle)
+     * @return Statut de l'annulation
      */
     @PostMapping("/{appointmentId}/cancel")
     public ResponseEntity<Map<String, String>> cancelAppointmentByPatient(
             @PathVariable String appointmentId,
             @RequestBody Map<String, String> body) {
 
-        log.info("❌ Patient cancelling appointment: {}", appointmentId);
+        log.info("❌ Patient annule le rendez-vous : {}", appointmentId);
 
         String reason = body.get("reason");
         if (reason == null || reason.isBlank()) {
-            reason = "No reason provided";
+            reason = "Aucune raison fournie";
         }
 
+        // Appel du service pour annuler le rendez-vous côté patient
         appointmentService.cancelAppointment(appointmentId, "PATIENT", reason);
 
         return ResponseEntity.ok(Map.of(
                 "status", "success",
-                "message", "Appointment cancelled successfully"
+                "message", "Rendez-vous annulé avec succès"
         ));
     }
 }

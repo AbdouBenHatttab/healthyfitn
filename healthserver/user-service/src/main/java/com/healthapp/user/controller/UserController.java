@@ -25,38 +25,38 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasAnyRole('USER', 'DOCTOR', 'ADMIN')")
 @Slf4j
 public class UserController {
-    
+
     private final UserService userService;
     private final PasswordService passwordService;
-    
+
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUserProfile(Authentication auth) {
-        log.info("Getting current user profile");
+        log.info("Récupération du profil utilisateur courant");
         CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
         UserResponse user = userService.getUserById(principal.getId());
-        return ResponseEntity.ok(ApiResponse.success("Profile retrieved", user));
+        return ResponseEntity.ok(ApiResponse.success("Profil récupéré avec succès", user));
     }
-    
+
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
             @Valid @RequestBody UpdateUserRequest request,
             Authentication auth) {
-        
-        log.info("Updating user profile");
+
+        log.info("Mise à jour du profil utilisateur");
         CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
         UserResponse updated = userService.updateUser(principal.getId(), request);
-        return ResponseEntity.ok(ApiResponse.success("Profile updated", updated));
+        return ResponseEntity.ok(ApiResponse.success("Profil mis à jour avec succès", updated));
     }
-    
+
     @PutMapping("/change-password")
     public ResponseEntity<ApiResponse<String>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
             Authentication auth) {
-        
-        log.info("Change password request");
+
+        log.info("Demande de changement de mot de passe");
         CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
         passwordService.changePassword(principal.getId(), request);
-        return ResponseEntity.ok(ApiResponse.success("Password changed", null));
+        return ResponseEntity.ok(ApiResponse.success("Mot de passe modifié avec succès", null));
     }
 
     @PutMapping("/{email}/score")
@@ -64,18 +64,16 @@ public class UserController {
             @PathVariable String email,
             @RequestBody Map<String, Double> request) {
 
-        log.info("Updating score for user {}", email);
+        log.info("Mise à jour du score pour l'utilisateur {}", email);
 
         if (!request.containsKey("score")) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Score is required"));
+                    .body(ApiResponse.error("Le score est requis"));
         }
 
         Double score = request.get("score");
         UserResponse updated = userService.updateUserScore(email, score);
 
-        return ResponseEntity.ok(ApiResponse.success("Score updated", updated));
+        return ResponseEntity.ok(ApiResponse.success("Score mis à jour avec succès", updated));
     }
-
-
 }

@@ -18,32 +18,35 @@ import java.time.LocalDateTime;
 @Transactional
 @Slf4j
 public class PasswordService {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    
+
+    /**
+     * Changer le mot de passe d’un utilisateur
+     */
     public void changePassword(String userId, ChangePasswordRequest request) {
-        log.info("Changing password for user: {}", userId);
-        
+        log.info("🔄 Changement de mot de passe pour l'utilisateur : {}", userId);
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-        
-        // Verify current password
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé avec l'ID : " + userId));
+
+        // Vérifier le mot de passe actuel
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            log.error("Current password is incorrect for user: {}", userId);
-            throw new InvalidPasswordException("Current password is incorrect");
+            log.error("Mot de passe actuel incorrect pour l'utilisateur : {}", userId);
+            throw new InvalidPasswordException("Le mot de passe actuel est incorrect");
         }
-        
-        // Validate new password is different
+
+        // Vérifier que le nouveau mot de passe est différent
         if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
-            throw new InvalidPasswordException("New password must be different from current password");
+            throw new InvalidPasswordException("Le nouveau mot de passe doit être différent de l'ancien");
         }
-        
-        // Update password
+
+        // Mettre à jour le mot de passe
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
-        
-        log.info("Password changed successfully for user: {}", userId);
+
+        log.info("✅ Mot de passe modifié avec succès pour l'utilisateur : {}", userId);
     }
 }

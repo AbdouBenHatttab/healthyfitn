@@ -14,101 +14,100 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Admin Service - Handle doctor activation/rejection
+ * Service Administrateur - Gestion de l’activation et du rejet des médecins
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class AdminService {
-    
+
     private final UserRepository userRepository;
     private final UserService userService;
     private final EmailService emailService;
-    
+
     /**
-     * Get all pending doctors (isActivated = false)
+     * Récupérer tous les médecins en attente (isActivated = false)
      */
     public List<UserResponse> getPendingDoctors() {
-        log.info("Fetching pending doctors");
-        
+        log.info("Récupération des médecins en attente d’approbation...");
+
         List<User> pendingDoctors = userRepository.findPendingDoctors();
-        
-        log.info("Found {} pending doctors", pendingDoctors.size());
-        
+
+        log.info("{} médecin(s) en attente trouvés", pendingDoctors.size());
+
         return pendingDoctors.stream()
                 .map(userService::mapToUserResponse)
                 .collect(Collectors.toList());
     }
-    
+
     /**
-     * Activate a doctor account
+     * Activer un compte médecin
      */
     public void activateDoctor(String doctorId) {
-        log.info("Activating doctor with ID: {}", doctorId);
-        
+        log.info("Activation du médecin avec l’ID : {}", doctorId);
+
         User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
-        
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable avec l’ID : " + doctorId));
+
         if (!doctor.hasRole(UserRole.DOCTOR)) {
-            throw new RuntimeException("User is not a doctor");
+            throw new RuntimeException("L’utilisateur n’est pas un médecin");
         }
-        
+
         if (doctor.getIsActivated()) {
-            log.warn("Doctor is already activated: {}", doctor.getEmail());
+            log.warn("Ce médecin est déjà activé : {}", doctor.getEmail());
             return;
         }
-        
-        // Activate the doctor
+
+        // Activation du médecin
         doctor.setIsActivated(true);
         doctor.setActivationDate(LocalDateTime.now());
         userRepository.save(doctor);
-        
-        // Send confirmation email
+
+        // Envoi d’un email de confirmation
         emailService.sendDoctorActivationConfirmation(doctor);
-        
-        log.info("✅ Doctor activated successfully: {}", doctor.getEmail());
+
+        log.info("✅ Médecin activé avec succès : {}", doctor.getEmail());
     }
-    
+
     /**
-     * Reject a doctor account
+     * Rejeter un compte médecin
      */
     public void rejectDoctor(String doctorId, String reason) {
-        log.info("Rejecting doctor with ID: {}", doctorId);
-        
+        log.info("Rejet du médecin avec l’ID : {}", doctorId);
+
         User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
-        
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable avec l’ID : " + doctorId));
+
         if (!doctor.hasRole(UserRole.DOCTOR)) {
-            throw new RuntimeException("User is not a doctor");
+            throw new RuntimeException("L’utilisateur n’est pas un médecin");
         }
-        
-        // Keep isActivated = false, but mark as rejected
-        // You could add a rejectionReason field to User entity if needed
-        
-        // Send rejection email
+
+        // isActivated reste false, mais on envoie un email de rejet
+        // (ajouter un champ rejectionReason dans l’entité User si nécessaire)
+
         emailService.sendDoctorRejectionNotification(doctor, reason);
-        
-        log.info("❌ Doctor rejected: {} - Reason: {}", doctor.getEmail(), reason);
+
+        log.info("❌ Médecin rejeté : {} - Raison : {}", doctor.getEmail(), reason);
     }
-    
+
     /**
-     * Get count of pending doctors
+     * Obtenir le nombre de médecins en attente
      */
     public long getPendingDoctorsCount() {
         return userRepository.findPendingDoctors().size();
     }
-    
+
     /**
-     * Get all activated doctors
+     * Récupérer tous les médecins activés
      */
     public List<UserResponse> getActivatedDoctors() {
-        log.info("Fetching activated doctors");
-        
+        log.info("Récupération des médecins activés...");
+
         List<User> activatedDoctors = userRepository.findActivatedDoctors();
-        
-        log.info("Found {} activated doctors", activatedDoctors.size());
-        
+
+        log.info("{} médecin(s) activé(s) trouvés", activatedDoctors.size());
+
         return activatedDoctors.stream()
                 .map(userService::mapToUserResponse)
                 .collect(Collectors.toList());
