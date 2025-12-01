@@ -23,20 +23,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class AdminDoctorController {
-    
+
     private final DoctorActivationService doctorActivationService;
-    
+
     /**
      * Récupérer la liste des médecins en attente d'activation
      */
     @GetMapping("/pending")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DoctorPendingResponse>> getPendingDoctors() {
-        log.info("Admin requesting pending doctors list");
+        log.info("Admin demande la liste des médecins en attente");
         List<DoctorPendingResponse> pendingDoctors = doctorActivationService.getPendingDoctors();
         return ResponseEntity.ok(pendingDoctors);
     }
-    
+
     /**
      * Approuver ou rejeter un médecin
      */
@@ -44,62 +44,59 @@ public class AdminDoctorController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> activateDoctor(
             @Valid @RequestBody DoctorActivationRequestDto request) {
-        
-        log.info("🔍 Admin processing doctor activation: {} - Action: {}", 
+
+        log.info("🔍 Admin traite l'activation du médecin : {} - Action : {}",
                 request.getDoctorId(), request.getAction());
-        
-        // Récupérer l'Authentication depuis SecurityContextHolder
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        log.info("🔍 Authentication object: {}", authentication);
-        log.info("🔍 Is authenticated: {}", authentication != null ? authentication.isAuthenticated() : "null");
-        
+
         if (authentication == null) {
-            log.error("❌ Authentication is NULL in SecurityContext!");
+            log.error("❌ Aucune authentification trouvée dans le contexte !");
             return ResponseEntity.status(401).body(Map.of(
-                "status", "error",
-                "message", "Authentication required - no auth found in context"
+                    "status", "error",
+                    "message", "Authentification requise - aucun utilisateur trouvé"
             ));
         }
-        
+
         if (!authentication.isAuthenticated()) {
-            log.error("❌ User is not authenticated!");
+            log.error("❌ L'utilisateur n'est pas authentifié !");
             return ResponseEntity.status(401).body(Map.of(
-                "status", "error",
-                "message", "Authentication required - user not authenticated"
+                    "status", "error",
+                    "message", "Authentification requise - utilisateur non authentifié"
             ));
         }
-        
+
         // Extraire l'email de l'admin
         String adminEmail = authentication.getName();
         String adminId = adminEmail;
-        
-        log.info("✅ Admin authenticated: email={}, authorities={}", 
+
+        log.info("✅ Admin authentifié : email={}, authorities={}",
                 adminEmail, authentication.getAuthorities());
-        
+
         doctorActivationService.processDoctorActivation(request, adminId, adminEmail);
-        
+
         String message = "APPROVE".equalsIgnoreCase(request.getAction())
-                ? "Doctor account has been successfully activated"
-                : "Doctor account activation has been rejected";
-        
+                ? "Le compte du médecin a été activé avec succès"
+                : "L'activation du compte du médecin a été rejetée";
+
         return ResponseEntity.ok(Map.of(
-            "status", "success",
-            "message", message
+                "status", "success",
+                "message", message
         ));
     }
+
     /**
-     * ✅ NOUVEAU: Récupérer la liste des médecins activés
+     * ✅ Récupérer la liste des médecins activés
      */
     @GetMapping("/activated")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DoctorPendingResponse>> getActivatedDoctors() {
-        log.info("📋 Admin requesting activated doctors list");
+        log.info("📋 Admin demande la liste des médecins activés");
         List<DoctorPendingResponse> activatedDoctors = doctorActivationService.getActivatedDoctors();
-        log.info("✅ Found {} activated doctors", activatedDoctors.size());
+        log.info("✅ {} médecins activés trouvés", activatedDoctors.size());
         return ResponseEntity.ok(activatedDoctors);
     }
-    
+
     /**
      * Compter les médecins en attente
      */

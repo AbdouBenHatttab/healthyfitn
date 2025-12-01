@@ -9,76 +9,75 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * DoctorLoginService - Doctor authentication management
+ * DoctorLoginService - Gestion de l’authentification des médecins
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class DoctorLoginService {
-    
+
     private final DoctorRepository doctorRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    
+
     @Value("${app.jwt.secret}")
     private String jwtSecret;
-    
-    @Value("${app.jwt.expiration:86400000}")  // 24h default
+
+    @Value("${app.jwt.expiration:86400000}")  // 24h par défaut
     private Long jwtExpiration;
-    
+
     /**
-     * Doctor login
+     * Connexion d’un médecin
      */
     public Map<String, Object> loginDoctor(String email, String password) {
-        log.info("🔐 Doctor login attempt for: {}", email);
-        
-        // Find doctor by email
+        log.info("🔐 Tentative de connexion d’un médecin : {}", email);
+
+        // Recherche du médecin par email
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
-        
-        // Verify password
+                .orElseThrow(() -> new RuntimeException("Email ou mot de passe invalide"));
+
+        // Vérification du mot de passe
         if (!passwordEncoder.matches(password, doctor.getPassword())) {
-            log.error("❌ Invalid password for: {}", email);
-            throw new RuntimeException("Invalid email or password");
+            log.error("❌ Mot de passe invalide pour : {}", email);
+            throw new RuntimeException("Email ou mot de passe invalide");
         }
-        
-        // Check if account is activated
+
+        // Vérifier si le compte est activé
         if (!doctor.getIsActivated()) {
-            log.warn("⚠️ Doctor account not activated: {}", email);
+            log.warn("⚠️ Compte médecin non activé : {}", email);
             return Map.of(
-                "error", "ACCOUNT_NOT_ACTIVATED",
-                "message", "Your account is pending admin approval. Please wait for activation.",
-                "activationStatus", doctor.getActivationStatus(),
-                "email", doctor.getEmail()
+                    "error", "COMPTE_NON_ACTIVE",
+                    "message", "Votre compte est en attente d'approbation par un administrateur.",
+                    "activationStatus", doctor.getActivationStatus(),
+                    "email", doctor.getEmail()
             );
         }
-        
-        // Generate JWT token
+
+        // Génération du JWT
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", doctor.getEmail());
         claims.put("userId", doctor.getUserId());
-        claims.put("roles", List.of("DOCTOR"));  // ✅ CHANGÉ: "role" → "roles" + List.of()
+        claims.put("roles", List.of("DOCTOR"));
         claims.put("doctorId", doctor.getId());
-        
-        // Call static method directly (no injection needed)
+
+        // Appel direct de la méthode statique
         String accessToken = JwtUtil.generateToken(claims, doctor.getEmail(), jwtExpiration, jwtSecret);
         String refreshToken = JwtUtil.generateToken(claims, doctor.getEmail(), jwtExpiration * 7, jwtSecret);
-        
-        log.info("✅ Login successful for doctor: {}", email);
-        
+
+        log.info("✅ Connexion réussie pour le médecin : {}", email);
+
         return Map.of(
-            "accessToken", accessToken,
-            "refreshToken", refreshToken,
-            "userId", doctor.getUserId(),
-            "doctorId", doctor.getId(),
-            "email", doctor.getEmail(),
-            "fullName", doctor.getFullName(),
-            "isActivated", doctor.getIsActivated(),
-            "role", "DOCTOR"
+                "accessToken", accessToken,
+                "refreshToken", refreshToken,
+                "userId", doctor.getUserId(),
+                "doctorId", doctor.getId(),
+                "email", doctor.getEmail(),
+                "fullName", doctor.getFullName(),
+                "isActivated", doctor.getIsActivated(),
+                "role", "DOCTOR"
         );
     }
 }

@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Patient Appointment Controller
- * Handles appointment operations for patients
+ * Contrôleur des rendez-vous patients
+ * Gère les opérations de rendez-vous pour les patients
  */
 @RestController
 @RequestMapping("/api/v1/appointments")
@@ -31,7 +31,7 @@ public class PatientAppointmentController {
     private final AppointmentClientService appointmentService;
 
     /**
-     * Create a new appointment
+     * Créer un nouveau rendez-vous
      */
     @PostMapping
     public ResponseEntity<ApiResponse<AppointmentResponse>> createAppointment(
@@ -40,30 +40,30 @@ public class PatientAppointmentController {
 
         CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
 
-        log.info("📅 Patient {} creating appointment with doctor {}",
+        log.info("📅 Patient {} crée un rendez-vous avec le médecin {}",
                 principal.getEmail(), request.getDoctorId());
 
         AppointmentResponse response = appointmentService.createAppointment(request, principal);
 
-        return ResponseEntity.ok(ApiResponse.success("Appointment created successfully", response));
+        return ResponseEntity.ok(ApiResponse.success("Rendez-vous créé avec succès", response));
     }
 
     /**
-     * Get all appointments for the authenticated patient
+     * Obtenir tous les rendez-vous du patient authentifié
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getMyAppointments(Authentication auth) {
         CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
 
-        log.info("📅 Patient {} requesting appointments", principal.getEmail());
+        log.info("📅 Patient {} demande ses rendez-vous", principal.getEmail());
 
         List<AppointmentResponse> appointments = appointmentService.getPatientAppointments(principal.getId());
 
-        return ResponseEntity.ok(ApiResponse.success("Appointments retrieved", appointments));
+        return ResponseEntity.ok(ApiResponse.success("Rendez-vous récupérés avec succès", appointments));
     }
 
     /**
-     * Cancel an appointment
+     * Annuler un rendez-vous
      */
     @PostMapping("/{appointmentId}/cancel")
     public ResponseEntity<ApiResponse<String>> cancelAppointment(
@@ -73,24 +73,24 @@ public class PatientAppointmentController {
 
         CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
 
-        log.info("❌ Patient {} cancelling appointment: {}", principal.getEmail(), appointmentId);
+        log.info("❌ Patient {} annule le rendez-vous : {}", principal.getEmail(), appointmentId);
 
         String reason = body.get("reason");
 
-        appointmentService.cancelAppointment(appointmentId,  reason);
+        appointmentService.cancelAppointment(appointmentId, reason);
 
-        return ResponseEntity.ok(ApiResponse.success("Appointment cancelled successfully", null));
+        return ResponseEntity.ok(ApiResponse.success("Rendez-vous annulé avec succès", null));
     }
 
     /**
-     * Get available doctors (all activated doctors)
+     * Obtenir les médecins disponibles (tous les médecins activés)
      */
     @GetMapping("/doctors")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAvailableDoctors() {
-        log.info("🩺 Fetching available doctors");
+        log.info("🩺 Récupération des médecins disponibles");
 
         List<Map<String, Object>> doctors = appointmentService.getAvailableDoctors();
 
-        return ResponseEntity.ok(ApiResponse.success("Doctors retrieved", doctors));
+        return ResponseEntity.ok(ApiResponse.success("Médecins récupérés avec succès", doctors));
     }
 }

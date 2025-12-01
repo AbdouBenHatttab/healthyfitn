@@ -14,8 +14,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Public Doctor Controller - No authentication required
- * Used for patient interactions and inter-service communication
+ * Contrôleur public des médecins
+ * Pas besoin d'authentification
+ * Utilisé pour les interactions avec les patients et la communication inter-service
  */
 @RestController
 @RequestMapping("/api/doctors")
@@ -27,11 +28,11 @@ public class PublicDoctorController {
     private final AppointmentService appointmentService;
 
     /**
-     * Get all activated doctors (for patient to choose)
+     * Récupérer tous les médecins activés (pour que le patient puisse choisir)
      */
     @GetMapping("/available")
     public ResponseEntity<List<Map<String, Object>>> getActivatedDoctors() {
-        log.info("🩺 Fetching available doctors");
+        log.info("🩺 Récupération des médecins disponibles");
 
         List<Doctor> doctors = doctorRepository.findByIsActivatedTrue();
 
@@ -51,19 +52,19 @@ public class PublicDoctorController {
                 })
                 .collect(Collectors.toList());
 
-        log.info("✅ Found {} activated doctors", response.size());
+        log.info("✅ {} médecins activés trouvés", response.size());
 
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Create appointment from patient (via user-service)
+     * Créer un rendez-vous depuis le patient (via le service utilisateur)
      */
     @PostMapping("/appointments/from-patient")
     public ResponseEntity<Map<String, Object>> createAppointmentFromPatient(
             @RequestBody Map<String, Object> request) {
 
-        log.info("📅 Creating appointment from patient");
+        log.info("📅 Création d'un rendez-vous depuis le patient");
 
         String doctorId = (String) request.get("doctorId");
         String patientId = (String) request.get("patientId");
@@ -75,7 +76,7 @@ public class PublicDoctorController {
         String reason = (String) request.get("reason");
         String notes = (String) request.get("notes");
 
-        // Create appointment request
+        // Créer la requête de rendez-vous
         com.healthapp.doctor.dto.request.AppointmentRequest appointmentRequest =
                 com.healthapp.doctor.dto.request.AppointmentRequest.builder()
                         .doctorId(doctorId)
@@ -88,7 +89,7 @@ public class PublicDoctorController {
         AppointmentResponse response = appointmentService.createAppointment(
                 appointmentRequest, patientId, patientEmail, patientName);
 
-        // Convert to Map for Feign
+        // Convertir en Map pour Feign ou JSON
         Map<String, Object> map = new HashMap<>();
         map.put("id", response.getId());
         map.put("patientId", response.getPatientId());
@@ -110,13 +111,13 @@ public class PublicDoctorController {
     }
 
     /**
-     * Get patient appointments (via user-service)
+     * Récupérer les rendez-vous d'un patient (via le service utilisateur)
      */
     @GetMapping("/appointments/patient/{patientId}")
     public ResponseEntity<List<Map<String, Object>>> getPatientAppointments(
             @PathVariable String patientId) {
 
-        log.info("📅 Fetching appointments for patient: {}", patientId);
+        log.info("📅 Récupération des rendez-vous pour le patient: {}", patientId);
 
         List<AppointmentResponse> appointments = appointmentService.getPatientAppointments(patientId);
 

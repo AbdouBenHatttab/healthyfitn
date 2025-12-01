@@ -21,14 +21,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * DoctorController - Endpoints for authenticated doctors
+ * Contrôleur pour les médecins authentifiés
+ * Fournit les endpoints pour gérer le profil, mot de passe et emails
  */
 @RestController
 @RequestMapping("/api/doctors")
 @RequiredArgsConstructor
 @Slf4j
 public class DoctorController {
-    
+
     private final DoctorRepository doctorRepository;
     private final DoctorPasswordService doctorPasswordService;
     private final DoctorPasswordResetService passwordResetService;
@@ -36,207 +37,188 @@ public class DoctorController {
     @PostConstruct
     public void init() {
         log.info("========================================");
-        log.info("✅ DoctorController INITIALIZED");
-        log.info("✅ Base path: /api/doctors");
+        log.info("✅ DoctorController INITIALISÉ");
+        log.info("✅ Chemin de base : /api/doctors");
         log.info("========================================");
     }
-    
+
     /**
-     * TEST ENDPOINT
+     * ENDPOINT DE TEST
      */
     @GetMapping("/test")
     public ResponseEntity<Map<String, String>> testEndpoint() {
-        log.info("🧪 TEST endpoint called successfully!");
+        log.info("🧪 Endpoint TEST appelé avec succès !");
         return ResponseEntity.ok(Map.of(
-            "status", "OK",
-            "message", "DoctorController is working!",
-            "timestamp", String.valueOf(System.currentTimeMillis())
+                "statut", "OK",
+                "message", "DoctorController fonctionne correctement !",
+                "timestamp", String.valueOf(System.currentTimeMillis())
         ));
     }
-    
+
     /**
-     * DEBUG ENDPOINT - Check database state
+     * ENDPOINT DEBUG - Affiche tous les emails des médecins
      */
     @GetMapping("/debug/all-emails")
     public ResponseEntity<Map<String, Object>> getAllEmails() {
         List<Doctor> allDoctors = doctorRepository.findAll();
-        
+
         Map<String, Object> debug = new HashMap<>();
         debug.put("totalDoctors", allDoctors.size());
         debug.put("emails", allDoctors.stream()
-            .map(d -> Map.of(
-                "email", d.getEmail(),
-                "contactEmail", d.getContactEmail() != null ? d.getContactEmail() : "N/A", // ✅ NOUVEAU
-                "userId", d.getUserId(),
-                "isActivated", d.getIsActivated()
-            ))
-            .collect(Collectors.toList()));
-        
+                .map(d -> Map.of(
+                        "email", d.getEmail(),
+                        "contactEmail", d.getContactEmail() != null ? d.getContactEmail() : "N/A",
+                        "userId", d.getUserId(),
+                        "isActivated", d.getIsActivated()
+                ))
+                .collect(Collectors.toList()));
+
         return ResponseEntity.ok(debug);
     }
-    
+
     /**
-     * Get authenticated doctor's profile
+     * Récupérer le profil du médecin authentifié
      */
     @GetMapping("/profile")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<DoctorResponse> getDoctorProfile(Authentication authentication) {
         String email = authentication.getName();
-        log.info("🔍 [PROFILE] Looking up doctor profile for email: '{}'", email);
-        
+        log.info("🔍 [PROFIL] Recherche du profil du médecin pour l'email : '{}'", email);
+
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
-        
-        log.info("✅ [PROFILE] Doctor found: id={}, email='{}', contactEmail='{}'", 
+                .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour l'email : " + email));
+
+        log.info("✅ [PROFIL] Médecin trouvé : id={}, email='{}', contactEmail='{}'",
                 doctor.getId(), doctor.getEmail(), doctor.getContactEmail());
-        
+
         return ResponseEntity.ok(mapToDoctorResponse(doctor));
     }
-    
+
     /**
-     * Update doctor profile - ✅ Inclut contactEmail
+     * Mettre à jour le profil du médecin
      */
     @PutMapping("/profile")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<DoctorResponse> updateDoctorProfile(
             @RequestBody UpdateDoctorProfileRequest request,
             Authentication authentication) {
-        
+
         String email = authentication.getName();
-        log.info("🔄 [UPDATE] Updating profile for email: '{}'", email);
-        
+        log.info("🔄 [MISE À JOUR] Mise à jour du profil pour l'email : '{}'", email);
+
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
-        
+                .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour l'email : " + email));
+
         if (request.getFirstName() != null) doctor.setFirstName(request.getFirstName());
         if (request.getLastName() != null) doctor.setLastName(request.getLastName());
         if (request.getPhoneNumber() != null) doctor.setPhoneNumber(request.getPhoneNumber());
-        
-        // ✅ NOUVEAU: Permettre de modifier le contact email
         if (request.getContactEmail() != null) {
-            log.info("📧 Updating contact email to: {}", request.getContactEmail());
+            log.info("📧 Mise à jour de l'email de contact : {}", request.getContactEmail());
             doctor.setContactEmail(request.getContactEmail());
         }
-        
         if (request.getSpecialization() != null) doctor.setSpecialization(request.getSpecialization());
         if (request.getHospitalAffiliation() != null) doctor.setHospitalAffiliation(request.getHospitalAffiliation());
         if (request.getYearsOfExperience() != null) doctor.setYearsOfExperience(request.getYearsOfExperience());
         if (request.getOfficeAddress() != null) doctor.setOfficeAddress(request.getOfficeAddress());
         if (request.getConsultationHours() != null) doctor.setConsultationHours(request.getConsultationHours());
         if (request.getProfilePictureUrl() != null) doctor.setProfilePictureUrl(request.getProfilePictureUrl());
-        
+
         Doctor updatedDoctor = doctorRepository.save(doctor);
-        log.info("✅ [UPDATE] Doctor profile updated: {}", doctor.getEmail());
-        
+        log.info("✅ [MISE À JOUR] Profil du médecin mis à jour : {}", doctor.getEmail());
+
         return ResponseEntity.ok(mapToDoctorResponse(updatedDoctor));
     }
-    
+
     /**
-     * Change doctor password
+     * Changer le mot de passe du médecin
      */
     @PutMapping("/change-password")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<Map<String, Object>> changeDoctorPassword(
             @RequestBody ChangePasswordRequest request,
             Authentication authentication) {
-        
-        log.info("🔐🔐🔐 [PASSWORD] ENDPOINT CALLED! 🔐🔐🔐");
-        log.info("🔍 [PASSWORD] Request received from: {}", authentication.getName());
-        
+
+        log.info("🔐 [MOT DE PASSE] Endpoint appelé par : {}", authentication.getName());
+
         try {
             String email = authentication.getName();
-            
-            // Validation
+
             if (request.getCurrentPassword() == null || request.getCurrentPassword().isEmpty()) {
-                log.error("❌ [PASSWORD] Current password is missing");
+                log.error("❌ Mot de passe actuel manquant");
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "Current password is required"));
+                        .body(Map.of("success", false, "error", "Le mot de passe actuel est requis"));
             }
-            
+
             if (request.getNewPassword() == null || request.getNewPassword().isEmpty()) {
-                log.error("❌ [PASSWORD] New password is missing");
+                log.error("❌ Nouveau mot de passe manquant");
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "New password is required"));
+                        .body(Map.of("success", false, "error", "Le nouveau mot de passe est requis"));
             }
-            
-            // Find doctor
+
             Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    log.error("❌ [PASSWORD] Doctor not found for email: '{}'", email);
-                    return new RuntimeException("Doctor not found with email: " + email);
-                });
-            
-            log.info("✅ [PASSWORD] Doctor found: id={}, email={}", doctor.getId(), doctor.getEmail());
-            
-            // Change password
+                    .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour l'email : " + email));
+
             doctorPasswordService.changePassword(doctor.getId(), request);
-            
-            log.info("✅✅✅ [PASSWORD] Password changed successfully! ✅✅✅");
-            
+
+            log.info("✅ Mot de passe changé avec succès !");
+
             return ResponseEntity.ok(Map.of(
-                "success", true, 
-                "message", "Password changed successfully"
+                    "success", true,
+                    "message", "Mot de passe changé avec succès"
             ));
-            
+
         } catch (RuntimeException e) {
-            log.error("❌ [PASSWORD] Error: {}", e.getMessage(), e);
-            
+            log.error("❌ Erreur mot de passe : {}", e.getMessage());
+
             if (e.getMessage().contains("Current password is incorrect")) {
                 return ResponseEntity.status(401)
-                    .body(Map.of("success", false, "error", "Current password is incorrect"));
+                        .body(Map.of("success", false, "error", "Le mot de passe actuel est incorrect"));
             }
-            
+
             if (e.getMessage().contains("New password must be different")) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "New password must be different from current password"));
+                        .body(Map.of("success", false, "error", "Le nouveau mot de passe doit être différent de l'actuel"));
             }
-            
+
             return ResponseEntity.status(500)
-                .body(Map.of("success", false, "error", e.getMessage()));
-                
-        } catch (Exception e) {
-            log.error("❌ [PASSWORD] Unexpected error: {}", e.getMessage(), e);
-            return ResponseEntity.status(500)
-                .body(Map.of("success", false, "error", "An unexpected error occurred"));
+                    .body(Map.of("success", false, "error", e.getMessage()));
         }
     }
-    
- 
-/**
- * Forgot password - FIXED VERSION
- */
-@PostMapping("/forgot-password")
-public ResponseEntity<Map<String, Object>> forgotDoctorPassword(
-        @RequestBody Map<String, String> request) {
-    
-    String email = request.get("email");
-    if (email == null || email.isEmpty()) {
-        throw new RuntimeException("Email is required");
-    }
-    
-    log.info("🔐 Password reset requested for doctor: {}", email);
-    
-    try {
-        // ✅ Appeler le service pour envoyer l'email
-        passwordResetService.sendPasswordResetEmailForDoctor(email);
-        
-        return ResponseEntity.ok(Map.of(
-            "success", true, 
-            "message", "Password reset email sent successfully"
-        ));
-        
-    } catch (Exception e) {
-        log.error("❌ Failed to send password reset email: {}", e.getMessage());
-        
-        // ⚠️ NE PAS révéler si l'email existe (sécurité)
-        return ResponseEntity.ok(Map.of(
-            "success", true,
-            "message", "If the email exists, a reset link will be sent"
-        ));
-    }
-}
+
     /**
-     * Map Doctor to DoctorResponse
+     * Mot de passe oublié - version sécurisée
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, Object>> forgotDoctorPassword(
+            @RequestBody Map<String, String> request) {
+
+        String email = request.get("email");
+        if (email == null || email.isEmpty()) {
+            throw new RuntimeException("L'email est requis");
+        }
+
+        log.info("🔐 Réinitialisation de mot de passe demandée pour le médecin : {}", email);
+
+        try {
+            passwordResetService.sendPasswordResetEmailForDoctor(email);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Email de réinitialisation envoyé avec succès"
+            ));
+
+        } catch (Exception e) {
+            log.error("❌ Échec de l'envoi de l'email de réinitialisation : {}", e.getMessage());
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Si l'email existe, un lien de réinitialisation sera envoyé"
+            ));
+        }
+    }
+
+    /**
+     * Convertir un Doctor en DoctorResponse
      */
     private DoctorResponse mapToDoctorResponse(Doctor doctor) {
         return DoctorResponse.builder()
