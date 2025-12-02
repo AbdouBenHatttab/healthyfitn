@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <!-- ✅ Remote Video (Full Screen) - ID CORRIGÉ -->
+    <org.webrtc.SurfaceViewRenderer
+        android:id="@+id/remoteVideoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- ✅ Local Video (Picture-in-Picture) - ID CORRIGÉ -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardLocalVideo"
+        android:layout_width="120dp"
+        android:layout_height="160dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="8dp">
+
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/localVideoView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- Call Status Overlay (Top) -->
+
+    <!-- ✅ Progress Bar (Loading) -->
+    <LinearLayout
+        android:id="@+id/llCallStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="-7dp"
+        android:background="@drawable/bg_gradient_overlay"
+        android:orientation="vertical"
+        android:paddingTop="40dp"
+        android:paddingBottom="16dp">
+
+        <!-- ✅ ID CORRIGÉ tvStatus -->
+
+        <TextView
+            android:id="@+id/tvCallDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:shadowColor="@color/black"
+            android:shadowRadius="2"
+            android:text="00:00"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:shadowColor="@color/black"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
+            android:text="📞 Initialisation..."
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:indeterminateTint="@color/white" />
+
+    <!-- Controls (Bottom) -->
+    <LinearLayout
+        android:id="@+id/llControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:paddingTop="16dp"
+        android:paddingBottom="32dp"
+        android:background="@drawable/bg_gradient_overlay_bottom">
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingHorizontal="16dp">
+
+            <!-- ✅ Mute Button - FloatingActionButton -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnMic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:src="@drawable/ic_mic"
+                android:contentDescription="Microphone"
+                app:backgroundTint="@color/white_20"
+                app:tint="@color/white"
+                app:fabSize="normal" />
+
+            <!-- ✅ Toggle Video Button - FloatingActionButton -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnVideo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:src="@drawable/ic_videocam"
+                android:contentDescription="Vidéo"
+                app:backgroundTint="@color/white_20"
+                app:tint="@color/white"
+                app:fabSize="normal" />
+
+            <!-- ✅ Switch Camera Button - ImageButton -->
+            <ImageButton
+                android:id="@+id/btnSwitchCamera"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="8dp"
+                android:src="@drawable/ic_switch_camera"
+                android:background="@drawable/bg_circle_button"
+                android:contentDescription="Changer caméra"
+                app:tint="@color/white" />
+
+        </LinearLayout>
+
+        <!-- ✅ End Call Button - FloatingActionButton -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnEndCall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/ic_call_end"
+            android:contentDescription="Terminer l'appel"
+            app:backgroundTint="@android:color/holo_red_dark"
+            app:tint="@color/white"
+            app:fabSize="normal" />
+
+    </LinearLayout>
+
+</RelativeLayout>
