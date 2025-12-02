@@ -18,10 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Doctor Appointment Controller
- * Handles all appointment-related operations for doctors
- *
- * NOTE: Public endpoints (for patients) are in PublicDoctorController
+ * Contrôleur des rendez-vous pour les médecins
  */
 @RestController
 @RequestMapping("/api/doctors/appointments")
@@ -34,15 +31,15 @@ public class DoctorAppointmentController {
     private final DoctorRepository doctorRepository;
 
     /**
-     * Get all appointments for the authenticated doctor
+     * Obtenir tous les rendez-vous du médecin connecté
      */
     @GetMapping
     public ResponseEntity<List<AppointmentResponse>> getMyAppointments(Authentication auth) {
         String email = auth.getName();
-        log.info("📅 Doctor {} requesting appointments", email);
+        log.info("📅 Médecin {} demande tous ses rendez-vous", email);
 
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable"));
 
         List<AppointmentResponse> appointments = appointmentService.getDoctorAppointments(doctor.getId());
 
@@ -50,15 +47,15 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * Get upcoming appointments only
+     * Obtenir uniquement les rendez-vous à venir
      */
     @GetMapping("/upcoming")
     public ResponseEntity<List<AppointmentResponse>> getUpcomingAppointments(Authentication auth) {
         String email = auth.getName();
-        log.info("📅 Doctor {} requesting upcoming appointments", email);
+        log.info("📅 Médecin {} demande ses rendez-vous à venir", email);
 
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable"));
 
         List<AppointmentResponse> appointments = appointmentService.getUpcomingAppointments(doctor.getId());
 
@@ -66,15 +63,15 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * ✅ NEW: Get pending appointments (need response)
+     * Obtenir les rendez-vous en attente (à répondre)
      */
     @GetMapping("/pending")
     public ResponseEntity<List<AppointmentResponse>> getPendingAppointments(Authentication auth) {
         String email = auth.getName();
-        log.info("📋 Doctor {} requesting pending appointments", email);
+        log.info("📋 Médecin {} demande ses rendez-vous en attente", email);
 
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable"));
 
         List<AppointmentResponse> appointments = appointmentService.getPendingAppointments(doctor.getId());
 
@@ -82,7 +79,7 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * ✅ NEW: Accept a pending appointment
+     * Accepter un rendez-vous en attente
      */
     @PostMapping("/{appointmentId}/accept")
     public ResponseEntity<AppointmentResponse> acceptAppointment(
@@ -90,10 +87,10 @@ public class DoctorAppointmentController {
             Authentication auth) {
 
         String email = auth.getName();
-        log.info("✅ Doctor {} accepting appointment {}", email, appointmentId);
+        log.info("✅ Médecin {} accepte le rendez-vous {}", email, appointmentId);
 
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable"));
 
         AppointmentResponse response = appointmentService.acceptAppointment(
                 appointmentId, doctor.getId());
@@ -102,7 +99,7 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * ✅ NEW: Reject a pending appointment with reason
+     * Rejeter un rendez-vous en attente avec une raison
      */
     @PostMapping("/{appointmentId}/reject")
     public ResponseEntity<AppointmentResponse> rejectAppointment(
@@ -111,13 +108,13 @@ public class DoctorAppointmentController {
             Authentication auth) {
 
         String email = auth.getName();
-        log.info("❌ Doctor {} rejecting appointment {}", email, appointmentId);
+        log.info("❌ Médecin {} rejette le rendez-vous {}", email, appointmentId);
 
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable"));
 
         if (request.getReason() == null || request.getReason().isBlank()) {
-            throw new RuntimeException("Reason is required for rejection");
+            throw new RuntimeException("Une raison est requise pour le rejet");
         }
 
         AppointmentResponse response = appointmentService.rejectAppointment(
@@ -130,15 +127,15 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * Get all patients for the authenticated doctor
+     * Obtenir la liste des patients du médecin connecté
      */
     @GetMapping("/patients")
     public ResponseEntity<List<PatientInfoResponse>> getMyPatients(Authentication auth) {
         String email = auth.getName();
-        log.info("👥 Doctor {} requesting patient list", email);
+        log.info("👥 Médecin {} demande la liste de ses patients", email);
 
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable"));
 
         List<PatientInfoResponse> patients = appointmentService.getDoctorPatients(doctor.getId());
 
@@ -146,15 +143,15 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * Get dashboard statistics
+     * Obtenir les statistiques du tableau de bord
      */
     @GetMapping("/dashboard/stats")
     public ResponseEntity<DoctorStatsResponse> getDashboardStats(Authentication auth) {
         String email = auth.getName();
-        log.info("📊 Doctor {} requesting dashboard stats", email);
+        log.info("📊 Médecin {} demande les statistiques du tableau de bord", email);
 
         Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Médecin introuvable"));
 
         DoctorStatsResponse stats = appointmentService.getDoctorStats(doctor.getId());
 
@@ -162,7 +159,7 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * Complete an appointment
+     * Terminer un rendez-vous
      */
     @PostMapping("/{appointmentId}/complete")
     public ResponseEntity<AppointmentResponse> completeAppointment(
@@ -170,7 +167,7 @@ public class DoctorAppointmentController {
             @RequestBody Map<String, String> body,
             Authentication auth) {
 
-        log.info("✅ Completing appointment: {}", appointmentId);
+        log.info("✅ Finalisation du rendez-vous : {}", appointmentId);
 
         String diagnosis = body.get("diagnosis");
         String prescription = body.get("prescription");
@@ -183,7 +180,7 @@ public class DoctorAppointmentController {
     }
 
     /**
-     * Cancel an appointment (Doctor side)
+     * Annuler un rendez-vous (côté médecin)
      */
     @PostMapping("/{appointmentId}/cancel")
     public ResponseEntity<Map<String, String>> cancelAppointment(
@@ -191,15 +188,15 @@ public class DoctorAppointmentController {
             @RequestBody Map<String, String> body,
             Authentication auth) {
 
-        log.info("❌ Cancelling appointment: {}", appointmentId);
+        log.info("❌ Annulation du rendez-vous : {}", appointmentId);
 
-        String reason = (body != null) ? body.get("reason") : "No reason provided";
+        String reason = (body != null) ? body.get("reason") : "Aucune raison fournie";
 
         appointmentService.cancelAppointment(appointmentId, "DOCTOR", reason);
 
         return ResponseEntity.ok(Map.of(
                 "status", "success",
-                "message", "Appointment cancelled successfully"
+                "message", "Rendez-vous annulé avec succès"
         ));
     }
 }
