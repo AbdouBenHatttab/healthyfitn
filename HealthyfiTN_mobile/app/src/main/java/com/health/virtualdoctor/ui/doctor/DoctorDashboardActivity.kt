@@ -8,8 +8,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,8 +17,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.health.virtualdoctor.R
 import com.health.virtualdoctor.ui.auth.LoginActivity
@@ -46,19 +44,19 @@ class DoctorDashboardActivity : AppCompatActivity() {
     private lateinit var tvDoctorEmail: TextView
     private lateinit var tvActivationStatus: TextView
     private lateinit var tvSpecialization: TextView
-    private lateinit var etFirstName: EditText
-    private lateinit var etLastName: EditText
-    private lateinit var etPhoneNumber: EditText
-    private lateinit var etSpecialization: EditText
-    private lateinit var etHospital: EditText
-    private lateinit var etYearsOfExperience: EditText
-    private lateinit var etOfficeAddress: EditText
-    private lateinit var etConsultationHours: EditText
-    private lateinit var btnUpdateProfile: Button
-    private lateinit var btnCheckActivation: Button
-    private lateinit var btnChangePassword: Button
-    private lateinit var btnEditProfile: com.google.android.material.button.MaterialButton
-    private lateinit var cardEditProfile: androidx.cardview.widget.CardView
+    private lateinit var btnEditProfile: MaterialCardView
+    private lateinit var btnViewAllPatients: MaterialButton
+    private lateinit var btnNotifications: ImageButton
+
+    // Profile data for dialog
+    private var currentFirstName: String = ""
+    private var currentLastName: String = ""
+    private var currentPhoneNumber: String = ""
+    private var currentSpecialization: String = ""
+    private var currentHospital: String = ""
+    private var currentYearsOfExperience: Int = 0
+    private var currentOfficeAddress: String = ""
+    private var currentConsultationHours: String = ""
 
     // Views - Statistics Section
     private lateinit var tvTodayAppointments: TextView
@@ -107,7 +105,6 @@ class DoctorDashboardActivity : AppCompatActivity() {
         tokenManager = TokenManager(this)
 
         initViews()
-        setupToolbar()
         setupListeners()
         setupRecyclerView()
 
@@ -118,33 +115,18 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
     private fun initViews() {
 
-
-        // Back button
-        //
-
-        // ➕ Add this (Manage Appointments button)
+        // Manage Appointments button
         btnManageAppointments = findViewById(R.id.btnManageAppointments)
 
         // Profile views
-
         ivDoctorProfile = findViewById(R.id.ivDoctorProfile)
         tvDoctorName = findViewById(R.id.tvDoctorName)
         tvDoctorEmail = findViewById(R.id.tvDoctorEmail)
         tvActivationStatus = findViewById(R.id.tvActivationStatus)
         tvSpecialization = findViewById(R.id.tvSpecialization)
-        etFirstName = findViewById(R.id.etFirstName)
-        etLastName = findViewById(R.id.etLastName)
-        etPhoneNumber = findViewById(R.id.etPhoneNumber)
-        etSpecialization = findViewById(R.id.etSpecialization)
-        etHospital = findViewById(R.id.etHospital)
-        etYearsOfExperience = findViewById(R.id.etYearsOfExperience)
-        etOfficeAddress = findViewById(R.id.etOfficeAddress)
-        etConsultationHours = findViewById(R.id.etConsultationHours)
-        btnUpdateProfile = findViewById(R.id.btnUpdateProfile)
-        btnCheckActivation = findViewById(R.id.btnCheckActivation)
-        btnChangePassword = findViewById(R.id.btnChangePassword)
         btnEditProfile = findViewById(R.id.btnEditProfile)
-        cardEditProfile = findViewById(R.id.cardEditProfile)
+        btnViewAllPatients = findViewById(R.id.btnViewAllPatients)
+        btnNotifications = findViewById(R.id.btnNotifications)
 
         // Statistics views
         tvTodayAppointments = findViewById(R.id.tvTodayAppointments)
@@ -158,67 +140,26 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
     }
 
-    private fun setupToolbar() {
-        val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_doctor_dashboard, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_notifications -> {
-                Toast.makeText(this, "🔔 Notifications", Toast.LENGTH_SHORT).show()
-                true
-            }
-
-            R.id.action_settings -> {
-                Toast.makeText(this, "⚙️ Paramètres", Toast.LENGTH_SHORT).show()
-                true
-            }
-
-            R.id.action_logout -> {
-                showLogoutDialog()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     private fun setupListeners() {
 
-//        // Back button
-//        btnBack.setOnClickListener {
-//            finish()
-//        }
+        // Notifications button
+        btnNotifications.setOnClickListener {
+            Toast.makeText(this, "🔔 Notifications", Toast.LENGTH_SHORT).show()
+        }
+
+        // View All Patients button
+        btnViewAllPatients.setOnClickListener {
+            Toast.makeText(this, "👥 Liste des patients", Toast.LENGTH_SHORT).show()
+        }
 
         // Manage Appointments
         btnManageAppointments.setOnClickListener {
             startActivity(Intent(this, DoctorAppointmentsActivity::class.java))
         }
 
-        // Update profile
-        btnUpdateProfile.setOnClickListener {
-            updateDoctorProfile()
-        }
-
-        // Check activation
-        btnCheckActivation.setOnClickListener {
-            checkActivationStatus()
-        }
-
-        // Change password
-        btnChangePassword.setOnClickListener {
-            showChangePasswordDialog()
-        }
-
-        // Edit profile section toggle
+        // Edit profile - show dialog
         btnEditProfile.setOnClickListener {
-            toggleEditProfileVisibility()
+            showEditProfileDialog()
         }
 
         // Profile image click
@@ -355,14 +296,15 @@ class DoctorDashboardActivity : AppCompatActivity() {
                             "⏳ Pending Activation"
                         }
 
-                        etFirstName.setText(profile.firstName)
-                        etLastName.setText(profile.lastName)
-                        etPhoneNumber.setText(profile.phoneNumber ?: "")
-                        etSpecialization.setText(profile.specialization)
-                        etHospital.setText(profile.hospitalAffiliation)
-                        etYearsOfExperience.setText(profile.yearsOfExperience.toString())
-                        etOfficeAddress.setText(profile.officeAddress ?: "")
-                        etConsultationHours.setText(profile.consultationHours ?: "")
+                        // Store profile data for edit dialog
+                        currentFirstName = profile.firstName
+                        currentLastName = profile.lastName
+                        currentPhoneNumber = profile.phoneNumber ?: ""
+                        currentSpecialization = profile.specialization
+                        currentHospital = profile.hospitalAffiliation
+                        currentYearsOfExperience = profile.yearsOfExperience
+                        currentOfficeAddress = profile.officeAddress ?: ""
+                        currentConsultationHours = profile.consultationHours ?: ""
 
                         currentProfileImageUrl = profile.profilePictureUrl
                         if (!currentProfileImageUrl.isNullOrEmpty()) {
@@ -399,26 +341,88 @@ class DoctorDashboardActivity : AppCompatActivity() {
         Log.d("DoctorDashboard", "✅ Profile image loaded: $imageUrl")
     }
 
-    private fun updateDoctorProfile() {
-        val firstName = etFirstName.text.toString().trim()
-        val lastName = etLastName.text.toString().trim()
-        val phoneNumber = etPhoneNumber.text.toString().trim()
-        val specialization = etSpecialization.text.toString().trim()
-        val hospital = etHospital.text.toString().trim()
-        val yearsOfExperience = etYearsOfExperience.text.toString().trim().toIntOrNull()
-        val officeAddress = etOfficeAddress.text.toString().trim()
-        val consultationHours = etConsultationHours.text.toString().trim()
+    private fun showEditProfileDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_doctor_edit_profile, null)
+        
+        // Get dialog views
+        val etFirstName = dialogView.findViewById<EditText>(R.id.etFirstName)
+        val etLastName = dialogView.findViewById<EditText>(R.id.etLastName)
+        val etPhoneNumber = dialogView.findViewById<EditText>(R.id.etPhoneNumber)
+        val etSpecialization = dialogView.findViewById<EditText>(R.id.etSpecialization)
+        val etHospital = dialogView.findViewById<EditText>(R.id.etHospital)
+        val etYearsOfExperience = dialogView.findViewById<EditText>(R.id.etYearsOfExperience)
+        val etOfficeAddress = dialogView.findViewById<EditText>(R.id.etOfficeAddress)
+        val etConsultationHours = dialogView.findViewById<EditText>(R.id.etConsultationHours)
+        val btnCheckActivation = dialogView.findViewById<Button>(R.id.btnCheckActivation)
+        val btnChangePassword = dialogView.findViewById<Button>(R.id.btnChangePassword)
 
-        if (firstName.isEmpty() || lastName.isEmpty() || specialization.isEmpty()) {
-            Toast.makeText(this, "⚠️ Required fields are missing", Toast.LENGTH_SHORT).show()
-            return
+        // Pre-fill with current data
+        etFirstName.setText(currentFirstName)
+        etLastName.setText(currentLastName)
+        etPhoneNumber.setText(currentPhoneNumber)
+        etSpecialization.setText(currentSpecialization)
+        etHospital.setText(currentHospital)
+        etYearsOfExperience.setText(currentYearsOfExperience.toString())
+        etOfficeAddress.setText(currentOfficeAddress)
+        etConsultationHours.setText(currentConsultationHours)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setPositiveButton("Enregistrer", null) // Set to null initially
+            .setNegativeButton("Annuler", null)
+            .create()
+
+        // Set up inner button listeners
+        btnCheckActivation.setOnClickListener {
+            checkActivationStatus()
         }
 
+        btnChangePassword.setOnClickListener {
+            dialog.dismiss()
+            showChangePasswordDialog()
+        }
+
+        dialog.setOnShowListener {
+            val positiveButton = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+            positiveButton.setOnClickListener {
+                val firstName = etFirstName.text.toString().trim()
+                val lastName = etLastName.text.toString().trim()
+                val phoneNumber = etPhoneNumber.text.toString().trim()
+                val specialization = etSpecialization.text.toString().trim()
+                val hospital = etHospital.text.toString().trim()
+                val yearsOfExperience = etYearsOfExperience.text.toString().trim().toIntOrNull()
+                val officeAddress = etOfficeAddress.text.toString().trim()
+                val consultationHours = etConsultationHours.text.toString().trim()
+
+                if (firstName.isEmpty() || lastName.isEmpty() || specialization.isEmpty()) {
+                    Toast.makeText(this, "⚠️ Champs requis manquants", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                updateDoctorProfile(
+                    firstName, lastName, phoneNumber, specialization,
+                    hospital, yearsOfExperience, officeAddress, consultationHours,
+                    dialog
+                )
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun updateDoctorProfile(
+        firstName: String,
+        lastName: String,
+        phoneNumber: String,
+        specialization: String,
+        hospital: String,
+        yearsOfExperience: Int?,
+        officeAddress: String,
+        consultationHours: String,
+        dialog: androidx.appcompat.app.AlertDialog
+    ) {
         lifecycleScope.launch {
             try {
-                btnUpdateProfile.isEnabled = false
-                btnUpdateProfile.text = "Updating..."
-
                 val token = "Bearer ${tokenManager.getAccessToken()}"
                 var imageUrl = currentProfileImageUrl
 
@@ -433,22 +437,9 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
                     if (imageUrl != null) {
                         Log.d("DoctorDashboard", "✅ Image uploaded: $imageUrl")
-                        Toast.makeText(
-                            this@DoctorDashboardActivity,
-                            "✅ Image uploaded!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
                         runOnUiThread {
                             loadProfileImage(imageUrl)
                         }
-                    } else {
-                        Log.e("DoctorDashboard", "❌ Image upload failed")
-                        Toast.makeText(
-                            this@DoctorDashboardActivity,
-                            "⚠️ Image upload failed",
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
                 }
 
@@ -466,7 +457,7 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     profilePictureUrl = finalImageUrl
                 )
 
-                Log.d("DoctorDashboard", "📤 Updating profile with imageUrl: $finalImageUrl")
+                Log.d("DoctorDashboard", "📤 Updating profile...")
 
                 val response = RetrofitClient.getDoctorService(this@DoctorDashboardActivity)
                     .updateDoctorProfile(token, request)
@@ -478,6 +469,16 @@ class DoctorDashboardActivity : AppCompatActivity() {
                         tvDoctorName.text = updatedProfile.fullName
                         tvSpecialization.text = updatedProfile.specialization
 
+                        // Update stored values
+                        currentFirstName = firstName
+                        currentLastName = lastName
+                        currentPhoneNumber = phoneNumber
+                        currentSpecialization = specialization
+                        currentHospital = hospital
+                        currentYearsOfExperience = yearsOfExperience ?: 0
+                        currentOfficeAddress = officeAddress
+                        currentConsultationHours = consultationHours
+
                         currentProfileImageUrl = updatedProfile.profilePictureUrl
                         selectedImageBitmap = null
 
@@ -487,31 +488,29 @@ class DoctorDashboardActivity : AppCompatActivity() {
 
                         Toast.makeText(
                             this@DoctorDashboardActivity,
-                            "✅ Profile updated successfully!",
+                            "✅ Profil mis à jour!",
                             Toast.LENGTH_SHORT
                         ).show()
 
-                        toggleEditProfileVisibility()
+                        dialog.dismiss()
                     }
 
                     Log.d("DoctorDashboard", "✅ Profile updated: ${updatedProfile.email}")
                 } else {
                     val error = response.errorBody()?.string() ?: "Update failed"
-                    Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG)
-                        .show()
+                    runOnUiThread {
+                        Toast.makeText(this@DoctorDashboardActivity, "❌ $error", Toast.LENGTH_LONG).show()
+                    }
                 }
 
             } catch (e: Exception) {
                 Log.e("DoctorDashboard", "❌ Exception: ${e.message}", e)
-                Toast.makeText(
-                    this@DoctorDashboardActivity,
-                    "❌ Error: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
-            } finally {
                 runOnUiThread {
-                    btnUpdateProfile.isEnabled = true
-                    btnUpdateProfile.text = "Enregistrer"
+                    Toast.makeText(
+                        this@DoctorDashboardActivity,
+                        "❌ Erreur: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -633,23 +632,6 @@ class DoctorDashboardActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
-        }
-    }
-
-    private fun toggleEditProfileVisibility() {
-        if (cardEditProfile.visibility == View.VISIBLE) {
-            cardEditProfile.animate()
-                .alpha(0f)
-                .setDuration(200)
-                .withEndAction {
-                    cardEditProfile.visibility = View.GONE
-                }
-        } else {
-            cardEditProfile.visibility = View.VISIBLE
-            cardEditProfile.alpha = 0f
-            cardEditProfile.animate()
-                .alpha(1f)
-                .setDuration(300)
         }
     }
 
