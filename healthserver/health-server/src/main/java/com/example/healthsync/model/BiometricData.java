@@ -16,7 +16,7 @@ import java.util.List;
 public class BiometricData {
 
     @Id
-    private String id;  // MongoDB génère automatiquement
+    private String id;  // MongoDB génère automatiquemen    t
 
     private String email;  // Clé étrangère vers User (temporairement aléatoire)
 

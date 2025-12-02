@@ -74,5 +74,8 @@ data class AppointmentResponse(
     val respondedAt: String? = null,
 
     @SerializedName("cancellationReason")
-    val cancellationReason: String? = null
+    val cancellationReason: String? = null,
+
+    @SerializedName("cancelled_by")
+    val cancelledBy: String? = null
 )

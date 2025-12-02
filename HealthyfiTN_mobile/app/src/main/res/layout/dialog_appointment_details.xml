@@ -41,60 +41,11 @@
             android:layout_marginBottom="12dp" />
 
         <!-- Patient Name (For Doctor View) -->
-        <TextView
-            android:id="@+id/tvPatientNameDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="John Doe"
-            android:textSize="16sp"
-            android:textColor="#212121"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
 
-        <!-- Patient Email (For Doctor View) -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Email"
-            android:textSize="12sp"
-            android:textColor="#757575"
-            android:textStyle="bold"
-            android:id="@+id/lblPatientEmail"
-            android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/tvPatientEmailDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="patient@example.com"
-            android:textSize="16sp"
-            android:textColor="#212121"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
 
-        <!-- Patient Phone (For Doctor View) -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Téléphone"
-            android:textSize="12sp"
-            android:textColor="#757575"
-            android:textStyle="bold"
-            android:id="@+id/lblPatientPhone"
-            android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/tvPatientPhoneDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+33 6 12 34 56 78"
-            android:textSize="16sp"
-            android:textColor="#212121"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
+
 
         <!-- Date -->
         <TextView
@@ -115,17 +66,7 @@
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Alias for Doctor View -->
-        <TextView
-            android:id="@+id/tvAppointmentDateDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="15/11/2025"
-            android:textSize="16sp"
-            android:textColor="#212121"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
+
 
         <!-- Time -->
         <TextView
@@ -146,17 +87,7 @@
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Alias for Doctor View -->
-        <TextView
-            android:id="@+id/tvAppointmentTimeDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="10:00"
-            android:textSize="16sp"
-            android:textColor="#212121"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
+
 
         <!-- Type -->
         <TextView
@@ -175,17 +106,7 @@
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Alias for Doctor View -->
-        <TextView
-            android:id="@+id/tvAppointmentTypeDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="VIDEO_CALL"
-            android:textSize="16sp"
-            android:textColor="#212121"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
+
 
         <!-- Reason -->
         <TextView
@@ -206,17 +127,7 @@
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Alias for Doctor View -->
-        <TextView
-            android:id="@+id/tvReasonDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Consultation de routine"
-            android:textSize="16sp"
-            android:textColor="#212121"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
+
 
         <!-- Status -->
         <TextView
@@ -237,15 +148,7 @@
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Alias for Doctor View -->
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipStatusDialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SCHEDULED"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone" />
+
 
         <!-- Rejection Details Card -->
         <com.google.android.material.card.MaterialCardView
@@ -332,12 +235,108 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvCancelledBy"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Annulé par: N/A"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+                <TextView
                     android:id="@+id/tvCancellationReason"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Raison de l'annulation"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Completed Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCompletedDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#E8F5E9"
+            app:cardCornerRadius="8dp"
+            app:strokeColor="#4CAF50"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Consultation Terminée"
+                    android:textColor="#4CAF50"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Diagnostic"
+                    android:textSize="12sp"
+                    android:textColor="#757575"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"/>
+
+                <TextView
+                    android:id="@+id/tvDiagnosis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Diagnostic details"
                     android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Prescription"
+                    android:textSize="12sp"
+                    android:textColor="#757575"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"/>
+
+                <TextView
+                    android:id="@+id/tvPrescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Prescription details"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:id="@+id/llDoctorNotes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="12dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Notes du Docteur"
+                        android:textSize="12sp"
+                        android:textColor="#757575"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDoctorNotes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Doctor notes details"
+                        android:textSize="14sp" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

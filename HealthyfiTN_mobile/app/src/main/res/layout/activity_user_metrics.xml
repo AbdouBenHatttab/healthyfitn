@@ -215,114 +215,12 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <!-- Advanced Features Dropdown -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Advanced Features Section - Fragment -->
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/advancedFeaturesContainer"
+                android:name="com.health.virtualdoctor.ui.user.fragments.AdvancedFeaturesFragment"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/white">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <!-- Dropdown Header -->
-                    <!-- Advanced Features Section - Fragment -->
-                    <androidx.fragment.app.FragmentContainerView
-                        android:id="@+id/advancedFeaturesContainer"
-                        android:name="com.health.virtualdoctor.ui.user.fragments.AdvancedFeaturesFragment"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-                    <!-- Dropdown Content -->
-                    <LinearLayout
-                        android:id="@+id/dropdownContent"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:visibility="gone"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:paddingBottom="12dp">
-
-                        <!-- Health Analysis Button -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnHealthAnalysis"
-                            android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:layout_marginBottom="8dp"
-                            android:text="📊 Analyse de Santé"
-                            android:textColor="@color/white"
-                            android:textAlignment="textStart"
-                            android:textSize="15sp"
-                            android:backgroundTint="#4CAF50"
-                            app:cornerRadius="12dp"
-                            app:icon="@android:drawable/ic_menu_info_details"
-                            app:iconTint="@color/white"
-                            app:iconGravity="start"
-                            app:iconPadding="12dp"
-                            style="@style/Widget.Material3.Button" />
-
-                        <!-- Alerts Button -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnAlerts"
-                            android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:layout_marginBottom="8dp"
-                            android:text="🔔 Alertes Médicales"
-                            android:textColor="@color/white"
-                            android:textAlignment="textStart"
-                            android:textSize="15sp"
-                            android:backgroundTint="#FF9800"
-                            app:cornerRadius="12dp"
-                            app:icon="@android:drawable/ic_dialog_alert"
-                            app:iconTint="@color/white"
-                            app:iconGravity="start"
-                            app:iconPadding="12dp"
-                            style="@style/Widget.Material3.Button" />
-
-                        <!-- Trends Button -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnTrends"
-                            android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:layout_marginBottom="8dp"
-                            android:text="📈 Tendances and Stats"
-                            android:textColor="@color/white"
-                            android:textAlignment="textStart"
-                            android:textSize="15sp"
-                            android:backgroundTint="#2196F3"
-                            app:cornerRadius="12dp"
-                            app:icon="@android:drawable/ic_menu_sort_by_size"
-                            app:iconTint="@color/white"
-                            app:iconGravity="start"
-                            app:iconPadding="12dp"
-                            style="@style/Widget.Material3.Button" />
-
-                        <!-- 🆕 Goals Button -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnGoals"
-                            android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:text="🎯 Mes Objectifs"
-                            android:textColor="@color/white"
-                            android:textAlignment="textStart"
-                            android:textSize="15sp"
-                            android:backgroundTint="#9C27B0"
-                            app:cornerRadius="12dp"
-                            app:icon="@android:drawable/ic_menu_my_calendar"
-                            app:iconTint="@color/white"
-                            app:iconGravity="start"
-                            app:iconPadding="12dp"
-                            style="@style/Widget.Material3.Button" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
 

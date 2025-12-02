@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <!-- App Bar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_gradient_primary"
+        android:elevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Header Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_arrow_back"
+                    android:contentDescription="Retour"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:text="Health Dashboard"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:fontFamily="sans-serif-medium" />
+
+                <ImageButton
+                    android:id="@+id/btnProfile"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_person"
+                    android:contentDescription="Profil"
+                    app:tint="@color/white" />
+            </LinearLayout>
+
+            <!-- Status -->
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="En attente des données..."
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:alpha="0.9"
+                android:fontFamily="sans-serif" />
+
+            <!-- Primary Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAppointments"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="Rendez-vous"
+                    android:textColor="@color/primary"
+                    android:backgroundTint="@color/white"
+                    app:cornerRadius="24dp"
+                    app:icon="@drawable/ic_calendar"
+                    app:iconTint="@color/primary"
+                    app:iconGravity="textStart"
+                    app:iconPadding="5dp"
+                    app:elevation="2dp"
+                    style="@style/Widget.Material3.Button.ElevatedButton" />
+
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRefresh"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Actualiser"
+                    android:textColor="@color/primary"
+                    android:backgroundTint="@color/white"
+                    app:cornerRadius="24dp"
+                    app:icon="@android:drawable/ic_popup_sync"
+                    app:iconTint="@color/primary"
+                    app:elevation="2dp"
+                    style="@style/Widget.Material3.Button.ElevatedButton" />
+            </LinearLayout>
+
+            <!-- Quick Access Cards -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:weightSum="2">
+
+                <!-- Analyze Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardAnalyze"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:rippleColor="#00BCD4">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📸"
+                            android:textSize="36sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Analyser"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#00BCD4"
+                            android:fontFamily="sans-serif-medium"
+                            android:layout_marginTop="4dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Repas"
+                            android:textSize="11sp"
+                            android:textColor="#666666"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Chatbot Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardChatbot"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:rippleColor="#9C27B0">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💬"
+                            android:textSize="36sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chatbot"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#9C27B0"
+                            android:fontFamily="sans-serif-medium"
+                            android:layout_marginTop="4dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Santé IA"
+                            android:textSize="11sp"
+                            android:textColor="#666666"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Advanced Features Dropdown -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Dropdown Header -->
+                    <!-- Advanced Features Section - Fragment -->
+                    <androidx.fragment.app.FragmentContainerView
+                        android:id="@+id/advancedFeaturesContainer"
+                        android:name="com.health.virtualdoctor.ui.user.fragments.AdvancedFeaturesFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Dropdown Content -->
+                    <LinearLayout
+                        android:id="@+id/dropdownContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="12dp">
+
+                        <!-- Health Analysis Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnHealthAnalysis"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="📊 Analyse de Santé"
+                            android:textColor="@color/white"
+                            android:textAlignment="textStart"
+                            android:textSize="15sp"
+                            android:backgroundTint="#4CAF50"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/ic_menu_info_details"
+                            app:iconTint="@color/white"
+                            app:iconGravity="start"
+                            app:iconPadding="12dp"
+                            style="@style/Widget.Material3.Button" />
+
+                        <!-- Alerts Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAlerts"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="🔔 Alertes Médicales"
+                            android:textColor="@color/white"
+                            android:textAlignment="textStart"
+                            android:textSize="15sp"
+                            android:backgroundTint="#FF9800"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/ic_dialog_alert"
+                            app:iconTint="@color/white"
+                            app:iconGravity="start"
+                            app:iconPadding="12dp"
+                            style="@style/Widget.Material3.Button" />
+
+                        <!-- Trends Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTrends"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="📈 Tendances and Stats"
+                            android:textColor="@color/white"
+                            android:textAlignment="textStart"
+                            android:textSize="15sp"
+                            android:backgroundTint="#2196F3"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/ic_menu_sort_by_size"
+                            app:iconTint="@color/white"
+                            app:iconGravity="start"
+                            app:iconPadding="12dp"
+                            style="@style/Widget.Material3.Button" />
+
+                        <!-- 🆕 Goals Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnGoals"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="🎯 Mes Objectifs"
+                            android:textColor="@color/white"
+                            android:textAlignment="textStart"
+                            android:textSize="15sp"
+                            android:backgroundTint="#9C27B0"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/ic_menu_my_calendar"
+                            app:iconTint="@color/white"
+                            app:iconGravity="start"
+                            app:iconPadding="12dp"
+                            style="@style/Widget.Material3.Button" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Quick Stats Grid -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📊 Résumé du Jour"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="16dp" />
+
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2"
+                        android:rowCount="3"
+                        android:alignmentMode="alignBounds"
+                        android:columnOrderPreserved="false">
+
+                        <!-- Steps Card -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#E8F5E9">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="👣"
+                                    android:textSize="32sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Pas"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/tvSteps"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#4CAF50"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Distance Card -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#E3F2FD">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="📏"
+                                    android:textSize="32sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Distance"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/tvDistance"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0.00 km"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#2196F3"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Heart Rate Card -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FFEBEE">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="❤️"
+                                    android:textSize="32sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="BPM"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/tvHeartRate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="-- bpm"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#F44336"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Sleep Card -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#F3E5F5">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="💤"
+                                    android:textSize="32sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Sommeil"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/tvSleep"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0.0h"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#9C27B0"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Hydration Card -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#E0F7FA">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="💧"
+                                    android:textSize="32sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Hydratation"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/tvHydration"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0.00 L"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#03A9F4"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <!-- Stress Card -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FFF3E0">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="16dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🧠"
+                                    android:textSize="32sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Stress"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/tvStress"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FF9800"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                    </GridLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Exercises Section -->
+            <!-- Exercises Section - MAINTENANT UN FRAGMENT -->
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/exercisesFragmentContainer"
+                android:name="com.health.virtualdoctor.ui.user.fragments.ExercisesFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                tools:layout="@layout/fragment_exercises" />
+
+            <!-- Vital Signs Section -->
+            <!-- Vital Signs Section - Fragment -->
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/vitalSignsFragmentContainer"
+                android:name="com.health.virtualdoctor.ui.user.fragments.VitalSignsFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- Health Summary Section -->
+            <!-- Data Summary Section - Fragment -->
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/dataSummaryFragmentContainer"
+                android:name="com.health.virtualdoctor.ui.user.fragments.DataSummaryFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- Avatar 3D Section -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="500dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🧍 Avatar 3D - État de Santé"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="12dp" />
+
+                    <FrameLayout
+                        android:id="@+id/avatarContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#1a1a2e" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

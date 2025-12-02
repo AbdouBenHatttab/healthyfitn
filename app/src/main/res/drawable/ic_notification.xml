@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+        <!-- Cercle de fond -->
+        <item>
+            <shape
+                android:shape="oval">
+                <solid android:color="#2196F3"/>  <!-- Couleur de votre choix -->
+                <size
+                    android:width="24dp"
+                    android:height="24dp"/>
+            </shape>
+        </item>
+
+        <!-- Icône au centre -->
+        <item
+            android:drawable="@drawable/ic_bell"
+                android:width="12dp"
+                android:height="12dp"
+                android:gravity="center"/>
+    </layer-list>
+</selector>

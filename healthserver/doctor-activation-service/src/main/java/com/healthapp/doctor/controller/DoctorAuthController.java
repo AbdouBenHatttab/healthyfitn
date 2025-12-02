@@ -13,70 +13,71 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * DoctorAuthController - Public endpoints for doctor registration and login
- * 
- * These endpoints do NOT require authentication
+ * Contrôleur d'authentification des médecins
+ * Endpoints publics pour l'inscription et la connexion
+ *
+ * Ces endpoints ne nécessitent PAS d'authentification
  */
 @RestController
 @RequestMapping("/api/doctors")
 @RequiredArgsConstructor
 @Slf4j
 public class DoctorAuthController {
-    
+
     private final DoctorAuthService doctorAuthService;
     private final DoctorLoginService doctorLoginService;
-    
+
     /**
-     * Register a new doctor (PUBLIC endpoint)
-     * 
-     * No authentication required
-     * 
-     * @param request Doctor registration data
-     * @return DoctorResponse with registration status
+     * Inscrire un nouveau médecin (endpoint PUBLIC)
+     *
+     * Aucune authentification requise
+     *
+     * @param request Données d'inscription du médecin
+     * @return DoctorResponse avec le statut de l'inscription
      */
     @PostMapping("/register")
     public ResponseEntity<DoctorResponse> registerDoctor(@Valid @RequestBody DoctorRegisterRequest request) {
-        log.info("🏥 Doctor registration request received for: {}", request.getEmail());
-        
+        log.info("🏥 Demande d'inscription d'un médecin reçue pour : {}", request.getEmail());
+
         DoctorResponse response = doctorAuthService.registerDoctor(request);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    
+
     /**
-     * Login a doctor (PUBLIC endpoint)
-     * 
-     * No authentication required
-     * Returns access token and refresh token if successful
-     * Returns error if account is not yet activated
-     * 
-     * @param loginRequest Email and password
-     * @return Access token, refresh token, and user info
+     * Connexion d'un médecin (endpoint PUBLIC)
+     *
+     * Aucune authentification requise
+     * Retourne le token d'accès et le refresh token si succès
+     * Retourne une erreur si le compte n'est pas encore activé
+     *
+     * @param loginRequest Email et mot de passe
+     * @return Token d'accès, refresh token et informations du médecin
      */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> loginDoctor(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("email");
         String password = loginRequest.get("password");
-        
-        log.info("🔐 Doctor login request for: {}", email);
-        
+
+        log.info("🔐 Demande de connexion pour le médecin : {}", email);
+
         Map<String, Object> response = doctorLoginService.loginDoctor(email, password);
-        
-        // If account not activated, return 403 Forbidden
+
+        // Si le compte n'est pas activé, renvoyer 403 Forbidden
         if (response.containsKey("error")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     /**
-     * Health check endpoint
-     * 
-     * @return Service status
+     * Endpoint de vérification de l'état du service
+     *
+     * @return Statut du service
      */
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("Doctor Activation Service is UP");
+        return ResponseEntity.ok("Service d'activation des médecins opérationnel");
     }
 }

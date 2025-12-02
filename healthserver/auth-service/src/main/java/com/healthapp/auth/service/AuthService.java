@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-//import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,32 +31,32 @@ import java.util.Set;
 @Transactional
 @Slf4j
 public class AuthService {
-    
+
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtSecurity jwtService;
     private final AuthenticationManager authenticationManager;
-    
+
     /**
      * Enregistrement d'un utilisateur normal
      * Les médecins doivent s'enregistrer via le doctor-service
      */
     public AuthResponse register(RegisterRequest request) {
-        log.info("Attempting to register user with email: {}", request.getEmail());
-        
+        log.info("Tentative d'inscription pour l'email : {}", request.getEmail());
+
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
+            throw new UserAlreadyExistsException("Un utilisateur existe déjà avec cet email : " + request.getEmail());
         }
-        
+
         User user = buildUserFromRequest(request);
         User savedUser = userRepository.save(user);
-        
-        log.info("User registered successfully: {} with role: {}", savedUser.getEmail(), request.getRole());
-        
+
+        log.info("Utilisateur inscrit avec succès : {} avec le rôle : {}", savedUser.getEmail(), request.getRole());
+
         String accessToken = jwtService.generateToken(savedUser);
         RefreshToken refreshToken = createRefreshToken(savedUser);
-        
+
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
@@ -65,39 +64,36 @@ public class AuthService {
                 .user(mapToUserResponse(savedUser))
                 .build();
     }
-    
+
     /**
      * Créer un compte basique (appelé par les autres microservices via Feign)
-     * Ce endpoint est utilisé par doctor-service pour créer les credentials
      */
     public AuthResponse createBasicAccount(RegisterRequest request) {
-        log.info("Creating basic account for: {}", request.getEmail());
-        
+        log.info("Création d'un compte basique pour : {}", request.getEmail());
+
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
+            throw new UserAlreadyExistsException("Un utilisateur existe déjà avec cet email : " + request.getEmail());
         }
-        
+
         User user = buildUserFromRequest(request);
         User savedUser = userRepository.save(user);
-        
-        log.info("Basic account created: {} with roles: {}", savedUser.getEmail(), savedUser.getRoles());
-        
-        // Pour les comptes créés par d'autres services, on ne génère pas de tokens
-        // Le service appelant gérera l'authentification
+
+        log.info("Compte basique créé : {} avec les rôles : {}", savedUser.getEmail(), savedUser.getRoles());
+
         return AuthResponse.builder()
                 .userId(savedUser.getId())
                 .user(mapToUserResponse(savedUser))
                 .build();
     }
-    
+
     public AuthResponse login(LoginRequest request) {
-        log.info("Attempting login for email: {}", request.getEmail());
-        
+        log.info("Tentative de connexion pour l'email : {}", request.getEmail());
+
         if (!userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Login attempt with non-existent email: {}", request.getEmail());
-            throw new UsernameNotFoundException("No account found with this email address");
+            log.warn("Tentative de connexion avec un email inexistant : {}", request.getEmail());
+            throw new UsernameNotFoundException("Aucun compte trouvé avec cette adresse email");
         }
-        
+
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -105,55 +101,55 @@ public class AuthService {
                             request.getPassword()
                     )
             );
-            
+
             User user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            
+                    .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
             user.resetFailedLoginAttempts();
             user.setLastLoginAt(LocalDateTime.now());
             userRepository.save(user);
-            
+
             String accessToken = jwtService.generateToken(user);
             RefreshToken refreshToken = createRefreshToken(user);
-            
-            log.info("User logged in successfully: {}", user.getEmail());
-            
+
+            log.info("Utilisateur connecté avec succès : {}", user.getEmail());
+
             return AuthResponse.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken.getToken())
                     .expiresIn(jwtService.getAccessTokenExpiration() / 1000)
                     .user(mapToUserResponse(user))
                     .build();
-                    
+
         } catch (AuthenticationException e) {
             User user = userRepository.findByEmail(request.getEmail()).orElse(null);
             if (user != null) {
                 user.incrementFailedLoginAttempts();
                 userRepository.save(user);
             }
-            log.warn("Authentication failed for email: {}", request.getEmail());
+            log.warn("Échec d'authentification pour l'email : {}", request.getEmail());
             throw e;
         }
     }
 
     public AuthResponse refreshToken(RefreshTokenRequest request) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(request.getRefreshToken())
-                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
-        
+                .orElseThrow(() -> new InvalidTokenException("Jeton de rafraîchissement invalide"));
+
         if (!refreshToken.isValid()) {
             refreshTokenRepository.delete(refreshToken);
-            throw new InvalidTokenException("Refresh token expired or revoked");
+            throw new InvalidTokenException("Le jeton de rafraîchissement a expiré ou a été révoqué");
         }
-        
+
         User user = userRepository.findById(refreshToken.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
         refreshToken.revoke();
         refreshTokenRepository.save(refreshToken);
-        
+
         String newAccessToken = jwtService.generateToken(user);
         RefreshToken newRefreshToken = createRefreshToken(user);
-        
+
         return AuthResponse.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken.getToken())
@@ -161,7 +157,7 @@ public class AuthService {
                 .user(mapToUserResponse(user))
                 .build();
     }
-    
+
     public void logout(String refreshToken) {
         refreshTokenRepository.findByToken(refreshToken)
                 .ifPresent(token -> {
@@ -169,37 +165,37 @@ public class AuthService {
                     refreshTokenRepository.save(token);
                 });
     }
-    
+
     /**
      * Activer un compte utilisateur (appelé par d'autres services)
      */
     public void activateUser(String userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
         user.setIsActivated(true);
         user.setActivationDate(LocalDateTime.now());
         userRepository.save(user);
-        
-        log.info("User activated: {}", user.getEmail());
+
+        log.info("Utilisateur activé : {}", user.getEmail());
     }
-    
+
     /**
-     * Vérifier si un utilisateur existe
+     * Vérifier si un utilisateur existe par email
      */
     public boolean userExists(String email) {
         return userRepository.existsByEmail(email);
     }
-    
+
     /**
-     * Récupérer un utilisateur par email (pour les autres services)
+     * Récupérer un utilisateur par email (appelé par d'autres services)
      */
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable"));
         return mapToUserResponse(user);
     }
-    
+
     private User buildUserFromRequest(RegisterRequest request) {
         User.UserBuilder userBuilder = User.builder()
                 .email(request.getEmail().toLowerCase().trim())
@@ -210,29 +206,27 @@ public class AuthService {
                 .gender(request.getGender())
                 .phoneNumber(request.getPhoneNumber())
                 .roles(Set.of(request.getRole()));
-        
-        // Les utilisateurs normaux sont activés directement
-        // Les médecins sont créés non-activés et gérés par doctor-service
+
         if (request.getRole() == UserRole.DOCTOR) {
             userBuilder.isActivated(false);
             userBuilder.activationRequestDate(LocalDateTime.now());
         } else {
             userBuilder.isActivated(true);
         }
-        
+
         return userBuilder.build();
     }
-    
+
     private RefreshToken createRefreshToken(User user) {
         RefreshToken refreshToken = RefreshToken.builder()
                 .userId(user.getId())
                 .token(jwtService.generateRefreshToken(user))
                 .expiryDate(LocalDateTime.now().plusDays(7))
                 .build();
-        
+
         return refreshTokenRepository.save(refreshToken);
     }
-    
+
     private UserResponse mapToUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
