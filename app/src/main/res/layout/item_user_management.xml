@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/divider">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header: Name + Status Chip -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="👤 John Doe"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✅ ACTIF"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                app:chipBackgroundColor="@android:color/holo_green_light" />
+
+        </LinearLayout>
+
+        <!-- Email -->
+        <TextView
+            android:id="@+id/tvUserEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📧 john.doe@example.com"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="8dp" />
+
+        <!-- Role -->
+        <TextView
+            android:id="@+id/tvUserRole"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎭 USER"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp" />
+
+        <!-- Phone Number -->
+        <TextView
+            android:id="@+id/tvPhoneNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📱 +33 6 12 34 56 78"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp" />
+
+        <!-- Created At -->
+        <TextView
+            android:id="@+id/tvCreatedAt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📅 Créé: 15/01/2025 10:30"
+            android:textSize="12sp"
+            android:textColor="@color/text_hint"
+            android:layout_marginTop="8dp" />
+
+        <!-- Last Login -->
+        <TextView
+            android:id="@+id/tvLastLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🕐 Dernière connexion: 20/01/2025 14:15"
+            android:textSize="12sp"
+            android:textColor="@color/text_hint"
+            android:layout_marginTop="4dp" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewDetails"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Détails"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_info"
+                app:iconSize="18dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDelete"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Supprimer"
+                android:textSize="12sp"
+                android:textColor="@android:color/holo_red_dark"
+                app:icon="@drawable/ic_delete"
+                app:iconTint="@android:color/holo_red_dark"
+                app:iconSize="18dp"
+                android:layout_marginStart="8dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
