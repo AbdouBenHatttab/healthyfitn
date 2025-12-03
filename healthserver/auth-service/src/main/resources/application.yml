@@ -1,6 +1,6 @@
 spring:
   application:
-    name: auth-service  # ⚠️ TRÈS IMPORTANT - Doit être exactement "auth-service"
+    name: auth-service
   data:
     mongodb:
       uri: mongodb://localhost:27017/health_auth_db
@@ -9,6 +9,30 @@ spring:
       enabled: false
   main:
     allow-bean-definition-overriding: true
+
+  # 🔐 CONFIGURATION KEYCLOAK
+  security:
+    oauth2:
+      # Configuration Resource Server (pour valider les tokens)
+      resourceserver:
+        jwt:
+          # URL publique pour obtenir les clés publiques de Keycloak
+          jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
+          # Issuer du token (doit correspondre au claim 'iss' dans le JWT)
+          issuer-uri: http://localhost:8080/realms/health-app-realm
+
+      # Configuration Client (pour communiquer avec Keycloak Admin)
+      client:
+        registration:
+          keycloak:
+            client-id: health-backend-services
+            client-secret: QjKkJoIsqB4rbXHqv53ofsPuw0O7Qz57  # À récupérer depuis Keycloak
+            authorization-grant-type: client_credentials
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/health-app-realm
+            user-name-attribute: preferred_username
 
 server:
   port: 8082
@@ -22,20 +46,34 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}  # ID unique pour chaque instance
+    instance-id: ${spring.application.name}:${random.value}
     hostname: localhost
 
-# JWT Configuration
-app:
-  jwt:
-    secret: 21f4e176cd2f4b991bd27fd94a7acfa923a032015252f7f725cee7761503b6120d0f92dcda38390c619190e921833477ea8f32100e9d59bcd398073b1552c15e
-    expiration: 900000  # 15 minutes
-    refresh-token:
-      expiration: 604800000  # 7 jours
+# ⚠️ CONFIGURATION KEYCLOAK ADMIN CLIENT
+keycloak:
+  # URL du serveur Keycloak
+  server-url: http://localhost:8080
 
+  # Nom du realm cible (où sont vos utilisateurs)
+  realm: health-app-realm
+
+  # 🔑 CREDENTIALS ADMIN (Option 1 - Admin Master)
+  admin:
+    realm: master                    # ← AJOUTEZ CECI
+    username: amine                  # ← AJOUTEZ CECI
+    password: Password123!                  # ← AJOUTEZ CECI (ou votre mot de passe admin)
+    client-id: admin-cli            # ← CHANGEZ CECI
+
+  # Configuration des rôles
+  roles:
+    user: USER
+    doctor: DOCTOR
+    admin: ADMIN
 # Logging
 logging:
   level:
     com.healthapp.auth: DEBUG
+    org.springframework.security: DEBUG
+    org.keycloak: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
