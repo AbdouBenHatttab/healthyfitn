@@ -1,14 +1,18 @@
 package com.healthapp.auth.service;
 
+import com.healthapp.auth.Enums.AccountStatus;
 import com.healthapp.auth.dto.request.LoginRequest;
 import com.healthapp.auth.dto.request.RegisterRequest;
 import com.healthapp.auth.dto.response.AuthResponse;
 import com.healthapp.auth.dto.response.UserResponse;
 import com.healthapp.auth.Enums.UserRole;
+import com.healthapp.auth.entity.User;
 import com.healthapp.auth.exception.UserAlreadyExistsException;
+import com.healthapp.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
@@ -36,6 +40,9 @@ public class AuthService {
     private final KeycloakAdminService keycloakAdminService;
     private final RestTemplateBuilder restTemplateBuilder;
     private RestTemplate restTemplate;
+    @Autowired
+    private final UserRepository userRepository;
+
 
     @Value("${keycloak.server-url}")
     private String keycloakServerUrl;
@@ -122,7 +129,24 @@ public class AuthService {
                     request.getPassword()
             );
 
+            User user = User.builder()
+                    .id(keycloakUserId)
+                    .email(request.getEmail())
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .birthDate(request.getBirthDate())
+                    .gender(request.getGender())
+                    .phoneNumber(request.getPhoneNumber())
+                    .roles(Set.of(UserRole.USER))
+                    .accountStatus(AccountStatus.ACTIVE)
+                    .isActivated(true)
+                    .isEmailVerified(true)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            userRepository.save(user);
             return buildAuthResponse(keycloakUserId, tokenResponse, request.getEmail());
+
         }
     }
 
