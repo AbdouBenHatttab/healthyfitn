@@ -1,245 +1,380 @@
 package com.healthapp.auth.service;
 
 import com.healthapp.auth.dto.request.LoginRequest;
-import com.healthapp.auth.dto.request.RefreshTokenRequest;
 import com.healthapp.auth.dto.request.RegisterRequest;
 import com.healthapp.auth.dto.response.AuthResponse;
 import com.healthapp.auth.dto.response.UserResponse;
-import com.healthapp.auth.entity.RefreshToken;
-import com.healthapp.auth.entity.User;
 import com.healthapp.auth.Enums.UserRole;
-import com.healthapp.auth.exception.InvalidTokenException;
 import com.healthapp.auth.exception.UserAlreadyExistsException;
-import com.healthapp.auth.repository.RefreshTokenRepository;
-import com.healthapp.auth.repository.UserRepository;
-import com.healthapp.auth.security.JwtSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
+import jakarta.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.*;
 
+/**
+ * Service d'authentification avec Keycloak
+ */
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtSecurity jwtService;
-    private final AuthenticationManager authenticationManager;
+    private final KeycloakAdminService keycloakAdminService;
+    private final RestTemplateBuilder restTemplateBuilder;
+    private RestTemplate restTemplate;
+
+    @Value("${keycloak.server-url}")
+    private String keycloakServerUrl;
+
+    @Value("${keycloak.realm}")
+    private String realm;
+
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-id}")
+    private String clientId;
+
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-secret}")
+    private String clientSecret;
+
+    @PostConstruct
+    public void init() {
+        // Créer RestTemplate avec timeouts
+        this.restTemplate = restTemplateBuilder
+                .setConnectTimeout(Duration.ofSeconds(10))
+                .setReadTimeout(Duration.ofSeconds(10))
+                .build();
+
+        log.info("✅ RestTemplate initialisé avec timeouts (10s connect, 10s read)");
+    }
 
     /**
-     * Enregistrement d'un utilisateur normal
-     * Les médecins doivent s'enregistrer via le doctor-service
+     * Inscription d'un utilisateur normal
      */
     public AuthResponse register(RegisterRequest request) {
-        log.info("Tentative d'inscription pour l'email : {}", request.getEmail());
+        log.info("📝 Inscription d'un utilisateur : {}", request.getEmail());
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("Un utilisateur existe déjà avec cet email : " + request.getEmail());
+        if (keycloakAdminService.userExists(request.getEmail())) {
+            throw new UserAlreadyExistsException(
+                    "Un utilisateur existe déjà avec cet email : " + request.getEmail()
+            );
         }
 
-        User user = buildUserFromRequest(request);
-        User savedUser = userRepository.save(user);
+        List<String> roles = new ArrayList<>();
+        roles.add(request.getRole().name());
+        if (request.getRole() != UserRole.ADMIN) {
+            roles.add("USER");
+        }
 
-        log.info("Utilisateur inscrit avec succès : {} avec le rôle : {}", savedUser.getEmail(), request.getRole());
+        String keycloakUserId;
 
-        String accessToken = jwtService.generateToken(savedUser);
-        RefreshToken refreshToken = createRefreshToken(savedUser);
+        if (request.getRole() == UserRole.DOCTOR) {
+            keycloakUserId = keycloakAdminService.createDoctor(
+                    request.getEmail(),
+                    request.getPassword(),
+                    request.getFirstName(),
+                    request.getLastName(),
+                    request.getMedicalLicenseNumber(),
+                    request.getSpecialization(),
+                    request.getHospitalAffiliation(),
+                    request.getYearsOfExperience()
+            );
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .expiresIn(jwtService.getAccessTokenExpiration() / 1000)
-                .user(mapToUserResponse(savedUser))
-                .build();
+            log.info("👨‍⚕️ Médecin créé dans Keycloak (en attente d'activation) : {}", request.getEmail());
+
+            return AuthResponse.builder()
+                    .userId(keycloakUserId)
+                    .user(UserResponse.builder()
+                            .id(keycloakUserId)
+                            .email(request.getEmail())
+                            .firstName(request.getFirstName())
+                            .lastName(request.getLastName())
+                            .roles(Set.of(UserRole.DOCTOR))
+                            .isActivated(false)
+                            .build())
+                    .build();
+
+        } else {
+            keycloakUserId = keycloakAdminService.createUser(
+                    request.getEmail(),
+                    request.getPassword(),
+                    request.getFirstName(),
+                    request.getLastName(),
+                    roles
+            );
+
+            log.info("✅ Utilisateur créé et activé dans Keycloak : {}", request.getEmail());
+
+            Map<String, Object> tokenResponse = getTokenFromKeycloak(
+                    request.getEmail(),
+                    request.getPassword()
+            );
+
+            return buildAuthResponse(keycloakUserId, tokenResponse, request.getEmail());
+        }
     }
 
     /**
-     * Créer un compte basique (appelé par les autres microservices via Feign)
+     * Connexion d'un utilisateur
      */
-    public AuthResponse createBasicAccount(RegisterRequest request) {
-        log.info("Création d'un compte basique pour : {}", request.getEmail());
-
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("Un utilisateur existe déjà avec cet email : " + request.getEmail());
-        }
-
-        User user = buildUserFromRequest(request);
-        User savedUser = userRepository.save(user);
-
-        log.info("Compte basique créé : {} avec les rôles : {}", savedUser.getEmail(), savedUser.getRoles());
-
-        return AuthResponse.builder()
-                .userId(savedUser.getId())
-                .user(mapToUserResponse(savedUser))
-                .build();
-    }
-
     public AuthResponse login(LoginRequest request) {
-        log.info("Tentative de connexion pour l'email : {}", request.getEmail());
+        log.info("🔐 Tentative de connexion : {}", request.getEmail());
 
-        if (!userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Tentative de connexion avec un email inexistant : {}", request.getEmail());
-            throw new UsernameNotFoundException("Aucun compte trouvé avec cette adresse email");
+        if (!keycloakAdminService.userExists(request.getEmail())) {
+            log.warn("❌ Tentative de connexion avec un email inexistant : {}", request.getEmail());
+            throw new RuntimeException("Aucun compte trouvé avec cette adresse email");
         }
 
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
+            log.debug("📤 Demande de token à Keycloak pour : {}", request.getEmail());
+
+            Map<String, Object> tokenResponse = getTokenFromKeycloak(
+                    request.getEmail(),
+                    request.getPassword()
             );
 
-            User user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+            log.debug("📥 Token reçu de Keycloak");
 
-            user.resetFailedLoginAttempts();
-            user.setLastLoginAt(LocalDateTime.now());
-            userRepository.save(user);
+            Optional<UserRepresentation> keycloakUser =
+                    keycloakAdminService.getUserByEmail(request.getEmail());
 
-            String accessToken = jwtService.generateToken(user);
-            RefreshToken refreshToken = createRefreshToken(user);
-
-            log.info("Utilisateur connecté avec succès : {}", user.getEmail());
-
-            return AuthResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken.getToken())
-                    .expiresIn(jwtService.getAccessTokenExpiration() / 1000)
-                    .user(mapToUserResponse(user))
-                    .build();
-
-        } catch (AuthenticationException e) {
-            User user = userRepository.findByEmail(request.getEmail()).orElse(null);
-            if (user != null) {
-                user.incrementFailedLoginAttempts();
-                userRepository.save(user);
+            if (keycloakUser.isEmpty()) {
+                throw new RuntimeException("Utilisateur introuvable dans Keycloak");
             }
-            log.warn("Échec d'authentification pour l'email : {}", request.getEmail());
+
+            String userId = keycloakUser.get().getId();
+
+            log.info("✅ Connexion réussie pour : {}", request.getEmail());
+
+            return buildAuthResponse(userId, tokenResponse, request.getEmail());
+
+        } catch (HttpClientErrorException e) {
+            log.error("❌ Erreur HTTP client {} lors de la connexion pour {}: {}",
+                    e.getStatusCode(), request.getEmail(), e.getResponseBodyAsString());
+
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw new RuntimeException("Email ou mot de passe incorrect");
+            } else if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                throw new RuntimeException("Requête invalide. Vérifiez la configuration du client Keycloak.");
+            }
+            throw new RuntimeException("Erreur lors de la connexion: " + e.getMessage());
+
+        } catch (HttpServerErrorException e) {
+            log.error("❌ Erreur serveur Keycloak {} lors de la connexion pour {}: {}",
+                    e.getStatusCode(), request.getEmail(), e.getResponseBodyAsString());
+            throw new RuntimeException("Erreur du serveur d'authentification");
+
+        } catch (ResourceAccessException e) {
+            log.error("❌ Impossible de joindre Keycloak : {}", e.getMessage());
+            throw new RuntimeException("Le serveur d'authentification est inaccessible");
+
+        } catch (Exception e) {
+            log.error("❌ Échec de connexion pour {} : {}", request.getEmail(), e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la connexion: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Demander un token à Keycloak avec le grant type "password"
+     */
+    private Map<String, Object> getTokenFromKeycloak(String email, String password) {
+        String tokenUrl = String.format(
+                "%s/realms/%s/protocol/openid-connect/token",
+                keycloakServerUrl,
+                realm
+        );
+
+        log.debug("🌐 URL du token Keycloak : {}", tokenUrl);
+        log.debug("🔑 Client ID : {}", clientId);
+        log.debug("👤 Username : {}", email);
+
+        // Préparer les paramètres de la requête
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", clientId);
+        requestBody.add("client_secret", clientSecret);  // ← AJOUTÉ
+        requestBody.add("username", email);
+        requestBody.add("password", password);
+        requestBody.add("grant_type", "password");
+
+        // Configurer les headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request =
+                new HttpEntity<>(requestBody, headers);
+
+        log.debug("📤 Envoi de la requête token à Keycloak...");
+
+        try {
+            // Faire la requête
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    tokenUrl,
+                    HttpMethod.POST,
+                    request,
+                    Map.class
+            );
+
+            log.debug("📥 Réponse reçue de Keycloak : status = {}", response.getStatusCode());
+
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                log.error("❌ Réponse inattendue de Keycloak : {}", response.getStatusCode());
+                throw new RuntimeException("Impossible d'obtenir un token depuis Keycloak");
+            }
+
+            return response.getBody();
+
+        } catch (Exception e) {
+            log.error("❌ Exception lors de l'appel à Keycloak : {}", e.getMessage());
             throw e;
         }
     }
 
-    public AuthResponse refreshToken(RefreshTokenRequest request) {
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(request.getRefreshToken())
-                .orElseThrow(() -> new InvalidTokenException("Jeton de rafraîchissement invalide"));
+    /**
+     * Rafraîchir un token avec le refresh token
+     */
+    public AuthResponse refreshToken(String refreshToken) {
+        log.info("🔄 Rafraîchissement du token");
 
-        if (!refreshToken.isValid()) {
-            refreshTokenRepository.delete(refreshToken);
-            throw new InvalidTokenException("Le jeton de rafraîchissement a expiré ou a été révoqué");
+        String tokenUrl = String.format(
+                "%s/realms/%s/protocol/openid-connect/token",
+                keycloakServerUrl,
+                realm
+        );
+
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", clientId);
+        requestBody.add("client_secret", clientSecret);
+        requestBody.add("refresh_token", refreshToken);
+        requestBody.add("grant_type", "refresh_token");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request =
+                new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                tokenUrl,
+                HttpMethod.POST,
+                request,
+                Map.class
+        );
+
+        if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+            throw new RuntimeException("Impossible de rafraîchir le token");
         }
 
-        User user = userRepository.findById(refreshToken.getUserId())
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+        Map<String, Object> tokenResponse = response.getBody();
 
-        refreshToken.revoke();
-        refreshTokenRepository.save(refreshToken);
-
-        String newAccessToken = jwtService.generateToken(user);
-        RefreshToken newRefreshToken = createRefreshToken(user);
+        log.info("✅ Token rafraîchi avec succès");
 
         return AuthResponse.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken.getToken())
-                .expiresIn(jwtService.getAccessTokenExpiration() / 1000)
-                .user(mapToUserResponse(user))
+                .accessToken((String) tokenResponse.get("access_token"))
+                .refreshToken((String) tokenResponse.get("refresh_token"))
+                .expiresIn(((Number) tokenResponse.get("expires_in")).longValue())
+                .tokenType("Bearer")
+                .issuedAt(LocalDateTime.now())
                 .build();
     }
 
+    /**
+     * Déconnexion (révocation du refresh token)
+     */
     public void logout(String refreshToken) {
-        refreshTokenRepository.findByToken(refreshToken)
-                .ifPresent(token -> {
-                    token.revoke();
-                    refreshTokenRepository.save(token);
-                });
+        log.info("🚪 Déconnexion");
+
+        String logoutUrl = String.format(
+                "%s/realms/%s/protocol/openid-connect/logout",
+                keycloakServerUrl,
+                realm
+        );
+
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", clientId);
+        requestBody.add("client_secret", clientSecret);
+        requestBody.add("refresh_token", refreshToken);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request =
+                new HttpEntity<>(requestBody, headers);
+
+        try {
+            restTemplate.exchange(
+                    logoutUrl,
+                    HttpMethod.POST,
+                    request,
+                    Void.class
+            );
+            log.info("✅ Déconnexion réussie");
+        } catch (Exception e) {
+            log.warn("⚠️ Erreur lors de la déconnexion : {}", e.getMessage());
+        }
     }
 
     /**
-     * Activer un compte utilisateur (appelé par d'autres services)
+     * Construire la réponse d'authentification
      */
-    public void activateUser(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+    private AuthResponse buildAuthResponse(String userId, Map<String, Object> tokenResponse, String email) {
+        Optional<UserRepresentation> keycloakUser = keycloakAdminService.getUserByEmail(email);
 
-        user.setIsActivated(true);
-        user.setActivationDate(LocalDateTime.now());
-        userRepository.save(user);
-
-        log.info("Utilisateur activé : {}", user.getEmail());
-    }
-
-    /**
-     * Vérifier si un utilisateur existe par email
-     */
-    public boolean userExists(String email) {
-        return userRepository.existsByEmail(email);
-    }
-
-    /**
-     * Récupérer un utilisateur par email (appelé par d'autres services)
-     */
-    public UserResponse getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable"));
-        return mapToUserResponse(user);
-    }
-
-    private User buildUserFromRequest(RegisterRequest request) {
-        User.UserBuilder userBuilder = User.builder()
-                .email(request.getEmail().toLowerCase().trim())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName().trim())
-                .lastName(request.getLastName().trim())
-                .birthDate(request.getBirthDate())
-                .gender(request.getGender())
-                .phoneNumber(request.getPhoneNumber())
-                .roles(Set.of(request.getRole()));
-
-        if (request.getRole() == UserRole.DOCTOR) {
-            userBuilder.isActivated(false);
-            userBuilder.activationRequestDate(LocalDateTime.now());
-        } else {
-            userBuilder.isActivated(true);
+        UserResponse userResponse = null;
+        if (keycloakUser.isPresent()) {
+            userResponse = mapKeycloakUserToResponse(keycloakUser.get());
         }
 
-        return userBuilder.build();
-    }
-
-    private RefreshToken createRefreshToken(User user) {
-        RefreshToken refreshToken = RefreshToken.builder()
-                .userId(user.getId())
-                .token(jwtService.generateRefreshToken(user))
-                .expiryDate(LocalDateTime.now().plusDays(7))
+        return AuthResponse.builder()
+                .userId(userId)
+                .accessToken((String) tokenResponse.get("access_token"))
+                .refreshToken((String) tokenResponse.get("refresh_token"))
+                .expiresIn(((Number) tokenResponse.get("expires_in")).longValue())
+                .tokenType("Bearer")
+                .user(userResponse)
+                .issuedAt(LocalDateTime.now())
                 .build();
-
-        return refreshTokenRepository.save(refreshToken);
     }
 
-    private UserResponse mapToUserResponse(User user) {
+    /**
+     * Mapper un UserRepresentation Keycloak vers UserResponse
+     */
+    private UserResponse mapKeycloakUserToResponse(UserRepresentation keycloakUser) {
+        Map<String, List<String>> attributes = keycloakUser.getAttributes();
+
         return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .fullName(user.getFullName())
-                .birthDate(user.getBirthDate())
-                .gender(user.getGender())
-                .phoneNumber(user.getPhoneNumber())
-                .roles(user.getRoles())
-                .isActivated(user.getIsActivated())
-                .createdAt(user.getCreatedAt())
+                .id(keycloakUser.getId())
+                .email(keycloakUser.getEmail())
+                .firstName(keycloakUser.getFirstName())
+                .lastName(keycloakUser.getLastName())
+                .fullName(keycloakUser.getFirstName() + " " + keycloakUser.getLastName())
+                .isActivated(keycloakUser.isEnabled())
+                .isEmailVerified(keycloakUser.isEmailVerified())
+                .medicalLicenseNumber(getAttributeValue(attributes, "medicalLicenseNumber"))
+                .specialization(getAttributeValue(attributes, "specialization"))
+                .hospitalAffiliation(getAttributeValue(attributes, "hospitalAffiliation"))
                 .build();
+    }
+
+    /**
+     * Extraire une valeur d'attribut de Keycloak
+     */
+    private String getAttributeValue(Map<String, List<String>> attributes, String key) {
+        if (attributes == null || !attributes.containsKey(key)) {
+            return null;
+        }
+        List<String> values = attributes.get(key);
+        return values.isEmpty() ? null : values.get(0);
     }
 }
