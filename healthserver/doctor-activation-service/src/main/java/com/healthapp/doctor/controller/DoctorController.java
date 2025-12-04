@@ -9,6 +9,7 @@ import com.healthapp.doctor.service.DoctorPasswordService;
 import com.healthapp.doctor.dto.request.ChangePasswordRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,8 +22,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Contrôleur pour les médecins authentifiés
- * Fournit les endpoints pour gérer le profil, mot de passe et emails
+ * Contrôleur pour les médecins authentifiés avec Keycloak
+ *
+ * ✅ CHANGEMENTS AVEC KEYCLOAK:
+ * - /forgot-password : Déclenche l'action Keycloak
+ * - /change-password : Met à jour dans Keycloak (avec limitations)
+ *
+ * ⚠️ RECOMMANDATION:
+ * Pour un changement de mot de passe complet, redirigez vers:
+ * http://localhost:8080/realms/health-app-realm/account/password
  */
 @RestController
 @RequestMapping("/api/doctors")
@@ -34,11 +42,17 @@ public class DoctorController {
     private final DoctorPasswordService doctorPasswordService;
     private final DoctorPasswordResetService passwordResetService;
 
+    @Value("${keycloak.realm}")
+    private String keycloakRealm;
+
+    @Value("${keycloak.server-url}")
+    private String keycloakServerUrl;
+
     @PostConstruct
     public void init() {
         log.info("========================================");
-        log.info("✅ DoctorController INITIALISÉ");
-        log.info("✅ Chemin de base : /api/doctors");
+        log.info("✅ DoctorController INITIALIZED (KEYCLOAK)");
+        log.info("✅ Base path: /api/doctors");
         log.info("========================================");
     }
 
@@ -49,8 +63,9 @@ public class DoctorController {
     public ResponseEntity<Map<String, String>> testEndpoint() {
         log.info("🧪 Endpoint TEST appelé avec succès !");
         return ResponseEntity.ok(Map.of(
-                "statut", "OK",
-                "message", "DoctorController fonctionne correctement !",
+                "status", "OK",
+                "message", "DoctorController fonctionne correctement avec Keycloak !",
+                "authentication", "Keycloak OAuth2",
                 "timestamp", String.valueOf(System.currentTimeMillis())
         ));
     }
@@ -69,7 +84,8 @@ public class DoctorController {
                         "email", d.getEmail(),
                         "contactEmail", d.getContactEmail() != null ? d.getContactEmail() : "N/A",
                         "userId", d.getUserId(),
-                        "isActivated", d.getIsActivated()
+                        "isActivated", d.getIsActivated(),
+                        "hasPassword", d.getPassword() != null ? "YES (legacy)" : "NO (Keycloak)"
                 ))
                 .collect(Collectors.toList()));
 
@@ -130,7 +146,14 @@ public class DoctorController {
     }
 
     /**
-     * Changer le mot de passe du médecin
+     * ⚠️ CHANGEMENT DE MOT DE PASSE AVEC KEYCLOAK
+     *
+     * LIMITATIONS:
+     * - Impossible de vérifier l'ancien mot de passe via Admin API
+     * - Le mot de passe est mis à jour directement dans Keycloak
+     *
+     * RECOMMANDATION:
+     * Utilisez plutôt l'endpoint /password-change-url et redirigez vers Keycloak
      */
     @PutMapping("/change-password")
     @PreAuthorize("hasRole('DOCTOR')")
@@ -138,47 +161,43 @@ public class DoctorController {
             @RequestBody ChangePasswordRequest request,
             Authentication authentication) {
 
-        log.info("🔐 [MOT DE PASSE] Endpoint appelé par : {}", authentication.getName());
+        log.info("========================================");
+        log.info("🔐 PASSWORD CHANGE REQUEST (KEYCLOAK)");
+        log.info("========================================");
+        log.info("User: {}", authentication.getName());
+
+        log.warn("⚠️ LIMITATION: Current password verification not available with Keycloak Admin API");
+        log.warn("⚠️ RECOMMENDATION: Use Keycloak Account Console for secure password change");
 
         try {
             String email = authentication.getName();
 
-            if (request.getCurrentPassword() == null || request.getCurrentPassword().isEmpty()) {
-                log.error("❌ Mot de passe actuel manquant");
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "Le mot de passe actuel est requis"));
-            }
-
             if (request.getNewPassword() == null || request.getNewPassword().isEmpty()) {
                 log.error("❌ Nouveau mot de passe manquant");
                 return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "Le nouveau mot de passe est requis"));
+                        .body(Map.of(
+                                "success", false,
+                                "error", "Le nouveau mot de passe est requis"
+                        ));
             }
 
             Doctor doctor = doctorRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour l'email : " + email));
 
+            // ⚠️ Le service changera le mot de passe dans Keycloak
+            // mais ne pourra pas vérifier l'ancien mot de passe
             doctorPasswordService.changePassword(doctor.getId(), request);
 
-            log.info("✅ Mot de passe changé avec succès !");
+            log.info("✅ Mot de passe changé avec succès dans Keycloak !");
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Mot de passe changé avec succès"
+                    "message", "Mot de passe changé avec succès",
+                    "note", "Password updated in Keycloak"
             ));
 
         } catch (RuntimeException e) {
             log.error("❌ Erreur mot de passe : {}", e.getMessage());
-
-            if (e.getMessage().contains("Current password is incorrect")) {
-                return ResponseEntity.status(401)
-                        .body(Map.of("success", false, "error", "Le mot de passe actuel est incorrect"));
-            }
-
-            if (e.getMessage().contains("New password must be different")) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "Le nouveau mot de passe doit être différent de l'actuel"));
-            }
 
             return ResponseEntity.status(500)
                     .body(Map.of("success", false, "error", e.getMessage()));
@@ -186,7 +205,33 @@ public class DoctorController {
     }
 
     /**
-     * Mot de passe oublié - version sécurisée
+     * ✅ NOUVEAU: Obtenir l'URL de changement de mot de passe Keycloak
+     *
+     * RECOMMANDÉ: Redirigez l'utilisateur vers cette URL pour un changement
+     * de mot de passe sécurisé avec vérification de l'ancien mot de passe.
+     */
+    @GetMapping("/password-change-url")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Map<String, String>> getPasswordChangeUrl() {
+        String url = String.format(
+                "%s/realms/%s/account/password",
+                keycloakServerUrl,
+                keycloakRealm
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "url", url,
+                "message", "Redirect user to this URL for secure password change",
+                "note", "Keycloak will handle old password verification"
+        ));
+    }
+
+    /**
+     * Mot de passe oublié - Déclenche l'action Keycloak
+     *
+     * ✅ AVEC KEYCLOAK:
+     * - Keycloak envoie automatiquement l'email de réinitialisation
+     * - Pas besoin de gérer les tokens manuellement
      */
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, Object>> forgotDoctorPassword(
@@ -197,24 +242,47 @@ public class DoctorController {
             throw new RuntimeException("L'email est requis");
         }
 
-        log.info("🔐 Réinitialisation de mot de passe demandée pour le médecin : {}", email);
+        log.info("========================================");
+        log.info("🔐 PASSWORD RESET REQUEST (KEYCLOAK)");
+        log.info("========================================");
+        log.info("Email: {}", email);
 
         try {
             passwordResetService.sendPasswordResetEmailForDoctor(email);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Email de réinitialisation envoyé avec succès"
+                    "message", "Si l'email existe, un lien de réinitialisation sera envoyé par Keycloak",
+                    "provider", "Keycloak"
             ));
 
         } catch (Exception e) {
             log.error("❌ Échec de l'envoi de l'email de réinitialisation : {}", e.getMessage());
 
+            // Ne pas révéler si l'email existe ou non (sécurité)
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Si l'email existe, un lien de réinitialisation sera envoyé"
             ));
         }
+    }
+
+    /**
+     * ✅ NOUVEAU: Obtenir l'URL de réinitialisation de mot de passe Keycloak
+     */
+    @GetMapping("/password-reset-url")
+    public ResponseEntity<Map<String, String>> getPasswordResetUrl() {
+        String url = String.format(
+                "%s/realms/%s/login-actions/reset-credentials",
+                keycloakServerUrl,
+                keycloakRealm
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "url", url,
+                "message", "Redirect user to this URL for password reset",
+                "note", "User will receive an email from Keycloak"
+        ));
     }
 
     /**

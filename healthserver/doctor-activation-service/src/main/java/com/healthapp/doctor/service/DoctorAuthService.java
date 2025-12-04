@@ -1,8 +1,10 @@
 package com.healthapp.doctor.service;
 
 import com.healthapp.doctor.client.NotificationClient;
+import com.healthapp.doctor.dto.request.DoctorLoginRequest;
 import com.healthapp.doctor.dto.request.DoctorRegisterRequest;
 import com.healthapp.doctor.dto.request.EmailNotificationRequest;
+import com.healthapp.doctor.dto.response.AuthResponse;
 import com.healthapp.doctor.dto.response.DoctorResponse;
 import com.healthapp.doctor.entity.Doctor;
 import com.healthapp.doctor.entity.DoctorActivationRequest;
@@ -143,6 +145,17 @@ public class DoctorAuthService {
         } catch (Exception e) {
             log.error("❌ Failed to register doctor: {}", request.getEmail(), e);
             throw new RuntimeException("Failed to register doctor: " + e.getMessage(), e);
+        }
+    }
+
+    public AuthResponse login(DoctorLoginRequest request) {
+        log.info("🔐 Authenticating doctor with Keycloak: {}", request.getEmail());
+
+        try {
+            return keycloakUserService.login(request.getEmail(), request.getPassword());
+        } catch (Exception e) {
+            log.error("❌ Doctor login failed", e);
+            throw new RuntimeException("Invalid email or password");
         }
     }
 
