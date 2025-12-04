@@ -23,7 +23,11 @@ public interface DoctorRepository extends MongoRepository<Doctor, String> {
     List<Doctor> findByActivationStatus(String activationStatus);
     
     List<Doctor> findByIsActivatedTrue();
-    
+
+    /**
+     * ✅ NOUVEAU: Vérifier si un userId (Keycloak ID) existe déjà
+     */
+    boolean existsByUserId(String userId);
     List<Doctor> findBySpecialization(String specialization);
     
     List<Doctor> findByHospitalAffiliation(String hospitalAffiliation);

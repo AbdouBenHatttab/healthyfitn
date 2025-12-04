@@ -4,6 +4,7 @@ import com.healthapp.doctor.dto.request.UpdateDoctorProfileRequest;
 import com.healthapp.doctor.dto.response.DoctorResponse;
 import com.healthapp.doctor.entity.Doctor;
 import com.healthapp.doctor.repository.DoctorRepository;
+import com.healthapp.doctor.service.DoctorKeycloakSyncService;
 import com.healthapp.doctor.service.DoctorPasswordResetService;
 import com.healthapp.doctor.service.DoctorPasswordService;
 import com.healthapp.doctor.dto.request.ChangePasswordRequest;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.PostConstruct;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
  * Contrôleur pour les médecins authentifiés avec Keycloak
  *
  * ✅ CHANGEMENTS AVEC KEYCLOAK:
+ * - Extraction de l'ID Keycloak depuis le JWT (authentication.getName() = sub claim)
+ * - Recherche du doctor par userId (Keycloak ID) au lieu de email
  * - /forgot-password : Déclenche l'action Keycloak
  * - /change-password : Met à jour dans Keycloak (avec limitations)
  *
@@ -41,6 +46,8 @@ public class DoctorController {
     private final DoctorRepository doctorRepository;
     private final DoctorPasswordService doctorPasswordService;
     private final DoctorPasswordResetService passwordResetService;
+    private final DoctorKeycloakSyncService keycloakSyncService;
+
 
     @Value("${keycloak.realm}")
     private String keycloakRealm;
@@ -93,25 +100,63 @@ public class DoctorController {
     }
 
     /**
+     * ENDPOINT DEBUG - Affiche les informations du JWT
+     */
+    @GetMapping("/debug/jwt-info")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Map<String, Object>> getJwtInfo(Authentication authentication) {
+        Map<String, Object> jwtInfo = new HashMap<>();
+
+        jwtInfo.put("authenticationType", authentication.getClass().getSimpleName());
+        jwtInfo.put("name", authentication.getName());
+        jwtInfo.put("authorities", authentication.getAuthorities().stream()
+                .map(Object::toString)
+                .collect(Collectors.toList()));
+
+        if (authentication instanceof JwtAuthenticationToken) {
+            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+            Jwt jwt = jwtAuth.getToken();
+
+            jwtInfo.put("subject", jwt.getSubject());
+            jwtInfo.put("email", jwt.getClaim("email"));
+            jwtInfo.put("preferredUsername", jwt.getClaim("preferred_username"));
+            jwtInfo.put("givenName", jwt.getClaim("given_name"));
+            jwtInfo.put("familyName", jwt.getClaim("family_name"));
+        }
+
+        return ResponseEntity.ok(jwtInfo);
+    }
+
+    /**
      * Récupérer le profil du médecin authentifié
+     *
+     * ✅ CORRECTION: Recherche par userId (Keycloak ID) au lieu de email
      */
     @GetMapping("/profile")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<DoctorResponse> getDoctorProfile(Authentication authentication) {
-        String email = authentication.getName();
-        log.info("🔍 [PROFIL] Recherche du profil du médecin pour l'email : '{}'", email);
+        // ✅ Extraire l'ID Keycloak depuis le JWT
+        String keycloakUserId = extractKeycloakUserId(authentication);
 
-        Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour l'email : " + email));
+        log.info("🔍 [PROFIL] Recherche du profil du médecin pour Keycloak ID : '{}'", keycloakUserId);
 
-        log.info("✅ [PROFIL] Médecin trouvé : id={}, email='{}', contactEmail='{}'",
-                doctor.getId(), doctor.getEmail(), doctor.getContactEmail());
+        // ✅ Rechercher par userId (Keycloak ID)
+        Doctor doctor = doctorRepository.findByUserId(keycloakUserId)
+                .orElseThrow(() -> {
+                    log.error("❌ Médecin non trouvé pour Keycloak ID : {}", keycloakUserId);
+                    return new RuntimeException("Médecin non trouvé pour cet utilisateur");
+                });
+
+        log.info("✅ [PROFIL] Médecin trouvé : id={}, email='{}', contactEmail='{}', userId='{}'",
+                doctor.getId(), doctor.getEmail(), doctor.getContactEmail(), doctor.getUserId());
 
         return ResponseEntity.ok(mapToDoctorResponse(doctor));
     }
 
     /**
      * Mettre à jour le profil du médecin
+     *
+     * ✅ CORRECTION: Recherche par userId (Keycloak ID) au lieu de email
      */
     @PutMapping("/profile")
     @PreAuthorize("hasRole('DOCTOR')")
@@ -119,12 +164,16 @@ public class DoctorController {
             @RequestBody UpdateDoctorProfileRequest request,
             Authentication authentication) {
 
-        String email = authentication.getName();
-        log.info("🔄 [MISE À JOUR] Mise à jour du profil pour l'email : '{}'", email);
+        // ✅ Extraire l'ID Keycloak depuis le JWT
+        String keycloakUserId = extractKeycloakUserId(authentication);
 
-        Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour l'email : " + email));
+        log.info("🔄 [MISE À JOUR] Mise à jour du profil pour Keycloak ID : '{}'", keycloakUserId);
 
+        // ✅ Rechercher par userId (Keycloak ID)
+        Doctor doctor = doctorRepository.findByUserId(keycloakUserId)
+                .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour cet utilisateur"));
+
+        // Mise à jour des champs
         if (request.getFirstName() != null) doctor.setFirstName(request.getFirstName());
         if (request.getLastName() != null) doctor.setLastName(request.getLastName());
         if (request.getPhoneNumber() != null) doctor.setPhoneNumber(request.getPhoneNumber());
@@ -139,8 +188,11 @@ public class DoctorController {
         if (request.getConsultationHours() != null) doctor.setConsultationHours(request.getConsultationHours());
         if (request.getProfilePictureUrl() != null) doctor.setProfilePictureUrl(request.getProfilePictureUrl());
 
+        // ✅ MISE À JOUR KEYCLOAK
+        keycloakSyncService.updateDoctorInKeycloak(keycloakUserId, request);
         Doctor updatedDoctor = doctorRepository.save(doctor);
-        log.info("✅ [MISE À JOUR] Profil du médecin mis à jour : {}", doctor.getEmail());
+        log.info("✅ [MISE À JOUR] Profil du médecin mis à jour : {} ({})",
+                doctor.getEmail(), doctor.getUserId());
 
         return ResponseEntity.ok(mapToDoctorResponse(updatedDoctor));
     }
@@ -170,7 +222,8 @@ public class DoctorController {
         log.warn("⚠️ RECOMMENDATION: Use Keycloak Account Console for secure password change");
 
         try {
-            String email = authentication.getName();
+            // ✅ Extraire l'ID Keycloak depuis le JWT
+            String keycloakUserId = extractKeycloakUserId(authentication);
 
             if (request.getNewPassword() == null || request.getNewPassword().isEmpty()) {
                 log.error("❌ Nouveau mot de passe manquant");
@@ -181,8 +234,9 @@ public class DoctorController {
                         ));
             }
 
-            Doctor doctor = doctorRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour l'email : " + email));
+            // ✅ Rechercher par userId (Keycloak ID)
+            Doctor doctor = doctorRepository.findByUserId(keycloakUserId)
+                    .orElseThrow(() -> new RuntimeException("Médecin non trouvé pour cet utilisateur"));
 
             // ⚠️ Le service changera le mot de passe dans Keycloak
             // mais ne pourra pas vérifier l'ancien mot de passe
@@ -239,7 +293,11 @@ public class DoctorController {
 
         String email = request.get("email");
         if (email == null || email.isEmpty()) {
-            throw new RuntimeException("L'email est requis");
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "success", false,
+                            "error", "L'email est requis"
+                    ));
         }
 
         log.info("========================================");
@@ -283,6 +341,33 @@ public class DoctorController {
                 "message", "Redirect user to this URL for password reset",
                 "note", "User will receive an email from Keycloak"
         ));
+    }
+
+    /**
+     * ✅ MÉTHODE UTILITAIRE: Extraire l'ID Keycloak depuis le JWT
+     *
+     * Le JWT Keycloak contient:
+     * - sub (subject): L'ID utilisateur Keycloak (UUID)
+     * - email: L'email de l'utilisateur
+     * - preferred_username: Le nom d'utilisateur
+     *
+     * authentication.getName() retourne le "sub" (subject) qui est l'ID Keycloak
+     */
+    private String extractKeycloakUserId(Authentication authentication) {
+        // authentication.getName() retourne le "sub" claim du JWT = Keycloak User ID
+        String keycloakUserId = authentication.getName();
+
+        log.debug("🔑 Extracted Keycloak User ID from JWT: {}", keycloakUserId);
+
+        // Optionnel: Extraire aussi l'email pour logging
+        if (authentication instanceof JwtAuthenticationToken) {
+            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+            Jwt jwt = jwtAuth.getToken();
+            String email = jwt.getClaim("email");
+            log.debug("📧 User email from JWT: {}", email);
+        }
+
+        return keycloakUserId;
     }
 
     /**
