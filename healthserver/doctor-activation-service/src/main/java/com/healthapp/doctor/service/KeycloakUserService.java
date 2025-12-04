@@ -60,6 +60,7 @@ public class KeycloakUserService {
         log.info("Email: {}", email);
         log.info("Name: {} {}", firstName, lastName);
         log.info("User ID: {}", userId);
+        log.info("Password provided: {}", password != null && !password.isEmpty() ? "YES" : "NO");
         log.info("========================================");
 
         try {
@@ -79,8 +80,7 @@ public class KeycloakUserService {
             user.setEmail(email);
             user.setFirstName(firstName);
             user.setLastName(lastName);
-
-            user.setEnabled(false); // ⚠️ DÉSACTIVÉ PAR DÉFAUT - Sera activé après validation admin
+            user.setEnabled(false); // ⚠️ DÉSACTIVÉ - Sera activé après validation admin
             user.setEmailVerified(false);
 
             // Attributs personnalisés
@@ -90,19 +90,27 @@ public class KeycloakUserService {
             attributes.put("activationStatus", List.of("PENDING"));
             user.setAttributes(attributes);
 
-            // ⚠️ PAS DE MOT DE PASSE DÉFINI
-            // L'utilisateur recevra un email pour définir son mot de passe après activation
+            // ✅ CORRECTION CRITIQUE: Définir le mot de passe immédiatement
+            if (password != null && !password.isEmpty()) {
+                CredentialRepresentation credential = new CredentialRepresentation();
+                credential.setType(CredentialRepresentation.PASSWORD);
+                credential.setValue(password);
+                credential.setTemporary(false); // Mot de passe permanent
+                user.setCredentials(List.of(credential));
+                log.info("✅ Password configured for user creation");
+            } else {
+                log.warn("⚠️ No password provided - user won't be able to login");
+            }
 
             // Créer l'utilisateur
             Response response = usersResource.create(user);
 
             if (response.getStatus() == 201) {
-                // Récupérer l'ID de l'utilisateur créé
                 String locationHeader = response.getHeaderString("Location");
                 String keycloakUserId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
 
                 log.info("✅ User created in Keycloak with ID: {}", keycloakUserId);
-                setUserPassword(keycloakUserId, password);
+
                 // Assigner le rôle DOCTOR
                 assignDoctorRole(keycloakUserId);
 
@@ -110,6 +118,7 @@ public class KeycloakUserService {
                 log.info("✅ DOCTOR USER CREATED SUCCESSFULLY");
                 log.info("Keycloak ID: {}", keycloakUserId);
                 log.info("Status: DISABLED (pending activation)");
+                log.info("Password: CONFIGURED");
                 log.info("========================================");
 
                 return keycloakUserId;
@@ -164,24 +173,6 @@ public class KeycloakUserService {
         }
     }
 
-    private void setUserPassword(String userId, String password) {
-        try {
-            // Toujours récupérer localement
-            RealmResource realmResource = keycloak.realm(realm);
-            UserResource userResource = realmResource.users().get(userId);
-
-            CredentialRepresentation credential = new CredentialRepresentation();
-            credential.setType(CredentialRepresentation.PASSWORD);
-            credential.setValue(password);
-            credential.setTemporary(false);
-
-            userResource.resetPassword(credential);
-            log.info("🔐 Mot de passe défini pour l'utilisateur : {}", userId);
-        } catch (Exception e) {
-            log.error("❌ Erreur lors de la définition du mot de passe pour {}: {}", userId, e.getMessage(), e);
-            throw new RuntimeException("Impossible de définir le mot de passe", e);
-        }
-    }
 
 
     /**
