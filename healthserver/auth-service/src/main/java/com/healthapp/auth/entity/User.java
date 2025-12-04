@@ -31,6 +31,9 @@ public class User {
     
     @Id
     private String id;
+
+    @Indexed(unique = true, sparse = true)
+    private String keycloakId; // ✅ LIEN AVEC KEYCLOAK
     
     @NotBlank(message = "Email is required")
     @Email(message = "Email format is invalid")

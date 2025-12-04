@@ -1,8 +1,10 @@
 package com.healthapp.doctor.controller;
 
+import com.healthapp.doctor.repository.AppointmentRepository;
 import com.healthapp.doctor.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +20,8 @@ import java.util.Map;
 public class PublicDoctorAppointmentController {
 
     private final AppointmentService appointmentService;
+    @Autowired
+    private final AppointmentRepository appointmentRepository;
 
     /**
      * Annulation d'un rendez-vous par le patient
@@ -36,12 +40,13 @@ public class PublicDoctorAppointmentController {
         if (reason == null || reason.isBlank()) {
             reason = "Aucune raison fournie";
         }
+        String doctorId = appointmentRepository.findById(appointmentId).get().getDoctorId();
 
         // ✅ ICI LA CORRECTION IMPORTANTE
         appointmentService.cancelAppointment(
                 appointmentId,
-                "SYSTEM",      // doctorId fictif obligatoire pour la sécurité
-                "PATIENT",     // cancelledBy
+                doctorId,      // doctorId
+                body.get("patientId"),     // cancelledBy
                 reason
         );
 

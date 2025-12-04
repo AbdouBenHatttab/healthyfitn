@@ -8,6 +8,7 @@ import com.healthapp.user.Enums.UserRole;
 import com.healthapp.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,11 +36,17 @@ public class AdminController {
     @PostMapping("/search")
     public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> searchUsers(
             @RequestBody UserSearchRequest request) {
-
-        log.info("Admin recherche des utilisateurs avec les critères : {}", request);
-        PageResponse<UserResponse> result = userService.searchUsers(request);
-        return ResponseEntity.ok(ApiResponse.success("Recherche effectuée avec succès", result));
+        try {
+            log.info("Admin recherche des utilisateurs avec les critères : {}", request);
+            PageResponse<UserResponse> result = userService.searchUsers(request);
+            return ResponseEntity.ok(ApiResponse.success("Recherche effectuée avec succès", result));
+        } catch (Exception e) {
+            log.error("Erreur lors de la recherche des utilisateurs", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Une erreur est survenue"));
+        }
     }
+
 
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable String userId) {

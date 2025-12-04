@@ -33,4 +33,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     
     @Query("{ 'accountStatus': ?0 }")
     List<User> findByAccountStatus(String accountStatus);
+    Optional<User> findByKeycloakId(String keycloakId);
+    boolean existsByKeycloakId(String keycloakId);
+
 }

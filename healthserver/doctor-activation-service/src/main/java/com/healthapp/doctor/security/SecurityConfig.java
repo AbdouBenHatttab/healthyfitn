@@ -67,6 +67,7 @@ public class SecurityConfig {
                                     "/api/doctors/debug/**",
                                     "/api/doctors/available",
                                     "/api/doctors/appointments/from-patient",
+                                    "/api/doctors/forgot-password",
                                     "/api/doctors/appointments/patient/**",
                                     "/actuator/**",
                                     "/api/public/**"

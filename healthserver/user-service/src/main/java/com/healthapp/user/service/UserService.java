@@ -68,7 +68,7 @@ public class UserService {
         Page<User> userPage;
         
         if (request.getEmail() != null || request.getFirstName() != null || request.getLastName() != null) {
-            String keyword = request.getEmail() != null ? request.getEmail() : 
+            String keyword = request.getEmail() != null ?  request.getEmail() :
                            request.getFirstName() != null ? request.getFirstName() : 
                            request.getLastName();
             userPage = userRepository.searchUsers(keyword, pageable);

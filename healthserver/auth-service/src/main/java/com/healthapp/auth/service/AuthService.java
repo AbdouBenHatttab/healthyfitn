@@ -130,7 +130,7 @@ public class AuthService {
             );
 
             User user = User.builder()
-                    .id(keycloakUserId)
+                    .keycloakId(keycloakUserId) // ✅ ID KEYCLOAK ICI
                     .email(request.getEmail())
                     .firstName(request.getFirstName())
                     .lastName(request.getLastName())
