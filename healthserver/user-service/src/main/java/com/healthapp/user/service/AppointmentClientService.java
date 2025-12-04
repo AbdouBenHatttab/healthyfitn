@@ -71,12 +71,12 @@ public class AppointmentClientService {
     /**
      * Cancel an existing appointment
      */
-    public void cancelAppointment(String appointmentId, String reason) {
+    public void cancelAppointment(String appointmentId, String reason,String patientId) {
         if (reason == null || reason.isBlank()) {
             reason = "No reason provided";
         }
 
-        CancelAppointmentRequest request = new CancelAppointmentRequest(reason);
+        CancelAppointmentRequest request = new CancelAppointmentRequest(reason,patientId);
 
         log.info("Calling doctor-service cancel endpoint for appointmentId={}", appointmentId);
         Map<String, String> response = doctorServiceClient.cancelAppointment(appointmentId, request);

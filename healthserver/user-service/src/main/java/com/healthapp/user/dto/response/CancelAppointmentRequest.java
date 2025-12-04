@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CancelAppointmentRequest {
     private String reason;
+    private String patientId;
 }
