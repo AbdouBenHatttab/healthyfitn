@@ -1,18 +1,26 @@
 package com.healthapp.doctor.service;
 
+import com.healthapp.doctor.dto.response.AuthResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.ws.rs.core.Response;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
 import java.util.*;
 
 /**
@@ -24,6 +32,8 @@ import java.util.*;
 public class KeycloakUserService {
 
     private final Keycloak keycloak;
+    @Value("${keycloak.server-url}")
+    private String keycloakServerUrl;
 
     @Value("${keycloak.realm}")
     private String realm;
@@ -112,6 +122,45 @@ public class KeycloakUserService {
             throw new RuntimeException("Failed to create user in Keycloak: " + e.getMessage(), e);
         }
     }
+    public AuthResponse login(String email, String password) {
+
+        try {
+            String tokenUrl = keycloakServerUrl
+                    + "/realms/" + realm + "/protocol/openid-connect/token";
+
+            RestTemplate restTemplate = new RestTemplate();
+
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("client_id", "health-backend-services");
+            body.add("grant_type", "password");
+            body.add("username", email);
+            body.add("password", password);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            HttpEntity<MultiValueMap<String, String>> request =
+                    new HttpEntity<>(body, headers);
+
+            ResponseEntity<Map> response =
+                    restTemplate.postForEntity(tokenUrl, request, Map.class);
+
+            Map<String, Object> token = response.getBody();
+
+            return AuthResponse.builder()
+                    .accessToken(token.get("access_token").toString())
+                    .refreshToken(token.get("refresh_token").toString())
+                    .expiresIn(Long.parseLong(token.get("expires_in").toString()))
+                    .tokenType(token.get("token_type").toString())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("❌ Keycloak login failed", e);
+            throw new RuntimeException("Invalid credentials");
+        }
+    }
+
+
 
     /**
      * Assigner le rôle DOCTOR à l'utilisateur

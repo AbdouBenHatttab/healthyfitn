@@ -10,11 +10,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import jakarta.annotation.PostConstruct;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Configuration de sécurité avec Keycloak OAuth2
@@ -56,7 +60,8 @@ public class SecurityConfig {
 
                             // Public endpoints - NO AUTHENTICATION
                             .requestMatchers(
-                                    "/api/doctors/register",       // ✅ Enregistrement public
+                                    "/api/doctors/register",
+                                    "/api/doctors/login",// ✅ Enregistrement public
                                     "/api/doctors/health",
                                     "/api/doctors/test",
                                     "/api/doctors/debug/**",
@@ -102,23 +107,25 @@ public class SecurityConfig {
      */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
 
-        // ✅ Configuration pour extraire les rôles depuis realm_access.roles
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("realm_access.roles");
-        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
 
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+            if (realmAccess == null || realmAccess.get("roles") == null) {
+                return List.<org.springframework.security.core.GrantedAuthority>of();
+            }
 
-        // ✅ Utiliser 'preferred_username' comme principal (email)
-        jwtAuthenticationConverter.setPrincipalClaimName("preferred_username");
+            @SuppressWarnings("unchecked")
+            List<String> roles = (List<String>) realmAccess.get("roles");
 
-        log.info("✅ JWT Authentication Converter configured");
-        log.info("   - Authorities claim: realm_access.roles");
-        log.info("   - Authority prefix: ROLE_");
-        log.info("   - Principal claim: preferred_username");
+            return roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(java.util.stream.Collectors.toList());
+        });
 
-        return jwtAuthenticationConverter;
+        return converter;
     }
+
+
 }

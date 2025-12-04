@@ -1,6 +1,8 @@
 package com.healthapp.doctor.controller;
 
+import com.healthapp.doctor.dto.request.DoctorLoginRequest;
 import com.healthapp.doctor.dto.request.DoctorRegisterRequest;
+import com.healthapp.doctor.dto.response.AuthResponse;
 import com.healthapp.doctor.dto.response.DoctorResponse;
 import com.healthapp.doctor.service.DoctorAuthService;
 import jakarta.validation.Valid;
@@ -66,16 +68,13 @@ public class DoctorAuthController {
      * Voir la documentation Keycloak OAuth2/OIDC pour plus de détails.
      */
 
-    /**
-     * ❌ ENDPOINT SUPPRIMÉ: /forgot-password
-     *
-     * La réinitialisation de mot de passe est maintenant gérée par Keycloak.
-     *
-     * Le frontend doit rediriger vers:
-     * http://localhost:8080/realms/health-app-realm/login-actions/reset-credentials
-     *
-     * Ou utiliser l'API Keycloak pour déclencher l'action UPDATE_PASSWORD.
-     */
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody DoctorLoginRequest request) {
+        log.info("🔐 Doctor login attempt: {}", request.getEmail());
+        AuthResponse response = doctorAuthService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
 
     /**
      * Endpoint de vérification de l'état du service
