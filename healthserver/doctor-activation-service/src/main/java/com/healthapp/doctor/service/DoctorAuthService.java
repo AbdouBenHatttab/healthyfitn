@@ -11,7 +11,6 @@ import com.healthapp.doctor.repository.DoctorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,127 +19,144 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * DoctorAuthService - Direct doctor registration
+ * DoctorAuthService - Enregistrement des médecins avec Keycloak
+ * ⚠️ SANS MOT DE PASSE - Le mot de passe sera défini après activation par l'admin
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class DoctorAuthService {
-    
+
     private final DoctorRepository doctorRepository;
     private final DoctorActivationRequestRepository activationRequestRepository;
     private final NotificationClient notificationClient;
-    private final BCryptPasswordEncoder passwordEncoder;
-    
+    private final KeycloakUserService keycloakUserService;
+
     @Value("${notification.admin-email}")
     private String adminEmail;
-    
+
     /**
-     * Register a new doctor
+     * Enregistrer un nouveau médecin
+     * ✅ Créé dans MongoDB + Keycloak (désactivé, sans mot de passe)
      */
     public DoctorResponse registerDoctor(DoctorRegisterRequest request) {
         log.info("========================================");
-        log.info("🥼 DOCTOR REGISTRATION START");
+        log.info("🥼 DOCTOR REGISTRATION START (KEYCLOAK)");
         log.info("========================================");
         log.info("📧 System Email (login): {}", request.getEmail());
         log.info("📨 Contact Email (notifications): {}", request.getContactEmail());
         log.info("========================================");
-        
+
         // Validation initiale
         if (request.getContactEmail() == null || request.getContactEmail().trim().isEmpty()) {
             log.error("❌ CRITICAL: contactEmail is NULL or EMPTY in request!");
             throw new RuntimeException("Contact email is required for doctor registration");
         }
-        
-        // Check if doctor already exists
+
+        // Vérifier si le médecin existe déjà dans MongoDB
         if (doctorRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Doctor already exists with email: " + request.getEmail());
         }
-        
+
         if (doctorRepository.existsByMedicalLicenseNumber(request.getMedicalLicenseNumber())) {
             throw new RuntimeException("Medical license number already registered");
         }
-        
+
+        // Vérifier si l'utilisateur existe déjà dans Keycloak
+        if (keycloakUserService.userExists(request.getEmail())) {
+            throw new RuntimeException("User already exists in Keycloak with email: " + request.getEmail());
+        }
+
         try {
-            // ✅ STEP 1: Create doctor profile
-            log.info("📝 STEP 1: Creating doctor profile");
-            Doctor doctor = createDoctorProfile(request);
-            
+            // ✅ STEP 1: Créer le profil doctor dans MongoDB (SANS MOT DE PASSE)
+            log.info("📝 STEP 1: Creating doctor profile in MongoDB (no password)");
+            Doctor doctor = createDoctorProfileWithoutPassword(request);
+
             log.info("🔍 Doctor object BEFORE save:");
             log.info("   - email: {}", doctor.getEmail());
-            log.info("   - contactEmail: {}", doctor.getContactEmail());
-            log.info("   - contactEmail is null? {}", doctor.getContactEmail() == null);
-            log.info("   - contactEmail is empty? {}", doctor.getContactEmail() != null && doctor.getContactEmail().isEmpty());
-            
-            // ✅ STEP 2: Save to MongoDB
+            log.info("   - contactEmail: {}", doctor.getEmail());
+            log.info("   - userId: {}", doctor.getUserId());
+            log.info("   - password: NULL");
+
+            // ✅ STEP 2: Sauvegarder dans MongoDB
             log.info("💾 STEP 2: Saving to MongoDB");
             Doctor savedDoctor = doctorRepository.save(doctor);
-            
+
             log.info("✅ Doctor saved to MongoDB:");
             log.info("   - ID: {}", savedDoctor.getId());
+            log.info("   - userId: {}", savedDoctor.getUserId());
             log.info("   - email: {}", savedDoctor.getEmail());
             log.info("   - contactEmail: {}", savedDoctor.getContactEmail());
-            log.info("   - getNotificationEmail(): {}", savedDoctor.getNotificationEmail());
-            log.info("   - createdAt: {}", savedDoctor.getCreatedAt());
-            
-            // ✅ VERIFICATION: Re-fetch from DB to confirm
-            log.info("🔍 VERIFICATION: Re-fetching from database");
-            Doctor verifyDoctor = doctorRepository.findByEmail(savedDoctor.getEmail())
-                    .orElseThrow(() -> new RuntimeException("Doctor not found after save!"));
-            
-            log.info("✅ Doctor re-fetched from DB:");
-            log.info("   - contactEmail in DB: {}", verifyDoctor.getContactEmail());
-            log.info("   - Matches saved object? {}", 
-                    savedDoctor.getContactEmail().equals(verifyDoctor.getContactEmail()));
-            
-            // ✅ STEP 3: Create activation request
-            log.info("📋 STEP 3: Creating activation request");
-            createActivationRequest(savedDoctor);
-            
-            // ✅ STEP 4: Send email to DOCTOR
+
+            // ✅ STEP 3: Créer l'utilisateur dans Keycloak (SANS MOT DE PASSE, DÉSACTIVÉ)
             log.info("========================================");
-            log.info("📧 STEP 4: Sending email to DOCTOR");
+            log.info("🔐 STEP 3: Creating user in Keycloak");
+            log.info("========================================");
+
+            String keycloakUserId = keycloakUserService.createDoctorUserWithoutPassword(
+                    savedDoctor.getEmail(),
+                    savedDoctor.getFirstName(),
+                    savedDoctor.getLastName(),
+                    savedDoctor.getUserId()
+            );
+
+            log.info("✅ User created in Keycloak with ID: {}", keycloakUserId);
+
+            // Stocker le Keycloak ID dans MongoDB pour référence
+            savedDoctor.setUserId(keycloakUserId);
+            doctorRepository.save(savedDoctor);
+
+            // ✅ STEP 4: Créer la demande d'activation
+            log.info("📋 STEP 4: Creating activation request");
+            createActivationRequest(savedDoctor);
+
+            // ✅ STEP 5: Envoyer email au DOCTOR
+            log.info("========================================");
+            log.info("📧 STEP 5: Sending email to DOCTOR");
             log.info("========================================");
             log.info("🎯 Target email: {}", savedDoctor.getNotificationEmail());
             log.info("📝 Template: DOCTOR_REGISTRATION_PENDING");
             log.info("========================================");
-            
+
             sendPendingValidationEmailToDoctor(savedDoctor);
-            
-            // ✅ STEP 5: Send email to ADMIN
+
+            // ✅ STEP 6: Envoyer email à l'ADMIN
             log.info("========================================");
-            log.info("📧 STEP 5: Sending email to ADMIN");
+            log.info("📧 STEP 6: Sending email to ADMIN");
             log.info("========================================");
             log.info("🎯 Admin email: {}", adminEmail);
             log.info("📝 Template: DOCTOR_REGISTRATION_ADMIN_NOTIFICATION");
             log.info("========================================");
-            
+
             notifyAdmins(savedDoctor);
-            
+
             log.info("========================================");
             log.info("✅ DOCTOR REGISTRATION COMPLETED");
             log.info("========================================");
-            
+            log.info("⚠️ Doctor account created WITHOUT password");
+            log.info("⚠️ Doctor will receive password setup email after admin activation");
+            log.info("========================================");
+
             return mapToDoctorResponse(savedDoctor);
-            
+
         } catch (Exception e) {
             log.error("❌ Failed to register doctor: {}", request.getEmail(), e);
             throw new RuntimeException("Failed to register doctor: " + e.getMessage(), e);
         }
     }
+
     /**
-     * Create doctor profile with contactEmail
+     * Créer le profil doctor SANS MOT DE PASSE
      */
-    private Doctor createDoctorProfile(DoctorRegisterRequest request) {
+    private Doctor createDoctorProfileWithoutPassword(DoctorRegisterRequest request) {
         String userId = UUID.randomUUID().toString();
-        String hashedPassword = passwordEncoder.encode(request.getPassword());
-        
+
         return Doctor.builder()
                 .userId(userId)
                 .email(request.getEmail())
-                .contactEmail(request.getContactEmail()) // ✅ NOUVEAU
-                .password(hashedPassword)
+                .contactEmail(request.getContactEmail())
+                //.password(null) // ⚠️ PAS DE MOT DE PASSE
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
@@ -160,9 +176,9 @@ public class DoctorAuthService {
                 .averageRating(0.0)
                 .build();
     }
-    
+
     /**
-     * Create activation request
+     * Créer la demande d'activation
      */
     private void createActivationRequest(Doctor doctor) {
         DoctorActivationRequest activationRequest = DoctorActivationRequest.builder()
@@ -176,71 +192,72 @@ public class DoctorAuthService {
                 .isPending(true)
                 .requestedAt(LocalDateTime.now())
                 .build();
-        
+
         activationRequestRepository.save(activationRequest);
     }
-    
+
     /**
-     * ✅ Send pending validation email to doctor's CONTACT EMAIL
+     * Envoyer email de confirmation au médecin
      */
     private void sendPendingValidationEmailToDoctor(Doctor doctor) {
         try {
             String emailTo = doctor.getNotificationEmail();
             log.info("📧 Sending pending validation email to: {}", emailTo);
-            
+
             EmailNotificationRequest emailRequest = EmailNotificationRequest.builder()
-                    .to(emailTo) // ✅ Contact email, pas system email
+                    .to(emailTo)
                     .subject("Registration Received - Pending Validation")
                     .templateType("DOCTOR_REGISTRATION_PENDING")
                     .templateVariables(Map.of(
-                        "doctorFirstName", doctor.getFirstName(),
-                        "doctorLastName", doctor.getLastName(),
-                        "registrationDate", doctor.getCreatedAt().toString()
+                            "doctorFirstName", doctor.getFirstName(),
+                            "doctorLastName", doctor.getLastName(),
+                            "registrationDate", doctor.getCreatedAt().toString(),
+                            "note", "You will receive an email to set your password once your account is activated."
                     ))
                     .build();
-            
+
             notificationClient.sendEmail(emailRequest);
             log.info("✅ Pending validation email sent to: {}", emailTo);
-            
+
         } catch (Exception e) {
             log.error("❌ Failed to send pending validation email", e);
         }
     }
-    
+
     /**
-     * Notify admins
+     * Notifier les admins
      */
     private void notifyAdmins(Doctor doctor) {
         try {
             log.info("📧 Sending notification to admin: {}", adminEmail);
-            
+
             EmailNotificationRequest emailRequest = EmailNotificationRequest.builder()
                     .to(adminEmail)
                     .subject("New Doctor Registration - Approval Required")
                     .templateType("DOCTOR_REGISTRATION_ADMIN_NOTIFICATION")
                     .templateVariables(Map.of(
-                        "adminName", "Admin",
-                        "doctorName", doctor.getFullName(),
-                        "doctorEmail", doctor.getEmail(),
-                        "doctorContactEmail", doctor.getContactEmail(), // ✅ Inclus dans notification admin
-                        "medicalLicense", doctor.getMedicalLicenseNumber(),
-                        "specialization", doctor.getSpecialization(),
-                        "hospital", doctor.getHospitalAffiliation(),
-                        "experience", doctor.getYearsOfExperience(),
-                        "registrationDate", doctor.getCreatedAt().toString()
+                            "adminName", "Admin",
+                            "doctorName", doctor.getFullName(),
+                            "doctorEmail", doctor.getEmail(),
+                            "doctorContactEmail", doctor.getContactEmail(),
+                            "medicalLicense", doctor.getMedicalLicenseNumber(),
+                            "specialization", doctor.getSpecialization(),
+                            "hospital", doctor.getHospitalAffiliation(),
+                            "experience", doctor.getYearsOfExperience(),
+                            "registrationDate", doctor.getCreatedAt().toString()
                     ))
                     .build();
-            
+
             notificationClient.sendEmail(emailRequest);
             log.info("✅ Admin notification sent to: {}", adminEmail);
-            
+
         } catch (Exception e) {
             log.error("❌ Failed to send admin notification", e);
         }
     }
-    
+
     /**
-     * Map Doctor to DoctorResponse
+     * Mapper vers DoctorResponse
      */
     private DoctorResponse mapToDoctorResponse(Doctor doctor) {
         return DoctorResponse.builder()

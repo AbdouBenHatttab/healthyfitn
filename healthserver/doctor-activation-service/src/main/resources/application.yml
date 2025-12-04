@@ -1,31 +1,53 @@
-# Configuration du Doctor Activation Service
+# Configuration du Doctor Activation Service avec Keycloak
 
 spring:
   application:
     name: doctor-activation-service
-  
+
   data:
     mongodb:
       uri: mongodb://localhost:27017/health_doctor_db
-  
+
   cloud:
     config:
       enabled: false
-  
+
   main:
     allow-bean-definition-overriding: true
-  
-  # ✅ CORRECTION: Configuration Web/MVC pour éviter que /api/** soit traité comme ressource statique
+
+  # Configuration Web/MVC
   web:
     resources:
       add-mappings: true
       static-locations: classpath:/static/,classpath:/public/
-  
+
   mvc:
     static-path-pattern: /static/**
     throw-exception-if-no-handler-found: true
     pathmatch:
       matching-strategy: ant_path_matcher
+
+  # 🔐 CONFIGURATION KEYCLOAK
+  security:
+    oauth2:
+      # Configuration Resource Server (pour valider les tokens)
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/health-app-realm
+
+      # Configuration Client (pour communiquer avec Keycloak Admin)
+      client:
+        registration:
+          keycloak:
+            client-id: health-backend-services
+            client-secret: QjKkJoIsqB4rbXHqv53ofsPuw0O7Qz57
+            authorization-grant-type: client_credentials
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/health-app-realm
+            user-name-attribute: preferred_username
 
 # Configuration des notifications
 notification:
@@ -55,7 +77,7 @@ feign:
       default:
         connectTimeout: 5000
         readTimeout: 5000
-        loggerLevel: full  
+        loggerLevel: full
   circuitbreaker:
     enabled: true
 
@@ -76,13 +98,30 @@ resilience4j:
         wait-duration-in-open-state: 10s
         failure-rate-threshold: 50
 
-# JWT Configuration
-app:
-  jwt:
-    secret: 21f4e176cd2f4b991bd27fd94a7acfa923a032015252f7f725cee7761503b6120d0f92dcda38390c619190e921833477ea8f32100e9d59bcd398073b1552c15e
-    expiration: 900000  # 15 minutes
-    refresh-token:
-      expiration: 604800000  # 7 jours
+# ⚠️ CONFIGURATION KEYCLOAK ADMIN CLIENT
+keycloak:
+  server-url: http://localhost:8080
+  realm: health-app-realm
+
+  # Credentials admin pour créer les utilisateurs
+  admin:
+    realm: master
+    username: amine
+    password: Password123!
+    client-id: admin-cli
+
+  # Configuration des rôles
+  roles:
+    user: USER
+    doctor: DOCTOR
+    admin: ADMIN
+
+# WebRTC Configuration avec Metered.ca
+webrtc:
+  metered:
+    domain: web_rtc.metered.live
+    secret-key: 4a562d19fd3a2762f0135ec749763bde501d
+    credential-ttl: 86400  # 24 heures
 
 # Actuator Configuration
 management:
@@ -98,18 +137,8 @@ management:
 logging:
   level:
     com.healthapp.doctor: DEBUG
-    org.springframework.cloud.openfeign: DEBUG
+    org.springframework.security: DEBUG
+    org.keycloak: DEBUG
     org.springframework.web.servlet.mvc: DEBUG
-    org.springframework.web.servlet.handler: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-
-# ============================================================
-# WebRTC Configuration avec Metered.ca (TURN temporaire)
-# ============================================================
-webrtc:
-  metered:
-    domain: web_rtc.metered.live
-    secret-key: 4a562d19fd3a2762f0135ec749763bde501d
-    credential-ttl: 86400  # 24 heures (en secondes)
-
