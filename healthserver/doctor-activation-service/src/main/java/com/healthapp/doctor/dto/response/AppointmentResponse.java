@@ -1,9 +1,9 @@
 package com.healthapp.doctor.dto.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
@@ -34,11 +34,23 @@ public class AppointmentResponse {
     private String notes;
     private String status;
 
-    // Consultation (if completed)
+    // ✅ RÉPONSE DU DOCTEUR
+    private String doctorResponse;
+    private String doctorResponseReason;
+    private String availableHoursSuggestion;
+    private LocalDateTime respondedAt;
+
+    // ✅ CONSULTATION
     private String diagnosis;
     private String prescription;
     private String doctorNotes;
     private LocalDateTime completedAt;
 
+    // ✅ ANNULATION
+    private String cancelledBy;
+    private String cancellationReason;
+    private LocalDateTime cancelledAt;
+
+    // Audit
     private LocalDateTime createdAt;
 }

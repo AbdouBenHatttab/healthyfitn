@@ -24,7 +24,6 @@ public class PublicDoctorAppointmentController {
      *
      * @param appointmentId ID du rendez-vous à annuler
      * @param body Contient la raison de l'annulation (optionnelle)
-     * @return Statut de l'annulation
      */
     @PostMapping("/{appointmentId}/cancel")
     public ResponseEntity<Map<String, String>> cancelAppointmentByPatient(
@@ -38,8 +37,13 @@ public class PublicDoctorAppointmentController {
             reason = "Aucune raison fournie";
         }
 
-        // Appel du service pour annuler le rendez-vous côté patient
-        appointmentService.cancelAppointment(appointmentId, "PATIENT", reason);
+        // ✅ ICI LA CORRECTION IMPORTANTE
+        appointmentService.cancelAppointment(
+                appointmentId,
+                "SYSTEM",      // doctorId fictif obligatoire pour la sécurité
+                "PATIENT",     // cancelledBy
+                reason
+        );
 
         return ResponseEntity.ok(Map.of(
                 "status", "success",

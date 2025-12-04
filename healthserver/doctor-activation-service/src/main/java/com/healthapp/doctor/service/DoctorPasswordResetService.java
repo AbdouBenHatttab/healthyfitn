@@ -10,14 +10,17 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import jakarta.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Service de réinitialisation de mot de passe avec Keycloak
  *
- * ✅ CHANGEMENT MAJEUR:
- * La réinitialisation de mot de passe est maintenant déléguée à Keycloak.
- * Ce service déclenche l'action "UPDATE_PASSWORD" qui envoie un email au doctor.
+ * ✅ FONCTIONNALITÉS:
+ * 1. Déclenche l'action UPDATE_PASSWORD dans Keycloak
+ * 2. Keycloak envoie automatiquement un email au doctor
+ * 3. Le doctor clique sur le lien et réinitialise son mot de passe
  */
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,9 @@ public class DoctorPasswordResetService {
 
     @Value("${keycloak.realm}")
     private String realm;
+
+    @Value("${keycloak.server-url}")
+    private String keycloakServerUrl;
 
     /**
      * Déclencher la réinitialisation de mot de passe via Keycloak
@@ -67,7 +73,7 @@ public class DoctorPasswordResetService {
             sendKeycloakPasswordResetEmail(doctor.getUserId(), email);
 
             log.info("========================================");
-            log.info("✅ PASSWORD RESET EMAIL SENT BY KEYCLOAK");
+            log.info("✅ PASSWORD RESET EMAIL TRIGGERED IN KEYCLOAK");
             log.info("========================================");
 
         } catch (Exception e) {
@@ -84,24 +90,33 @@ public class DoctorPasswordResetService {
             log.info("📧 Triggering Keycloak password reset action");
             log.info("   Keycloak User ID: {}", keycloakUserId);
 
-            // Récupérer l'utilisateur dans Keycloak
             UserResource userResource = keycloak.realm(realm)
                     .users()
                     .get(keycloakUserId);
 
             UserRepresentation user = userResource.toRepresentation();
 
-            // Vérifier que l'utilisateur est activé
-            if (!user.isEnabled()) {
-                log.warn("⚠️ User is disabled in Keycloak: {}", email);
-                return;
+            if (user == null) {
+                log.error("❌ User not found in Keycloak: {}", keycloakUserId);
+                throw new RuntimeException("User not found in Keycloak");
             }
 
-            // ✅ Déclencher l'action UPDATE_PASSWORD
-            // Keycloak enverra automatiquement un email avec un lien de réinitialisation
-            userResource.executeActionsEmail(List.of("UPDATE_PASSWORD"));
+            if (!user.isEnabled()) {
+                log.warn("⚠️ User is disabled in Keycloak: {}", email);
+                throw new RuntimeException("User account is disabled");
+            }
 
-            log.info("✅ Keycloak password reset email sent to: {}", email);
+            if (user.getEmail() == null || user.getEmail().isEmpty()) {
+                log.error("❌ User has no email in Keycloak: {}", keycloakUserId);
+                throw new RuntimeException("User has no email configured");
+            }
+
+            // ✅ NOUVELLE VERSION KEYCLOAK → VOID
+            userResource.executeActionsEmail(
+                    Collections.singletonList("UPDATE_PASSWORD")
+            );
+
+            log.info("✅ Keycloak password reset email sent successfully to: {}", email);
             log.info("   The user will receive an email with a password reset link");
 
         } catch (Exception e) {
@@ -109,32 +124,55 @@ public class DoctorPasswordResetService {
             log.error("   Keycloak User ID: {}", keycloakUserId);
             log.error("   Error: {}", e.getMessage());
 
-            throw new RuntimeException("Failed to send password reset email: " + e.getMessage(), e);
+            throw new RuntimeException(
+                    "Failed to send password reset email: " + e.getMessage(), e
+            );
         }
     }
 
+
     /**
-     * ⚠️ MÉTHODE OBSOLÈTE - Gardée pour compatibilité
-     *
-     * Avec Keycloak, on n'utilise plus de tokens manuels.
-     * Keycloak génère ses propres tokens sécurisés.
+     * Obtenir l'URL de réinitialisation de mot de passe Keycloak
+     * Alternative: Rediriger l'utilisateur vers cette page
      */
-    @Deprecated
-    public String generateResetToken(String email) {
-        log.warn("⚠️ generateResetToken() is deprecated with Keycloak");
-        log.warn("   Password reset is now handled entirely by Keycloak");
-        return null;
+    public String getPasswordResetUrl() {
+        return String.format(
+                "%s/realms/%s/login-actions/reset-credentials",
+                keycloakServerUrl,
+                realm
+        );
     }
 
     /**
-     * ⚠️ MÉTHODE OBSOLÈTE - Gardée pour compatibilité
-     *
-     * Avec Keycloak, la validation des tokens est gérée par Keycloak.
+     * Vérifier si un utilisateur existe et est activé
+     * Utilisé pour valider avant d'envoyer l'email
      */
-    @Deprecated
-    public boolean validateResetToken(String token) {
-        log.warn("⚠️ validateResetToken() is deprecated with Keycloak");
-        log.warn("   Token validation is now handled entirely by Keycloak");
-        return false;
+    public boolean isDoctorEligibleForPasswordReset(String email) {
+        try {
+            Doctor doctor = doctorRepository.findByEmail(email).orElse(null);
+
+            if (doctor == null) {
+                log.debug("Doctor not found: {}", email);
+                return false;
+            }
+
+            if (!doctor.getIsActivated()) {
+                log.debug("Doctor not activated: {}", email);
+                return false;
+            }
+
+            // Vérifier dans Keycloak
+            UserResource userResource = keycloak.realm(realm)
+                    .users()
+                    .get(doctor.getUserId());
+
+            UserRepresentation user = userResource.toRepresentation();
+
+            return user != null && user.isEnabled();
+
+        } catch (Exception e) {
+            log.error("Error checking doctor eligibility: {}", e.getMessage());
+            return false;
+        }
     }
 }
