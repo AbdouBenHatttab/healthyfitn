@@ -1,6 +1,7 @@
 package com.healthapp.doctor.service;
 
 import com.healthapp.doctor.dto.response.AuthResponse;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpEntity;
@@ -37,6 +38,7 @@ public class KeycloakUserService {
 
     @Value("${keycloak.realm}")
     private String realm;
+    private RealmResource realmResource;
 
     @Value("${keycloak.roles.doctor:DOCTOR}")
     private String doctorRole;
@@ -45,10 +47,11 @@ public class KeycloakUserService {
      * Créer un utilisateur doctor dans Keycloak
      * ⚠️ SANS MOT DE PASSE - L'utilisateur devra définir son mot de passe lors de la première connexion
      */
-    public String createDoctorUserWithoutPassword(
+    public String createDoctorUser(
             String email,
             String firstName,
             String lastName,
+            String password,
             String userId) {
 
         log.info("========================================");
@@ -76,6 +79,7 @@ public class KeycloakUserService {
             user.setEmail(email);
             user.setFirstName(firstName);
             user.setLastName(lastName);
+
             user.setEnabled(false); // ⚠️ DÉSACTIVÉ PAR DÉFAUT - Sera activé après validation admin
             user.setEmailVerified(false);
 
@@ -98,7 +102,7 @@ public class KeycloakUserService {
                 String keycloakUserId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
 
                 log.info("✅ User created in Keycloak with ID: {}", keycloakUserId);
-
+                setUserPassword(keycloakUserId, password);
                 // Assigner le rôle DOCTOR
                 assignDoctorRole(keycloakUserId);
 
@@ -160,6 +164,24 @@ public class KeycloakUserService {
         }
     }
 
+    private void setUserPassword(String userId, String password) {
+        try {
+            // Toujours récupérer localement
+            RealmResource realmResource = keycloak.realm(realm);
+            UserResource userResource = realmResource.users().get(userId);
+
+            CredentialRepresentation credential = new CredentialRepresentation();
+            credential.setType(CredentialRepresentation.PASSWORD);
+            credential.setValue(password);
+            credential.setTemporary(false);
+
+            userResource.resetPassword(credential);
+            log.info("🔐 Mot de passe défini pour l'utilisateur : {}", userId);
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de la définition du mot de passe pour {}: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Impossible de définir le mot de passe", e);
+        }
+    }
 
 
     /**

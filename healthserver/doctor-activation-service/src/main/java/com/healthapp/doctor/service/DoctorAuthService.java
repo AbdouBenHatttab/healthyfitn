@@ -96,10 +96,11 @@ public class DoctorAuthService {
             log.info("🔐 STEP 3: Creating user in Keycloak");
             log.info("========================================");
 
-            String keycloakUserId = keycloakUserService.createDoctorUserWithoutPassword(
+            String keycloakUserId = keycloakUserService.createDoctorUser(
                     savedDoctor.getEmail(),
                     savedDoctor.getFirstName(),
                     savedDoctor.getLastName(),
+                    savedDoctor.getPassword(),
                     savedDoctor.getUserId()
             );
 
