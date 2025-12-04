@@ -106,9 +106,13 @@ public class DoctorAuthService {
 
             log.info("✅ User created in Keycloak with ID: {}", keycloakUserId);
 
-            // Stocker le Keycloak ID dans MongoDB pour référence
-            savedDoctor.setUserId(keycloakUserId);
+            // ✅ Stocker le Keycloak ID dans MongoDB
+            savedDoctor.setKeycloakUserId(keycloakUserId);
+            savedDoctor.setUserId(keycloakUserId); // Utiliser le même ID
+            savedDoctor.setPassword(null);
             doctorRepository.save(savedDoctor);
+
+            log.info("✅ Keycloak User ID stored in MongoDB: {}", keycloakUserId);
 
             // ✅ STEP 4: Créer la demande d'activation
             log.info("📋 STEP 4: Creating activation request");
@@ -167,10 +171,10 @@ public class DoctorAuthService {
         String userId = UUID.randomUUID().toString();
 
         return Doctor.builder()
-                .userId(userId)
+                .userId(userId) // ✅ Sera remplacé par le Keycloak ID
                 .email(request.getEmail())
                 .contactEmail(request.getContactEmail())
-                //.password(null) // ⚠️ PAS DE MOT DE PASSE
+                .password(request.getPassword()) // ✅ STOCKER le mot de passe temporairement
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
