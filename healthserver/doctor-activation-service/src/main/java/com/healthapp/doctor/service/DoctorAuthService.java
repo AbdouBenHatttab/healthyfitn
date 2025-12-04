@@ -10,6 +10,7 @@ import com.healthapp.doctor.entity.Doctor;
 import com.healthapp.doctor.entity.DoctorActivationRequest;
 import com.healthapp.doctor.repository.DoctorActivationRequestRepository;
 import com.healthapp.doctor.repository.DoctorRepository;
+import org.keycloak.representations.idm.UserRepresentation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -153,14 +155,90 @@ public class DoctorAuthService {
         }
     }
 
+    /**
+     * Login du docteur avec vérification du statut d'activation
+     */
     public AuthResponse login(DoctorLoginRequest request) {
-        log.info("🔐 Authenticating doctor with Keycloak: {}", request.getEmail());
+        log.info("========================================");
+        log.info("🔐 DOCTOR LOGIN ATTEMPT");
+        log.info("========================================");
+        log.info("📧 Email: {}", request.getEmail());
+        log.info("========================================");
 
         try {
-            return keycloakUserService.login(request.getEmail(), request.getPassword());
+            // 1. Vérifier si le docteur existe dans MongoDB
+            Doctor doctor = doctorRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> {
+                        log.error("❌ Doctor not found in MongoDB: {}", request.getEmail());
+                        return new RuntimeException("Account not found. Please register first.");
+                    });
+
+            log.info("✅ Doctor found in MongoDB:");
+            log.info("   - ID: {}", doctor.getId());
+            log.info("   - Activation Status: {}", doctor.getActivationStatus());
+            log.info("   - Is Activated: {}", doctor.getIsActivated());
+            log.info("   - Keycloak User ID: {}", doctor.getKeycloakUserId());
+
+            // 2. Vérifier le statut d'activation
+            if (!doctor.getIsActivated()) {
+                log.warn("❌ Doctor account not activated yet: {}", request.getEmail());
+
+                if ("PENDING".equals(doctor.getActivationStatus())) {
+                    throw new RuntimeException(
+                            "Your account is pending admin approval. " +
+                                    "You will receive an email once your account is activated."
+                    );
+                } else if ("REJECTED".equals(doctor.getActivationStatus())) {
+                    throw new RuntimeException(
+                            "Your account has been rejected. " +
+                                    "Please contact support for more information."
+                    );
+                } else {
+                    throw new RuntimeException(
+                            "Your account is not activated. " +
+                                    "Please contact support."
+                    );
+                }
+            }
+
+            // 3. Vérifier dans Keycloak
+            Optional<UserRepresentation> keycloakUser =
+                    keycloakUserService.getUserByEmail(request.getEmail());
+
+            if (keycloakUser.isEmpty()) {
+                log.error("❌ User not found in Keycloak: {}", request.getEmail());
+                throw new RuntimeException("Account configuration error. Please contact support.");
+            }
+
+            if (!keycloakUser.get().isEnabled()) {
+                log.error("❌ User is disabled in Keycloak: {}", request.getEmail());
+                throw new RuntimeException(
+                        "Your account is disabled. Please contact support."
+                );
+            }
+
+            log.info("✅ All checks passed, authenticating with Keycloak...");
+
+            // 4. Authentifier avec Keycloak
+            AuthResponse authResponse = keycloakUserService.login(
+                    request.getEmail(),
+                    request.getPassword()
+            );
+
+            log.info("========================================");
+            log.info("✅ DOCTOR LOGIN SUCCESSFUL");
+            log.info("========================================");
+
+            return authResponse;
+
+        } catch (RuntimeException e) {
+            // Les exceptions avec des messages personnalisés sont relancées telles quelles
+            log.error("❌ Doctor login failed: {}", e.getMessage());
+            throw e;
+
         } catch (Exception e) {
-            log.error("❌ Doctor login failed", e);
-            throw new RuntimeException("Invalid email or password");
+            log.error("❌ Unexpected error during doctor login", e);
+            throw new RuntimeException("Login failed. Please try again later.");
         }
     }
 
