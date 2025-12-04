@@ -51,7 +51,7 @@ public class DoctorPasswordResetService {
 
         try {
             // Vérifier si le doctor existe dans MongoDB
-            Doctor doctor = doctorRepository.findByEmail(email).orElse(null);
+            Doctor doctor = doctorRepository.findByContactEmail(email).orElse(null);
 
             if (doctor == null) {
                 log.warn("⚠️ Doctor not found in MongoDB: {}", email);
