@@ -6,6 +6,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -16,12 +18,18 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 
 import jakarta.ws.rs.core.Response;
+import jakarta.annotation.PostConstruct;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
+import java.time.Duration;
 import java.util.*;
 
 /**
@@ -33,19 +41,42 @@ import java.util.*;
 public class KeycloakUserService {
 
     private final Keycloak keycloak;
+    private final RestTemplateBuilder restTemplateBuilder; // ✅ AJOUTEZ CECI
+    private RestTemplate restTemplate;
+
     @Value("${keycloak.server-url}")
     private String keycloakServerUrl;
 
     @Value("${keycloak.realm}")
     private String realm;
-    private RealmResource realmResource;
+
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-id}")
+    private String clientId;
+
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-secret}")
+    private String clientSecret;
 
     @Value("${keycloak.roles.doctor:DOCTOR}")
     private String doctorRole;
 
     /**
+     * Initialisation du RestTemplate avec timeouts
+     */
+    @PostConstruct
+    public void init() {
+        this.restTemplate = restTemplateBuilder
+                .setConnectTimeout(Duration.ofSeconds(10))
+                .setReadTimeout(Duration.ofSeconds(10))
+                .build();
+
+        log.info("✅ KeycloakUserService initialized with RestTemplate");
+        log.info("🔐 Keycloak Server: {}", keycloakServerUrl);
+        log.info("🔐 Realm: {}", realm);
+        log.info("🔐 Client ID: {}", clientId);
+    }
+
+    /**
      * Créer un utilisateur doctor dans Keycloak
-     * ⚠️ SANS MOT DE PASSE - L'utilisateur devra définir son mot de passe lors de la première connexion
      */
     public String createDoctorUser(
             String email,
@@ -80,7 +111,7 @@ public class KeycloakUserService {
             user.setEmail(email);
             user.setFirstName(firstName);
             user.setLastName(lastName);
-            user.setEnabled(false); // ⚠️ DÉSACTIVÉ - Sera activé après validation admin
+            user.setEnabled(false); // DÉSACTIVÉ - Sera activé après validation admin
             user.setEmailVerified(false);
 
             // Attributs personnalisés
@@ -90,12 +121,12 @@ public class KeycloakUserService {
             attributes.put("activationStatus", List.of("PENDING"));
             user.setAttributes(attributes);
 
-            // ✅ CORRECTION CRITIQUE: Définir le mot de passe immédiatement
+            // Définir le mot de passe immédiatement
             if (password != null && !password.isEmpty()) {
                 CredentialRepresentation credential = new CredentialRepresentation();
                 credential.setType(CredentialRepresentation.PASSWORD);
                 credential.setValue(password);
-                credential.setTemporary(false); // Mot de passe permanent
+                credential.setTemporary(false);
                 user.setCredentials(List.of(credential));
                 log.info("✅ Password configured for user creation");
             } else {
@@ -135,30 +166,62 @@ public class KeycloakUserService {
             throw new RuntimeException("Failed to create user in Keycloak: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Login avec Keycloak - VERSION CORRIGÉE
+     */
     public AuthResponse login(String email, String password) {
+        log.info("========================================");
+        log.info("🔐 DOCTOR LOGIN WITH KEYCLOAK");
+        log.info("========================================");
+        log.info("📧 Email: {}", email);
+        log.info("🔑 Client ID: {}", clientId);
+        log.info("🌐 Keycloak Server: {}", keycloakServerUrl);
+        log.info("========================================");
 
         try {
             String tokenUrl = keycloakServerUrl
                     + "/realms/" + realm + "/protocol/openid-connect/token";
 
-            RestTemplate restTemplate = new RestTemplate();
+            log.debug("📤 Token URL: {}", tokenUrl);
 
+            // Préparer les paramètres de la requête
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-            body.add("client_id", "health-backend-services");
+            body.add("client_id", clientId);
+            body.add("client_secret", clientSecret);
             body.add("grant_type", "password");
             body.add("username", email);
             body.add("password", password);
 
+            // Configurer les headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
             HttpEntity<MultiValueMap<String, String>> request =
                     new HttpEntity<>(body, headers);
 
-            ResponseEntity<Map> response =
-                    restTemplate.postForEntity(tokenUrl, request, Map.class);
+            log.debug("📤 Sending token request to Keycloak...");
+
+            // Faire la requête
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    tokenUrl,
+                    HttpMethod.POST,
+                    request,
+                    Map.class
+            );
+
+            log.debug("📥 Response received: status = {}", response.getStatusCode());
+
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                log.error("❌ Unexpected response from Keycloak: {}", response.getStatusCode());
+                throw new RuntimeException("Failed to get token from Keycloak");
+            }
 
             Map<String, Object> token = response.getBody();
+
+            log.info("========================================");
+            log.info("✅ LOGIN SUCCESSFUL");
+            log.info("========================================");
 
             return AuthResponse.builder()
                     .accessToken(token.get("access_token").toString())
@@ -167,13 +230,36 @@ public class KeycloakUserService {
                     .tokenType(token.get("token_type").toString())
                     .build();
 
+        } catch (HttpClientErrorException e) {
+            log.error("❌ HTTP Client Error during login");
+            log.error("Status: {}", e.getStatusCode());
+            log.error("Response: {}", e.getResponseBodyAsString());
+
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw new RuntimeException("Invalid email or password");
+            } else if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                throw new RuntimeException("Invalid request. Check Keycloak client configuration.");
+            }
+            throw new RuntimeException("Login failed: " + e.getMessage());
+
+        } catch (HttpServerErrorException e) {
+            log.error("❌ Keycloak Server Error during login");
+            log.error("Status: {}", e.getStatusCode());
+            log.error("Response: {}", e.getResponseBodyAsString());
+            throw new RuntimeException("Authentication server error");
+
+        } catch (ResourceAccessException e) {
+            log.error("❌ Cannot reach Keycloak server");
+            log.error("Error: {}", e.getMessage());
+            throw new RuntimeException("Authentication server is unreachable. Please try again later.");
+
         } catch (Exception e) {
             log.error("❌ Keycloak login failed", e);
-            throw new RuntimeException("Invalid credentials");
+            log.error("Error type: {}", e.getClass().getName());
+            log.error("Error message: {}", e.getMessage());
+            throw new RuntimeException("Login failed: " + e.getMessage());
         }
     }
-
-
 
     /**
      * Assigner le rôle DOCTOR à l'utilisateur
@@ -211,7 +297,7 @@ public class KeycloakUserService {
             UserResource userResource = realmResource.users().get(keycloakUserId);
 
             UserRepresentation user = userResource.toRepresentation();
-            user.setEnabled(true); // ✅ ACTIVER LE COMPTE
+            user.setEnabled(true); // ACTIVER LE COMPTE
 
             // Mettre à jour le statut d'activation
             Map<String, List<String>> attributes = user.getAttributes();
@@ -225,7 +311,7 @@ public class KeycloakUserService {
 
             log.info("✅ Doctor user enabled in Keycloak: {}", keycloakUserId);
 
-            // ⚠️ IMPORTANT: Envoyer un email pour définir le mot de passe
+            // Envoyer un email pour définir le mot de passe
             sendPasswordSetupEmail(keycloakUserId);
 
         } catch (Exception e) {
@@ -249,7 +335,6 @@ public class KeycloakUserService {
 
         } catch (Exception e) {
             log.warn("⚠️ Could not send password setup email: {}", e.getMessage());
-            // Ne pas bloquer si l'email échoue
         }
     }
 
@@ -266,7 +351,6 @@ public class KeycloakUserService {
             UserRepresentation user = userResource.toRepresentation();
             user.setEnabled(false);
 
-            // Mettre à jour le statut
             Map<String, List<String>> attributes = user.getAttributes();
             if (attributes == null) {
                 attributes = new HashMap<>();
