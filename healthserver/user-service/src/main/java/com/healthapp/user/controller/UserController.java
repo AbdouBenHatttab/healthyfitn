@@ -217,6 +217,7 @@ public class UserController {
         try {
             // ✅ Extraire l'ID Keycloak depuis le JWT
             String keycloakUserId = extractKeycloakUserIdAndEmail(auth).get("keycloakId");
+            String email = extractKeycloakUserIdAndEmail(auth).get("email");
 
             if (request.getNewPassword() == null || request.getNewPassword().isEmpty()) {
                 log.error("❌ Nouveau mot de passe manquant");
@@ -228,7 +229,7 @@ public class UserController {
             }
 
             // ✅ Rechercher par keycloakId
-            User user = userRepository.findByKeycloakId(keycloakUserId)
+            User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé pour cet utilisateur"));
 
             // ⚠️ Le service changera le mot de passe dans Keycloak

@@ -19,6 +19,9 @@ public class DoctorPendingResponse {
     private String fullName;
     private String medicalLicenseNumber;
     private String specialization;
+    private String phoneNumber;
+    private String role;
+    private String activationStatus;
     private String hospitalAffiliation;
     private Integer yearsOfExperience;
     private LocalDateTime registrationDate;

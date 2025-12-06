@@ -377,7 +377,7 @@ public class DoctorController {
         return DoctorResponse.builder()
                 .id(doctor.getId())
                 .userId(doctor.getUserId())
-                .email(doctor.getEmail())
+                .contactEmail(doctor.getContactEmail())
                 .firstName(doctor.getFirstName())
                 .lastName(doctor.getLastName())
                 .fullName(doctor.getFullName())

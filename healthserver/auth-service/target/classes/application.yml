@@ -26,7 +26,7 @@ spring:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: QjKkJoIsqB4rbXHqv53ofsPuw0O7Qz57  # À récupérer depuis Keycloak
+            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv  # À récupérer depuis Keycloak
             authorization-grant-type: client_credentials
             scope: openid, profile, email
         provider:
@@ -61,7 +61,7 @@ keycloak:
   admin:
     realm: master                    # ← AJOUTEZ CECI
     username: amine                  # ← AJOUTEZ CECI
-    password: Password123!                  # ← AJOUTEZ CECI (ou votre mot de passe admin)
+    password: Password123                  # ← AJOUTEZ CECI (ou votre mot de passe admin)
     client-id: admin-cli            # ← CHANGEZ CECI
 
   # Configuration des rôles

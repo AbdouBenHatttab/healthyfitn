@@ -96,6 +96,26 @@ public class AdminDoctorController {
         log.info("✅ {} médecins activés trouvés", activatedDoctors.size());
         return ResponseEntity.ok(activatedDoctors);
     }
+    /**
+     * ✅ Récupérer la liste des médecins
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<DoctorPendingResponse>> getDoctors() {
+        log.info("📋 Admin demande la liste des médecins activés");
+        List<DoctorPendingResponse> Doctors = doctorActivationService.getDoctors();
+        log.info("✅ {} médecins activés trouvés", Doctors.size());
+        return ResponseEntity.ok(Doctors);
+    }
+    /**
+     * Compter les médecins activés
+     */
+    @GetMapping("/activated/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Long>> getActivatedDoctorsCount() {
+        long count = doctorActivationService.getActivatedDoctorsCount();
+        return ResponseEntity.ok(Map.of("count", count));
+    }
 
     /**
      * Compter les médecins en attente
@@ -105,5 +125,56 @@ public class AdminDoctorController {
     public ResponseEntity<Map<String, Long>> getPendingDoctorsCount() {
         long count = doctorActivationService.getPendingDoctorsCount();
         return ResponseEntity.ok(Map.of("count", count));
+    }
+    /**
+     * Compter les médecins
+     */
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Long>> getDoctorsCount() {
+        long count = doctorActivationService.getDoctorsCount();
+        return ResponseEntity.ok(Map.of("count", count));
+    }
+    /**
+     * Supprimer un médecin (seulement si APPROVED)
+     */
+    @DeleteMapping("/{doctorId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteDoctor(@PathVariable String doctorId) {
+        log.info("🗑️ Admin demande la suppression du médecin : {}", doctorId);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.error("❌ Authentification requise");
+            return ResponseEntity.status(401).body(Map.of(
+                    "status", "error",
+                    "message", "Authentification requise"
+            ));
+        }
+
+        String adminId = authentication.getName();
+        log.info("✅ Admin authentifié : {}", adminId);
+
+        try {
+            doctorActivationService.deleteDoctor(doctorId, adminId);
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Le médecin a été supprimé avec succès"
+            ));
+        } catch (IllegalStateException e) {
+            log.error("❌ Action non autorisée : {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "status", "error",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de la suppression du médecin", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "status", "error",
+                    "message", "Erreur lors de la suppression du médecin"
+            ));
+        }
     }
 }

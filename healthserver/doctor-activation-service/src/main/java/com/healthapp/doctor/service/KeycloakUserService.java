@@ -402,4 +402,20 @@ public class KeycloakUserService {
             return Optional.empty();
         }
     }
+    /**
+     * Supprimer un utilisateur de Keycloak
+     */
+    public void deleteUser(String userId) {
+        log.info("🔐 Deleting user from Keycloak: {}", userId);
+
+        try {
+            UsersResource usersResource = keycloak.realm(realm).users();
+            usersResource.delete(userId);
+
+            log.info("✅ User successfully deleted from Keycloak: {}", userId);
+        } catch (Exception e) {
+            log.error("❌ Failed to delete user from Keycloak: {}", userId, e);
+            throw new RuntimeException("Failed to delete user from Keycloak: " + e.getMessage(), e);
+        }
+    }
 }
