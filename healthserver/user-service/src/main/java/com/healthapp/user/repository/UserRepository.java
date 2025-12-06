@@ -26,6 +26,7 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     List<User> findByRolesContaining(UserRole role);
 
+
     @Query("{ 'accountStatus': ?0 }")
     List<User> findByAccountStatus(AccountStatus status);
 

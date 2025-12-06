@@ -10,9 +10,13 @@ import com.healthapp.doctor.repository.AppointmentRepository;
 import com.healthapp.doctor.repository.DoctorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.mongodb.core.query.Query;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,6 +38,7 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final DoctorRepository doctorRepository;
+    private final MongoTemplate mongoTemplate;
 
     /**
      * 🔐 Vérifier que le rendez-vous appartient au docteur
@@ -479,6 +484,21 @@ public class AppointmentService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+    public long updatePatientEmail(String oldEmail, String newEmail) {
+        Query query = new Query(
+                Criteria.where("patientEmail").is(oldEmail)
+        );
+
+        Update update = new Update()
+                .set("patientEmail", newEmail);
+
+        return mongoTemplate.updateMulti(
+                query,
+                update,
+                Appointment.class   // ✅ Correct
+        ).getModifiedCount();
+    }
+
 
     /**
      * Helper: Map to response

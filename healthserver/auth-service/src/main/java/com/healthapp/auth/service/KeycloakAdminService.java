@@ -84,8 +84,10 @@ public class KeycloakAdminService {
         }
     }
 
+    // Modifier la méthode createUser pour accepter phoneNumber
+
     public String createUser(String email, String password, String firstName,
-                             String lastName, List<String> roles) {
+                             String lastName, String phoneNumber, List<String> roles) {
         log.info("👤 Création d'un utilisateur dans Keycloak : {}", email);
 
         UsersResource usersResource = realmResource.users();
@@ -97,6 +99,14 @@ public class KeycloakAdminService {
         user.setLastName(lastName);
         user.setEnabled(true);
         user.setEmailVerified(true);
+
+        // ✅ Ajouter le phoneNumber comme attribut
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            Map<String, List<String>> attributes = new HashMap<>();
+            attributes.put("phoneNumber", Collections.singletonList(phoneNumber));
+            user.setAttributes(attributes);
+            log.info("📱 Phone number ajouté aux attributs: {}", phoneNumber);
+        }
 
         Response response = usersResource.create(user);
 

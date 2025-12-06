@@ -114,11 +114,13 @@ public class AuthService {
                     .build();
 
         } else {
+            // ✅ Passer phoneNumber à createUser
             keycloakUserId = keycloakAdminService.createUser(
                     request.getEmail(),
                     request.getPassword(),
                     request.getFirstName(),
                     request.getLastName(),
+                    request.getPhoneNumber(), // ✅ AJOUT DU PHONE NUMBER
                     roles
             );
 
@@ -129,14 +131,15 @@ public class AuthService {
                     request.getPassword()
             );
 
+            // ✅ Sauvegarder dans MongoDB avec le phoneNumber
             User user = User.builder()
-                    .keycloakId(keycloakUserId) // ✅ ID KEYCLOAK ICI
+                    .keycloakId(keycloakUserId)
                     .email(request.getEmail())
                     .firstName(request.getFirstName())
                     .lastName(request.getLastName())
                     .birthDate(request.getBirthDate())
                     .gender(request.getGender())
-                    .phoneNumber(request.getPhoneNumber())
+                    .phoneNumber(request.getPhoneNumber()) // ✅ AJOUT DU PHONE NUMBER
                     .roles(Set.of(UserRole.USER))
                     .accountStatus(AccountStatus.ACTIVE)
                     .isActivated(true)
@@ -144,9 +147,10 @@ public class AuthService {
                     .createdAt(LocalDateTime.now())
                     .build();
 
-            userRepository.save(user);
-            return buildAuthResponse(keycloakUserId, tokenResponse, request.getEmail());
+            User savedUser = userRepository.save(user);
+            log.info("✅ User saved to MongoDB with phone: {}", savedUser.getPhoneNumber());
 
+            return buildAuthResponse(keycloakUserId, tokenResponse, request.getEmail());
         }
     }
 
@@ -352,12 +356,53 @@ public class AuthService {
     /**
      * Construire la réponse d'authentification
      */
+    /**
+     * Construire la réponse d'authentification
+     */
     private AuthResponse buildAuthResponse(String userId, Map<String, Object> tokenResponse, String email) {
-        Optional<UserRepresentation> keycloakUser = keycloakAdminService.getUserByEmail(email);
+        // ✅ PRIORITÉ 1: Récupérer l'utilisateur depuis MongoDB
+        Optional<User> userOptional = userRepository.findByEmail(email);
 
         UserResponse userResponse = null;
-        if (keycloakUser.isPresent()) {
-            userResponse = mapKeycloakUserToResponse(keycloakUser.get());
+
+        if (userOptional.isPresent()) {
+            // ✅ Mapper l'entité User depuis MongoDB vers UserResponse
+            User user = userOptional.get();
+            userResponse = UserResponse.builder()
+                    .id(user.getKeycloakId()) // ou user.getId() selon ce que vous voulez exposer
+                    .email(user.getEmail())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .fullName(user.getFirstName() + " " + user.getLastName())
+                    .birthDate(user.getBirthDate())
+                    .gender(user.getGender())
+                    .phoneNumber(user.getPhoneNumber()) // ✅ Le téléphone vient de MongoDB
+                    .profilePictureUrl(user.getProfilePictureUrl())
+                    .roles(user.getRoles())
+                    .accountStatus(user.getAccountStatus())
+                    .isEmailVerified(user.getIsEmailVerified())
+                    .isActivated(user.getIsActivated())
+                    .lastLoginAt(user.getLastLoginAt())
+                    .createdAt(user.getCreatedAt())
+                    .medicalLicenseNumber(user.getMedicalLicenseNumber())
+                    .specialization(user.getSpecialization())
+                    .hospitalAffiliation(user.getHospitalAffiliation())
+                    .yearsOfExperience(user.getYearsOfExperience())
+                    .activationDate(user.getActivationDate())
+                    .build();
+
+            log.info("✅ User data loaded from MongoDB: {}, phone: {}", email, user.getPhoneNumber());
+        } else {
+            // ✅ FALLBACK: Récupérer depuis Keycloak si l'utilisateur n'est pas dans MongoDB
+            log.warn("⚠️ User not found in MongoDB, fetching from Keycloak: {}", email);
+            Optional<UserRepresentation> keycloakUser = keycloakAdminService.getUserByEmail(email);
+
+            if (keycloakUser.isPresent()) {
+                userResponse = mapKeycloakUserToResponse(keycloakUser.get());
+                log.info("✅ User data loaded from Keycloak: {}", email);
+            } else {
+                log.error("❌ User not found in MongoDB nor Keycloak: {}", email);
+            }
         }
 
         return AuthResponse.builder()
@@ -366,7 +411,7 @@ public class AuthService {
                 .refreshToken((String) tokenResponse.get("refresh_token"))
                 .expiresIn(((Number) tokenResponse.get("expires_in")).longValue())
                 .tokenType("Bearer")
-                .user(userResponse)
+                .user(userResponse) // ✅ UserResponse au lieu de Optional<UserResponse>
                 .issuedAt(LocalDateTime.now())
                 .build();
     }
@@ -383,6 +428,7 @@ public class AuthService {
                 .firstName(keycloakUser.getFirstName())
                 .lastName(keycloakUser.getLastName())
                 .fullName(keycloakUser.getFirstName() + " " + keycloakUser.getLastName())
+                .phoneNumber(getAttributeValue(attributes, "phoneNumber")) // ✅ AJOUT
                 .isActivated(keycloakUser.isEnabled())
                 .isEmailVerified(keycloakUser.isEmailVerified())
                 .medicalLicenseNumber(getAttributeValue(attributes, "medicalLicenseNumber"))

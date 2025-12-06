@@ -36,4 +36,11 @@ public interface DoctorServiceClient {
 
     @GetMapping("/api/doctors/available")
     List<Map<String, Object>> getActivatedDoctors();
+
+    // ✅ CORRECTION : Envoyer un Map au lieu d'un String
+    @PutMapping("/api/public/doctors/appointments/{oldEmail}")
+    Map<String, String> updateAppointmentsPatientEmail(
+            @PathVariable("oldEmail") String oldEmail,
+            @RequestBody Map<String, String> body  // ✅ body contient {"newEmail": "..."}
+    );
 }

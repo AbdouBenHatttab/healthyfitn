@@ -34,9 +34,6 @@ public class DoctorKeycloakSyncService {
         if (request.getLastName() != null)
             user.setLastName(request.getLastName());
 
-        if (request.getContactEmail() != null)
-            user.setEmail(request.getContactEmail());
-
         userResource.update(user);
 
         log.info("✅ Keycloak user updated: {}", keycloakUserId);

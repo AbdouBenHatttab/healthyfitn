@@ -1,6 +1,7 @@
 package com.healthapp.user.service;
 
 //import com.healthapp.user.dto.request.ChangePasswordRequest;
+import com.healthapp.user.client.DoctorServiceClient;
 import com.healthapp.user.dto.request.UpdateUserRequest;
 import com.healthapp.user.dto.request.UserSearchRequest;
 import com.healthapp.user.dto.response.PageResponse;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,7 +38,9 @@ public class UserService {
     private final UserRepository userRepository;
     @Autowired
     private final KeycloakSyncService keycloakSyncService;
-    
+    @Autowired
+    private DoctorServiceClient doctorServiceClient;
+
     public UserResponse getUserById(String userId) {
         log.info("Fetching user by ID: {}", userId);
         User user = userRepository.findById(userId)
@@ -93,40 +97,58 @@ public class UserService {
                 .last(userPage.isLast())
                 .build();
     }
-    
+
     public UserResponse updateUser(String userId, UpdateUserRequest request) {
         log.info("Updating user: {}", userId);
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-        
+
         // Check email uniqueness if changed
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new UserAlreadyExistsException("Email already in use: " + request.getEmail());
             }
-            user.setEmail(request.getEmail());
+
+            // ✅ CORRECTION : Stocker l'ancien email AVANT de le changer
+            String oldEmail = user.getEmail();
+            String newEmail = request.getEmail();
+
+            // Mettre à jour l'email de l'utilisateur
+            user.setEmail(newEmail);
+
+            // ✅ CORRECTION : Envoyer un Map au lieu de deux Strings
+            try {
+                Map<String, String> result = doctorServiceClient.updateAppointmentsPatientEmail(
+                        oldEmail,
+                        Map.of("newEmail", newEmail)  // ✅ Envoyer comme Map
+                );
+                log.info("✅ Appointments updated: {}", result.get("message"));
+            } catch (Exception e) {
+                log.error("❌ Failed to update appointments email: {}", e.getMessage());
+                // Continuer quand même pour ne pas bloquer la mise à jour du profil
+            }
         }
-        
+
         if (request.getFirstName() != null) {
             user.setFirstName(request.getFirstName());
         }
-        
+
         if (request.getLastName() != null) {
             user.setLastName(request.getLastName());
         }
-        
+
         if (request.getPhoneNumber() != null) {
             user.setPhoneNumber(request.getPhoneNumber());
         }
-        
+
         if (request.getProfilePictureUrl() != null) {
             user.setProfilePictureUrl(request.getProfilePictureUrl());
         }
-        
+
         User updatedUser = userRepository.save(user);
         log.info("User updated successfully: {}", userId);
-        
+
         return mapToUserResponse(updatedUser);
     }
 
