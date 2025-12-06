@@ -1,7 +1,6 @@
 package com.healthapp.user.service;
 
 import com.healthapp.user.Enums.AccountStatus;
-import com.healthapp.user.Enums.Gender;
 import com.healthapp.user.Enums.UserRole;
 import com.healthapp.user.config.KeycloakConfig;
 import com.healthapp.user.entity.User;
@@ -12,10 +11,12 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import jakarta.ws.rs.NotFoundException;
+
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -162,4 +163,28 @@ public class KeycloakSyncService {
 
         log.info("✅ Utilisateur synchronisé vers Keycloak: {}", user.getEmail());
     }
+    /**
+     * Supprimer un utilisateur de Keycloak
+     */
+    public void deleteUserFromKeycloak(String keycloakUserId) {
+        log.info("========================================");
+        log.info("🔐 Deleting user from Keycloak");
+        log.info("Keycloak User ID: {}", keycloakUserId);
+        log.info("========================================");
+
+        try {
+            keycloak.realm(keycloakConfig.getRealm())
+                    .users()
+                    .delete(keycloakUserId);
+
+            log.info("✅ User successfully deleted from Keycloak: {}", keycloakUserId);
+
+        } catch (NotFoundException e) {
+            log.warn("⚠️ User not found in Keycloak (already deleted?): {}", keycloakUserId);
+        } catch (Exception e) {
+            log.error("❌ Failed to delete user from Keycloak: {}", keycloakUserId, e);
+            throw new RuntimeException("Failed to delete user from Keycloak: " + e.getMessage(), e);
+        }
+    }
+
 }

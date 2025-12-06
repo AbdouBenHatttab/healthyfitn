@@ -41,7 +41,7 @@ spring:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: QjKkJoIsqB4rbXHqv53ofsPuw0O7Qz57
+            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv
             authorization-grant-type: client_credentials
             scope: openid, profile, email
         provider:
@@ -107,7 +107,7 @@ keycloak:
   admin:
     realm: master
     username: amine
-    password: Password123!
+    password: Password123
     client-id: admin-cli
 
   # Configuration des rôles

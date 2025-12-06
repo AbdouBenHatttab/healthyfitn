@@ -15,6 +15,7 @@ import com.healthapp.user.exception.UserNotFoundException;
 import com.healthapp.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,8 @@ import java.util.stream.Collectors;
 public class UserService {
     
     private final UserRepository userRepository;
-    //private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private final KeycloakSyncService keycloakSyncService;
     
     public UserResponse getUserById(String userId) {
         log.info("Fetching user by ID: {}", userId);
@@ -127,15 +129,48 @@ public class UserService {
         
         return mapToUserResponse(updatedUser);
     }
-    
+
+    // Modifiez la méthode deleteUser existante
     public void deleteUser(String userId) {
-        log.info("Deleting user: {}", userId);
-        
+        log.info("========================================");
+        log.info("🗑️ DELETING USER: {}", userId);
+        log.info("========================================");
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-        
-        userRepository.delete(user);
-        log.info("User deleted successfully: {}", userId);
+
+        log.info("📝 User found: {} ({})", user.getFullName(), user.getEmail());
+
+        try {
+            // ✅ STEP 1: Supprimer de Keycloak si l'utilisateur a un keycloakUserId
+            if (user.getKeycloakId() != null && !user.getKeycloakId().isEmpty()) {
+                log.info("🔐 STEP 1: Deleting from Keycloak");
+                log.info("Keycloak User ID: {}", user.getKeycloakId());
+
+                try {
+                    keycloakSyncService.deleteUserFromKeycloak(user.getKeycloakId());
+                    log.info("✅ User deleted from Keycloak");
+                } catch (Exception e) {
+                    log.warn("⚠️ Failed to delete from Keycloak (continuing with MongoDB deletion): {}", e.getMessage());
+                }
+            } else {
+                log.warn("⚠️ No Keycloak User ID found, skipping Keycloak deletion");
+            }
+
+            // ✅ STEP 2: Supprimer de MongoDB
+            log.info("📝 STEP 2: Deleting from MongoDB");
+            userRepository.delete(user);
+
+            log.info("========================================");
+            log.info("✅ USER DELETION COMPLETED");
+            log.info("========================================");
+            log.info("User: {} successfully deleted", user.getEmail());
+            log.info("========================================");
+
+        } catch (Exception e) {
+            log.error("❌ Failed to delete user", e);
+            throw new RuntimeException("Failed to delete user: " + e.getMessage(), e);
+        }
     }
     
     public List<UserResponse> getUsersByRole(UserRole role) {

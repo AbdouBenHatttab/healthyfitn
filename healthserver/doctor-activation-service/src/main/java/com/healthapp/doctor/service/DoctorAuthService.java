@@ -79,7 +79,7 @@ public class DoctorAuthService {
 
             log.info("🔍 Doctor object BEFORE save:");
             log.info("   - email: {}", doctor.getEmail());
-            log.info("   - contactEmail: {}", doctor.getEmail());
+            log.info("   - contactEmail: {}", doctor.getContactEmail());
             log.info("   - userId: {}", doctor.getUserId());
             log.info("   - password: NULL");
 
@@ -359,7 +359,7 @@ public class DoctorAuthService {
         return DoctorResponse.builder()
                 .id(doctor.getId())
                 .userId(doctor.getUserId())
-                .email(doctor.getEmail())
+                .contactEmail(doctor.getContactEmail())
                 .firstName(doctor.getFirstName())
                 .lastName(doctor.getLastName())
                 .fullName(doctor.getFullName())

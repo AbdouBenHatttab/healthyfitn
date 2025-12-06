@@ -46,6 +46,18 @@ public class DoctorActivationService {
                 .map(this::mapToPendingResponse)
                 .collect(Collectors.toList());
     }
+    /**
+     * Récupérer tous les médecins en attente d'activation
+     */
+    public List<DoctorPendingResponse> getDoctors() {
+        log.info("📋 Fetching doctors");
+
+        List<Doctor> Doctors = doctorRepository.findAll();
+
+        return Doctors.stream()
+                .map(this::mapToPendingResponse)
+                .collect(Collectors.toList());
+    }
 
     /**
      * Traiter une demande d'activation (APPROVE ou REJECT)
@@ -248,6 +260,74 @@ public class DoctorActivationService {
     public long getPendingDoctorsCount() {
         return activationRequestRepository.countByIsPendingTrue();
     }
+    /**
+     * Compter les médecins activés
+     */
+    public long getActivatedDoctorsCount() {
+        return doctorRepository.countByIsActivatedTrue();
+    }
+    /**
+     * Compter les médecins
+     */
+    public long getDoctorsCount() {
+        return doctorRepository.count();
+    }
+    /**
+     * Supprimer un médecin (seulement si APPROVED)
+     * ✅ Supprime de MongoDB
+     * ✅ Supprime de Keycloak
+     */
+    public void deleteDoctor(String doctorId, String adminId) {
+        log.info("========================================");
+        log.info("🗑️ DELETING DOCTOR: {}", doctorId);
+        log.info("========================================");
+
+        try {
+            // Récupérer le médecin
+            Doctor doctor = doctorRepository.findById(doctorId)
+                    .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
+
+            // ✅ Vérifier que le médecin est bien APPROVED
+            if (!"APPROVED".equals(doctor.getActivationStatus())) {
+                throw new IllegalStateException(
+                        "Cannot delete doctor with status: " + doctor.getActivationStatus() +
+                                ". Only APPROVED doctors can be deleted."
+                );
+            }
+
+            log.info("📝 STEP 1: Deleting from MongoDB");
+            log.info("Doctor: {} ({})", doctor.getFullName(), doctor.getEmail());
+
+            // ✅ STEP 2: Supprimer de Keycloak
+            log.info("🔐 STEP 2: Deleting from Keycloak");
+            log.info("Keycloak User ID: {}", doctor.getUserId());
+
+            try {
+                keycloakUserService.deleteUser(doctor.getUserId());
+                log.info("✅ Doctor deleted from Keycloak");
+            } catch (Exception e) {
+                log.warn("⚠️ Failed to delete from Keycloak, continuing with MongoDB deletion: {}", e.getMessage());
+            }
+
+            // ✅ STEP 3: Supprimer la demande d'activation associée
+            log.info("📋 STEP 3: Deleting activation request");
+            activationRequestRepository.findByDoctorId(doctorId).ifPresent(activationRequestRepository::delete);
+
+            // ✅ STEP 4: Supprimer de MongoDB
+            log.info("📝 STEP 4: Deleting from MongoDB");
+            doctorRepository.delete(doctor);
+
+            log.info("========================================");
+            log.info("✅ DOCTOR DELETION COMPLETED");
+            log.info("========================================");
+            log.info("Doctor: {} successfully deleted by admin: {}", doctor.getEmail(), adminId);
+            log.info("========================================");
+
+        } catch (Exception e) {
+            log.error("❌ Failed to delete doctor", e);
+            throw new RuntimeException("Failed to delete doctor: " + e.getMessage(), e);
+        }
+    }
 
     /**
      * Mapper Doctor vers DoctorPendingResponse
@@ -264,6 +344,8 @@ public class DoctorActivationService {
                 .fullName(doctor.getFullName())
                 .medicalLicenseNumber(doctor.getMedicalLicenseNumber())
                 .specialization(doctor.getSpecialization())
+                .phoneNumber(doctor.getPhoneNumber())
+                .activationStatus(doctor.getActivationStatus())
                 .hospitalAffiliation(doctor.getHospitalAffiliation())
                 .yearsOfExperience(doctor.getYearsOfExperience())
                 .registrationDate(doctor.getCreatedAt())
