@@ -164,9 +164,30 @@ public class UserService {
         log.info("📝 User found: {} ({})", user.getFullName(), user.getEmail());
 
         try {
-            // ✅ STEP 1: Supprimer de Keycloak si l'utilisateur a un keycloakUserId
+            // ✅ STEP 1: Supprimer tous les rendez-vous du patient
+            log.info("========================================");
+            log.info("📅 STEP 1: Deleting all patient appointments");
+            log.info("========================================");
+
+            try {
+                Map<String, Object> appointmentResult = doctorServiceClient.deletePatientAppointments(
+                        user.getId(),      // Patient MongoDB ID
+                        user.getEmail()    // Patient email (optionnel)
+                );
+
+                Object deletedCount = appointmentResult.get("deletedAppointments");
+                log.info("✅ {} appointments deleted successfully", deletedCount);
+
+            } catch (Exception e) {
+                log.error("❌ Failed to delete appointments: {}", e.getMessage());
+                log.warn("⚠️ Continuing with user deletion despite appointment deletion failure");
+            }
+
+            // ✅ STEP 2: Supprimer de Keycloak si l'utilisateur a un keycloakId
             if (user.getKeycloakId() != null && !user.getKeycloakId().isEmpty()) {
-                log.info("🔐 STEP 1: Deleting from Keycloak");
+                log.info("========================================");
+                log.info("🔐 STEP 2: Deleting from Keycloak");
+                log.info("========================================");
                 log.info("Keycloak User ID: {}", user.getKeycloakId());
 
                 try {
@@ -179,14 +200,18 @@ public class UserService {
                 log.warn("⚠️ No Keycloak User ID found, skipping Keycloak deletion");
             }
 
-            // ✅ STEP 2: Supprimer de MongoDB
-            log.info("📝 STEP 2: Deleting from MongoDB");
+            // ✅ STEP 3: Supprimer de MongoDB
+            log.info("========================================");
+            log.info("📝 STEP 3: Deleting user from MongoDB");
+            log.info("========================================");
+
             userRepository.delete(user);
 
             log.info("========================================");
             log.info("✅ USER DELETION COMPLETED");
             log.info("========================================");
             log.info("User: {} successfully deleted", user.getEmail());
+            log.info("All associated appointments have been deleted");
             log.info("========================================");
 
         } catch (Exception e) {

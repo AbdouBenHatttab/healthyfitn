@@ -14,12 +14,10 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
     // Find by doctor
     List<Appointment> findByDoctorIdOrderByAppointmentDateTimeDesc(String doctorId);
 
-    List<Appointment> findByDoctorIdAndStatus(String doctorId, String status);
 
     // Find by patient
     List<Appointment> findByPatientIdOrderByAppointmentDateTimeDesc(String patientId);
 
-    List<Appointment> findByPatientIdAndStatus(String patientId, String status);
 
     // Find upcoming appointments for doctor
     @Query("{ 'doctorId': ?0, 'appointmentDateTime': { $gte: ?1 }, 'status': 'SCHEDULED' }")
@@ -43,6 +41,37 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
     // Find unique patient IDs for a doctor
     @Query(value = "{ 'doctorId': ?0 }", fields = "{ 'patientId': 1 }")
     List<Appointment> findDistinctPatientsByDoctorId(String doctorId);
+
+    // ✅ NOUVELLES MÉTHODES POUR LA SUPPRESSION
+
+    /**
+     * Supprimer tous les rendez-vous d'un docteur par son ID
+     */
+    void deleteByDoctorId(String doctorId);
+    /**
+     * Trouver tous les rendez-vous d'un patient par son ID
+     */
+    List<Appointment> findByPatientId(String patientId);
+
+    /**
+     * Trouver tous les rendez-vous d'un patient par son email
+     */
+    List<Appointment> findByPatientEmail(String patientEmail);
+
+    /**
+     * Supprimer tous les rendez-vous d'un patient par son ID
+     */
+    void deleteByPatientId(String patientId);
+
+    /**
+     * Supprimer tous les rendez-vous d'un patient par son email
+     */
+    void deleteByPatientEmail(String patientEmail);
+
+    /**
+     * Compter les rendez-vous d'un patient
+     */
+    long countByPatientId(String patientId);
 
 
 }

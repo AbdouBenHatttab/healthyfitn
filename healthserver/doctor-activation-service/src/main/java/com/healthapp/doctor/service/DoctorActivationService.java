@@ -33,6 +33,7 @@ public class DoctorActivationService {
     private final DoctorActivationRequestRepository activationRequestRepository;
     private final NotificationClient notificationClient;
     private final KeycloakUserService keycloakUserService;
+    private final AppointmentService appointmentService;
 
     /**
      * Récupérer tous les médecins en attente d'activation
@@ -274,6 +275,7 @@ public class DoctorActivationService {
     }
     /**
      * Supprimer un médecin (seulement si APPROVED)
+     * ✅ Supprime tous les rendez-vous du docteur
      * ✅ Supprime de MongoDB
      * ✅ Supprime de Keycloak
      */
@@ -295,12 +297,32 @@ public class DoctorActivationService {
                 );
             }
 
-            log.info("📝 STEP 1: Deleting from MongoDB");
-            log.info("Doctor: {} ({})", doctor.getFullName(), doctor.getEmail());
+            log.info("📝 Doctor Details:");
+            log.info("Name: {} ({})", doctor.getFullName(), doctor.getEmail());
+            log.info("Keycloak User ID: {}", doctor.getUserId());
+
+            // ✅ STEP 1: Supprimer tous les rendez-vous du docteur
+            log.info("========================================");
+            log.info("📅 STEP 1: Deleting all doctor appointments");
+            log.info("========================================");
+
+            try {
+                long deletedAppointments = appointmentService.deleteAllDoctorAppointments(
+                        doctor.getId(),      // MongoDB doctor ID
+                        doctor.getEmail()    // Email du docteur
+                );
+
+                log.info("✅ {} appointments deleted successfully", deletedAppointments);
+
+            } catch (Exception e) {
+                log.error("❌ Failed to delete appointments: {}", e.getMessage());
+                log.warn("⚠️ Continuing with doctor deletion despite appointment deletion failure");
+            }
 
             // ✅ STEP 2: Supprimer de Keycloak
+            log.info("========================================");
             log.info("🔐 STEP 2: Deleting from Keycloak");
-            log.info("Keycloak User ID: {}", doctor.getUserId());
+            log.info("========================================");
 
             try {
                 keycloakUserService.deleteUser(doctor.getUserId());
@@ -310,17 +332,28 @@ public class DoctorActivationService {
             }
 
             // ✅ STEP 3: Supprimer la demande d'activation associée
+            log.info("========================================");
             log.info("📋 STEP 3: Deleting activation request");
-            activationRequestRepository.findByDoctorId(doctorId).ifPresent(activationRequestRepository::delete);
+            log.info("========================================");
+
+            activationRequestRepository.findByDoctorId(doctorId)
+                    .ifPresent(request -> {
+                        activationRequestRepository.delete(request);
+                        log.info("✅ Activation request deleted");
+                    });
 
             // ✅ STEP 4: Supprimer de MongoDB
-            log.info("📝 STEP 4: Deleting from MongoDB");
+            log.info("========================================");
+            log.info("📝 STEP 4: Deleting doctor from MongoDB");
+            log.info("========================================");
+
             doctorRepository.delete(doctor);
 
             log.info("========================================");
             log.info("✅ DOCTOR DELETION COMPLETED");
             log.info("========================================");
             log.info("Doctor: {} successfully deleted by admin: {}", doctor.getEmail(), adminId);
+            log.info("All associated appointments have been deleted");
             log.info("========================================");
 
         } catch (Exception e) {
