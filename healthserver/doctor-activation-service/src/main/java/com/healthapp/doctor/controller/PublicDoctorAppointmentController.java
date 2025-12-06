@@ -55,4 +55,31 @@ public class PublicDoctorAppointmentController {
                 "message", "Rendez-vous annulé avec succès"
         ));
     }
+    @PutMapping("/{oldEmail}")
+    public ResponseEntity<Map<String, Object>> updateAppointmentsPatientEmail(
+            @PathVariable String oldEmail,
+            @RequestBody Map<String, String> body) {  // ✅ CORRECTION ICI
+
+        String newEmail = body.get("newEmail");  // ✅ Extraire le newEmail du body
+
+        if (newEmail == null || newEmail.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "Le nouvel email est requis"
+            ));
+        }
+
+        log.info("📧 Mise à jour des emails dans appointments : {} -> {}", oldEmail, newEmail);
+
+        long updatedCount = appointmentService.updatePatientEmail(oldEmail, newEmail);
+
+        log.info("✅ {} rendez-vous mis à jour", updatedCount);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "updatedRecords", updatedCount,
+                "message", updatedCount + " rendez-vous mis à jour avec succès"
+        ));
+    }
+
 }

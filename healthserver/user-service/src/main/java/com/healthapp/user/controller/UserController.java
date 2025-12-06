@@ -1,5 +1,6 @@
 package com.healthapp.user.controller;
 
+import com.healthapp.user.client.DoctorServiceClient;
 import com.healthapp.user.dto.request.UpdateUserRequest;
 import com.healthapp.user.dto.request.ChangePasswordRequest;
 import com.healthapp.user.dto.response.ApiResponse;
@@ -54,6 +55,7 @@ public class UserController {
     private final SecurityHelper securityHelper;
     private final UserRepository userRepository;
     private final UserKeycloakSyncService keycloakSyncService;
+    private final DoctorServiceClient doctorServiceClient;
 
     @Value("${keycloak.realm}")
     private String keycloakRealm;
@@ -169,15 +171,33 @@ public class UserController {
             @Valid @RequestBody UpdateUserRequest request,
             Authentication auth) {
 
-        // ✅ Extraire l'ID Keycloak depuis le JWT
         String keycloakUserId = extractKeycloakUserIdAndEmail(auth).get("keycloakId");
-        String email = extractKeycloakUserIdAndEmail(auth).get("email");
+        String oldEmail = extractKeycloakUserIdAndEmail(auth).get("email");
 
         log.info("🔄 [MISE À JOUR] Mise à jour du profil pour Keycloak ID : '{}'", keycloakUserId);
 
         // ✅ Rechercher par email
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(oldEmail)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé pour cet utilisateur"));
+
+        // ✅ VÉRIFIER SI L'EMAIL CHANGE
+        if (request.getEmail() != null && !request.getEmail().equals(oldEmail)) {
+            log.info("📧 Changement d'email détecté : {} -> {}", oldEmail, request.getEmail());
+
+            // ✅ METTRE À JOUR LES RENDEZ-VOUS DANS LE DOCTOR SERVICE
+            try {
+                Map<String, String> updateResult = doctorServiceClient.updateAppointmentsPatientEmail(
+                        oldEmail,
+                        Map.of("newEmail", request.getEmail())  // ✅ Envoyer comme Map
+                );
+
+                log.info("✅ Appointments mis à jour : {}", updateResult.get("message"));
+                log.info("✅ Nombre de rendez-vous mis à jour : {}", updateResult.get("updatedRecords"));
+
+            } catch (Exception e) {
+                log.error("❌ Erreur lors de la mise à jour des appointments : {}", e.getMessage(), e);
+            }
+        }
 
         // ✅ MISE À JOUR KEYCLOAK
         keycloakSyncService.updateUserInKeycloak(keycloakUserId, request);

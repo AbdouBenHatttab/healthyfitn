@@ -34,20 +34,28 @@ public class SecurityHelper {
 
             // Sinon, créer depuis JWT
             Jwt jwt = jwtAuth.getToken();
-            String email = jwt.getClaim("email");
+            String keycloakId = jwt.getSubject();  // ✅ Utiliser keycloakId
+            String emailInJwt = jwt.getClaim("email");
 
-            // Récupérer depuis MongoDB
-            Optional<User> userOpt = userRepository.findByEmail(email);
+            // ✅ RECHERCHER PAR KEYCLOAK ID (qui ne change jamais)
+            Optional<User> userOpt = userRepository.findByKeycloakId(keycloakId);
+
+            if (userOpt.isEmpty()) {
+                // ✅ Fallback : rechercher par email si keycloakId ne trouve rien
+                log.warn("⚠️ User not found by keycloakId: {}, trying email: {}", keycloakId, emailInJwt);
+                userOpt = userRepository.findByEmail(emailInJwt);
+            }
 
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 CustomUserPrincipal principal = CustomUserPrincipal.fromJwt(jwt, auth.getAuthorities());
                 principal.setId(user.getId());
-                principal.setKeycloakId(jwt.getSubject());
+                principal.setKeycloakId(keycloakId);
+                principal.setEmail(user.getEmail());  // ✅ Utiliser l'email de MongoDB (mis à jour)
                 return principal;
             }
 
-            log.warn("⚠️ User not found in MongoDB: {}", email);
+            log.warn("⚠️ User not found in MongoDB: keycloakId={}, email={}", keycloakId, emailInJwt);
             return CustomUserPrincipal.fromJwt(jwt, auth.getAuthorities());
         }
 

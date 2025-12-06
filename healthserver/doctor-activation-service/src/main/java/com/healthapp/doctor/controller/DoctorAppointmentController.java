@@ -102,7 +102,7 @@ public class DoctorAppointmentController {
 
         log.debug("🔍 Looking for doctor with email: {}", email);
 
-        Doctor doctor = doctorRepository.findByContactEmail(email)
+        Doctor doctor = doctorRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.error("❌ Doctor not found in database for email: {}", email);
                     return new RuntimeException("Doctor profile not found. Please contact support.");
