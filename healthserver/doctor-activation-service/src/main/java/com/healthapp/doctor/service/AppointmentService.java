@@ -498,6 +498,84 @@ public class AppointmentService {
                 Appointment.class   // ✅ Correct
         ).getModifiedCount();
     }
+    /**
+     * Supprimer tous les rendez-vous d'un docteur
+     * @param doctorId L'ID MongoDB du docteur
+     * @param doctorEmail L'email du docteur (optionnel, pour double vérification)
+     * @return Le nombre de rendez-vous supprimés
+     */
+    @Transactional
+    public long deleteAllDoctorAppointments(String doctorId, String doctorEmail) {
+        log.info("========================================");
+        log.info("🗑️ DELETING ALL APPOINTMENTS FOR DOCTOR");
+        log.info("========================================");
+        log.info("Doctor ID: {}", doctorId);
+        log.info("Doctor Email: {}", doctorEmail);
+
+        try {
+            // Compter d'abord combien de rendez-vous seront supprimés
+            long count = appointmentRepository.countByDoctorId(doctorId);
+
+            log.info("📊 Found {} appointments to delete", count);
+
+            if (count == 0) {
+                log.info("✅ No appointments to delete");
+                return 0;
+            }
+
+            // Supprimer par doctorId (plus fiable)
+            appointmentRepository.deleteByDoctorId(doctorId);
+
+            log.info("========================================");
+            log.info("✅ DELETED {} APPOINTMENTS", count);
+            log.info("========================================");
+
+            return count;
+
+        } catch (Exception e) {
+            log.error("❌ Failed to delete doctor appointments", e);
+            throw new RuntimeException("Failed to delete doctor appointments: " + e.getMessage(), e);
+        }
+    }
+    /**
+     * Supprimer tous les rendez-vous d'un patient
+     * @param patientId L'ID MongoDB du patient
+     * @param patientEmail L'email du patient (optionnel, pour double vérification)
+     * @return Le nombre de rendez-vous supprimés
+     */
+    @Transactional
+    public long deleteAllPatientAppointments(String patientId, String patientEmail) {
+        log.info("========================================");
+        log.info("🗑️ DELETING ALL APPOINTMENTS FOR PATIENT");
+        log.info("========================================");
+        log.info("Patient ID: {}", patientId);
+        log.info("Patient Email: {}", patientEmail);
+
+        try {
+            // Compter d'abord combien de rendez-vous seront supprimés
+            long count = appointmentRepository.countByPatientId(patientId);
+
+            log.info("📊 Found {} appointments to delete", count);
+
+            if (count == 0) {
+                log.info("✅ No appointments to delete");
+                return 0;
+            }
+
+            // Supprimer par patientId (plus fiable)
+            appointmentRepository.deleteByPatientId(patientId);
+
+            log.info("========================================");
+            log.info("✅ DELETED {} APPOINTMENTS", count);
+            log.info("========================================");
+
+            return count;
+
+        } catch (Exception e) {
+            log.error("❌ Failed to delete patient appointments", e);
+            throw new RuntimeException("Failed to delete patient appointments: " + e.getMessage(), e);
+        }
+    }
 
 
     /**

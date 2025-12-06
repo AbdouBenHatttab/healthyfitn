@@ -144,4 +144,32 @@ public class PublicDoctorController {
 
         return ResponseEntity.ok(response);
     }
+    /**
+     * Supprimer tous les rendez-vous d'un patient
+     * Utilisé par le user-service lors de la suppression d'un patient
+     */
+    @DeleteMapping("/appointments/patient/{patientId}")
+    public ResponseEntity<Map<String, Object>> deletePatientAppointments(
+            @PathVariable String patientId,
+            @RequestParam(required = false) String patientEmail) {
+
+        log.info("🗑️ Suppression des rendez-vous pour le patient: {}", patientId);
+
+        try {
+            long deletedCount = appointmentService.deleteAllPatientAppointments(patientId, patientEmail);
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "deletedAppointments", deletedCount,
+                    "message", deletedCount + " rendez-vous supprimés avec succès"
+            ));
+
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de la suppression des rendez-vous: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                    "status", "error",
+                    "message", "Erreur lors de la suppression des rendez-vous: " + e.getMessage()
+            ));
+        }
+    }
 }

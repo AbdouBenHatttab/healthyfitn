@@ -43,4 +43,10 @@ public interface DoctorServiceClient {
             @PathVariable("oldEmail") String oldEmail,
             @RequestBody Map<String, String> body  // ✅ body contient {"newEmail": "..."}
     );
+    // ✅ NOUVELLE MÉTHODE : Supprimer tous les rendez-vous d'un patient
+    @DeleteMapping("/api/doctors/appointments/patient/{patientId}")
+    Map<String, Object> deletePatientAppointments(
+            @PathVariable("patientId") String patientId,
+            @RequestParam(value = "patientEmail", required = false) String patientEmail
+    );
 }
