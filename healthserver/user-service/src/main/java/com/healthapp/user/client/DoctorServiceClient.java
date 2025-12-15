@@ -14,7 +14,8 @@ import java.util.Map;
 @FeignClient(
         name = "doctor-activation-service",
         url = "http://localhost:8083",
-        configuration = com.healthapp.user.config.FeignClientConfig.class
+        configuration = com.healthapp.user.config.FeignClientConfig.class,
+        fallback = DoctorServiceClientFallback.class
 )
 public interface DoctorServiceClient {
 
