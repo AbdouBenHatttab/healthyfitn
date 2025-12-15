@@ -9,14 +9,15 @@ spring:
           enabled: true
           lower-case-service-id: true
 
-      # ✅ CONFIGURATION DES ROUTES AVEC CIRCUIT BREAKER
+      # ✅ ROUTES AVEC NOM DE SERVICE DANS L'URL
       routes:
         # Route pour Auth Service
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/api/v1/auth/**
+            - Path=/auth-service/**
           filters:
+            - RewritePath=/auth-service/(?<segment>.*), /$\{segment}
             - name: CircuitBreaker
               args:
                 name: authServiceCircuitBreaker
@@ -26,8 +27,9 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/v1/user/**,/api/v1/users/**,/api/v1/appointments/**,/api/v1/admin/**,/api/v1/public/**
+            - Path=/user-service/**
           filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
             - name: CircuitBreaker
               args:
                 name: userServiceCircuitBreaker
@@ -37,8 +39,9 @@ spring:
         - id: doctor-service
           uri: lb://doctor-activation-service
           predicates:
-            - Path=/api/doctors/**,/api/public/doctors/**
+            - Path=/doctor-activation-service/**
           filters:
+            - RewritePath=/doctor-activation-service/(?<segment>.*), /$\{segment}
             - name: CircuitBreaker
               args:
                 name: doctorServiceCircuitBreaker
@@ -69,34 +72,19 @@ resilience4j:
   circuitbreaker:
     configs:
       default:
-        # Nombre d'appels minimum avant de calculer le taux d'échec
         sliding-window-size: 10
-
-        # Nombre minimum d'appels avant d'ouvrir le circuit
         minimum-number-of-calls: 5
-
-        # Seuil de pourcentage d'échec pour ouvrir le circuit (50%)
         failure-rate-threshold: 50
-
-        # Durée en état OPEN avant de passer en HALF_OPEN (5 secondes)
         wait-duration-in-open-state: 5s
-
-        # Nombre d'appels autorisés en état HALF_OPEN
         permitted-number-of-calls-in-half-open-state: 3
-
-        # Passer automatiquement de OPEN à HALF_OPEN
         automatic-transition-from-open-to-half-open-enabled: true
-
-        # Enregistrer les événements du circuit breaker
         register-health-indicator: true
 
     instances:
       authServiceCircuitBreaker:
         base-config: default
-
       userServiceCircuitBreaker:
         base-config: default
-
       doctorServiceCircuitBreaker:
         base-config: default
 
