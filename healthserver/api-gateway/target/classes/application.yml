@@ -1,13 +1,49 @@
 spring:
   application:
     name: api-gateway
-  
+
   cloud:
     gateway:
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+
+      # ✅ CONFIGURATION DES ROUTES AVEC CIRCUIT BREAKER
+      routes:
+        # Route pour Auth Service
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authServiceCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+
+        # Route pour User Service
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/user/**,/api/v1/users/**,/api/v1/appointments/**,/api/v1/admin/users/**,/api/v1/public/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/user
+
+        # Route pour Doctor Service
+        - id: doctor-service
+          uri: lb://doctor-activation-service
+          predicates:
+            - Path=/api/doctors/**,/api/public/doctors/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: doctorServiceCircuitBreaker
+                fallbackUri: forward:/fallback/doctor
+
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
@@ -25,15 +61,63 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
-
   instance:
     prefer-ip-address: true
 
+# ✅ CONFIGURATION RESILIENCE4J CIRCUIT BREAKER
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        # Nombre d'appels minimum avant de calculer le taux d'échec
+        sliding-window-size: 10
+
+        # Nombre minimum d'appels avant d'ouvrir le circuit
+        minimum-number-of-calls: 5
+
+        # Seuil de pourcentage d'échec pour ouvrir le circuit (50%)
+        failure-rate-threshold: 50
+
+        # Durée en état OPEN avant de passer en HALF_OPEN (5 secondes)
+        wait-duration-in-open-state: 5s
+
+        # Nombre d'appels autorisés en état HALF_OPEN
+        permitted-number-of-calls-in-half-open-state: 3
+
+        # Passer automatiquement de OPEN à HALF_OPEN
+        automatic-transition-from-open-to-half-open-enabled: true
+
+        # Enregistrer les événements du circuit breaker
+        register-health-indicator: true
+
+    instances:
+      authServiceCircuitBreaker:
+        base-config: default
+
+      userServiceCircuitBreaker:
+        base-config: default
+
+      doctorServiceCircuitBreaker:
+        base-config: default
+
+  # ✅ CONFIGURATION DES TIMEOUTS
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+    instances:
+      authServiceCircuitBreaker:
+        base-config: default
+      userServiceCircuitBreaker:
+        base-config: default
+      doctorServiceCircuitBreaker:
+        base-config: default
 
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     com.healthapp.gateway: DEBUG
+    io.github.resilience4j: DEBUG
 
 # 📊 ACTUATOR CONFIGURATION
 management:
@@ -41,12 +125,10 @@ management:
     web:
       base-path: /actuator
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents
   endpoint:
     health:
       show-details: always
   health:
-    mongo:
-      enabled: true
-    db:
+    circuitbreakers:
       enabled: true
