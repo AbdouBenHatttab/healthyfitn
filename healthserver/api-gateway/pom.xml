@@ -1,31 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>com.healthapp</groupId>
         <artifactId>health-app-microservices</artifactId>
         <version>1.0.0</version>
     </parent>
-    
+
     <artifactId>api-gateway</artifactId>
     <name>API Gateway</name>
     <description>API Gateway Service</description>
-    
+
     <dependencies>
         <!-- Spring Cloud Gateway -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
-        
-        <!-- Eureka Client (Optional) -->
+
+        <!-- Eureka Client -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-        
-        <!-- JWT -->
+
+        <!-- ✅ Spring Boot Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ✅ Circuit Breaker avec Resilience4j pour Spring Cloud Gateway -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+        </dependency>
+
+        <!-- ✅ NOUVEAU : Spring Security WebFlux (pour Gateway réactif) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- ✅ NOUVEAU : WebFlux (déjà inclus via Gateway mais explicite pour clarity) -->
+        <!-- Pas besoin d'ajouter spring-boot-starter-webflux car déjà dans spring-cloud-starter-gateway -->
+
+        <!-- JWT (pour validation si nécessaire) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -40,23 +61,13 @@
             <artifactId>jjwt-jackson</artifactId>
             <scope>runtime</scope>
         </dependency>
-        
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <!-- Circuit Breaker avec Resilience4j pour Spring Cloud Gateway -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
-        </dependency>
-
 
         <!-- Testing -->
         <dependency>
@@ -64,9 +75,30 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- ✅ NOUVEAU : Security Test -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <finalName>api-gateway</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>
