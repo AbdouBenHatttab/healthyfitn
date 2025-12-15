@@ -77,6 +77,11 @@
             <artifactId>keycloak-admin-client</artifactId>
             <version>23.0.0</version>
         </dependency>
+        <!-- Spring Boot Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 
         <!-- ❌ SUPPRIMER LES DÉPENDANCES JWT -->
         <!--

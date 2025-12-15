@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: api-gateway
@@ -35,3 +34,19 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     com.healthapp.gateway: DEBUG
+
+# 📊 ACTUATOR CONFIGURATION
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mongo:
+      enabled: true
+    db:
+      enabled: true

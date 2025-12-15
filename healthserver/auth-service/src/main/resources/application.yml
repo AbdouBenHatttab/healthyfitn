@@ -77,3 +77,18 @@ logging:
     org.keycloak: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+# 📊 ACTUATOR CONFIGURATION
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mongo:
+      enabled: true
+    db:
+      enabled: true
