@@ -26,8 +26,8 @@ spring:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv  # ✅ Le secret de votre capture d'écran
-            authorization-grant-type: password  # ✅ IMPORTANT: password grant pour login
+            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv  # À récupérer depuis Keycloak
+            authorization-grant-type: client_credentials
             scope: openid, profile, email
         provider:
           keycloak:
