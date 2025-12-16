@@ -1,19 +1,22 @@
 spring:
   application:
     name: auth-service
+
   data:
     mongodb:
       uri: mongodb://localhost:27017/health_auth_db
+
   cloud:
     config:
       enabled: false
+
   main:
     allow-bean-definition-overriding: true
 
   # 🔐 CONFIGURATION KEYCLOAK
   security:
     oauth2:
-      # Configuration Resource Server (pour valider les tokens)
+      # ✅ Resource Server : Valider les tokens entrants (pour les endpoints protégés)
       resourceserver:
         jwt:
           # URL publique pour obtenir les clés publiques de Keycloak
@@ -21,17 +24,18 @@ spring:
           # Issuer du token (doit correspondre au claim 'iss' dans le JWT)
           issuer-uri: http://localhost:8080/realms/health-app-realm
 
-      # Configuration Client (pour communiquer avec Keycloak Admin)
+      # ✅ OAuth2 Client : Pour demander des tokens à Keycloak (login/register)
       client:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv  # À récupérer depuis Keycloak
-            authorization-grant-type: client_credentials
+            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv  # ✅ Le secret de votre capture d'écran
+            authorization-grant-type: password  # ✅ IMPORTANT: password grant pour login
             scope: openid, profile, email
         provider:
           keycloak:
             issuer-uri: http://localhost:8080/realms/health-app-realm
+            token-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/token
             user-name-attribute: preferred_username
 
 server:
@@ -59,16 +63,17 @@ keycloak:
 
   # 🔑 CREDENTIALS ADMIN (Option 1 - Admin Master)
   admin:
-    realm: master                    # ← AJOUTEZ CECI
-    username: amine                  # ← AJOUTEZ CECI
-    password: Password123                  # ← AJOUTEZ CECI (ou votre mot de passe admin)
-    client-id: admin-cli            # ← CHANGEZ CECI
+    realm: master
+    username: amine
+    password: Password123
+    client-id: admin-cli
 
   # Configuration des rôles
   roles:
     user: USER
     doctor: DOCTOR
     admin: ADMIN
+
 # Logging
 logging:
   level:
@@ -77,6 +82,7 @@ logging:
     org.keycloak: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
 # 📊 ACTUATOR CONFIGURATION
 management:
   endpoints:

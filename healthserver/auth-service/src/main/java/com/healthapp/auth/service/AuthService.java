@@ -235,6 +235,7 @@ public class AuthService {
         requestBody.add("username", email);
         requestBody.add("password", password);
         requestBody.add("grant_type", "password");
+        requestBody.add("scope", "openid");
 
         // Configurer les headers
         HttpHeaders headers = new HttpHeaders();
@@ -409,6 +410,7 @@ public class AuthService {
                 .userId(userId)
                 .accessToken((String) tokenResponse.get("access_token"))
                 .refreshToken((String) tokenResponse.get("refresh_token"))
+                .idToken((String) tokenResponse.get("id_token"))
                 .expiresIn(((Number) tokenResponse.get("expires_in")).longValue())
                 .tokenType("Bearer")
                 .user(userResponse) // ✅ UserResponse au lieu de Optional<UserResponse>

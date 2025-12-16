@@ -336,6 +336,7 @@ public class UserController {
         if (authentication instanceof JwtAuthenticationToken) {
             JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
             Jwt jwt = jwtAuth.getToken();
+            // ✅ OIDC Standard Claims
             email = jwt.getClaim("email");
         }
         result.put("email", email);

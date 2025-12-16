@@ -1,6 +1,7 @@
 spring:
   application:
     name: user-service
+
   main:
     allow-bean-definition-overriding: true
 
@@ -26,23 +27,17 @@ spring:
       circuitbreaker:
         enabled: true
 
+  # 🔐 CONFIGURATION KEYCLOAK - RESOURCE SERVER SEULEMENT
   security:
     oauth2:
+      # ✅ Resource Server : Valider les tokens JWT entrants
       resourceserver:
         jwt:
           jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
           issuer-uri: http://localhost:8080/realms/health-app-realm
-      client:
-        registration:
-          keycloak:
-            client-id: health-backend-services
-            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv
-            authorization-grant-type: client_credentials
-            scope: openid, profile, email
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8080/realms/health-app-realm
-            user-name-attribute: preferred_username
+
+      # ❌ PAS DE SECTION CLIENT ICI !
+      # Le user-service ne demande JAMAIS de tokens, il les valide seulement
 
 server:
   port: 8085
@@ -54,6 +49,7 @@ notification:
   service:
     url: http://localhost:8084
 
+# ✅ KEYCLOAK ADMIN (pour modifier les utilisateurs)
 keycloak:
   server-url: http://localhost:8080
   realm: health-app-realm
