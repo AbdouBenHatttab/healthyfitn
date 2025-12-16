@@ -36,7 +36,7 @@ spring:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv
+            client-secret: j1xrKbw5T06KqF2ZRWUygjL9xdnqgY6W
             authorization-grant-type: client_credentials
             scope: openid, profile, email
         provider:
@@ -59,7 +59,7 @@ keycloak:
   realm: health-app-realm
   admin:
     realm: master
-    username: amine
+    username: aya
     password: Password123
     client-id: admin-cli
   roles:
@@ -111,10 +111,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,circuitbreakers,circuitbreakerevents
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents,prometheus
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true  # ✅ Active Prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true  # ✅ Active l'export Prometheus
   health:
     circuitbreakers:
       enabled: true

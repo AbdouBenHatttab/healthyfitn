@@ -26,7 +26,7 @@ spring:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv  # À récupérer depuis Keycloak
+            client-secret: j1xrKbw5T06KqF2ZRWUygjL9xdnqgY6W  # À récupérer depuis Keycloak
             authorization-grant-type: client_credentials
             scope: openid, profile, email
         provider:
@@ -60,7 +60,7 @@ keycloak:
   # 🔑 CREDENTIALS ADMIN (Option 1 - Admin Master)
   admin:
     realm: master                    # ← AJOUTEZ CECI
-    username: amine                  # ← AJOUTEZ CECI
+    username: aya                  # ← AJOUTEZ CECI
     password: Password123                  # ← AJOUTEZ CECI (ou votre mot de passe admin)
     client-id: admin-cli            # ← CHANGEZ CECI
 
@@ -83,10 +83,16 @@ management:
     web:
       base-path: /actuator
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true  # ✅ Active Prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true  # ✅ Active l'export Prometheus
   health:
     mongo:
       enabled: true
