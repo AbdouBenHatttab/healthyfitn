@@ -10,13 +10,14 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 /**
  * Configuration de sécurité pour l'API Gateway
  *
- * ⚠️ IMPORTANT : Le Gateway ne doit PAS bloquer les requêtes
- * La sécurité est gérée par chaque microservice (Keycloak OAuth2)
+ * ⚠️ IMPORTANT : Le Gateway ne doit PAS valider les JWT
+ * La validation est faite par chaque microservice
  *
  * Le Gateway se contente de :
  * 1. Router les requêtes
  * 2. Appliquer le Circuit Breaker
  * 3. Gérer CORS
+ * 4. Transmettre l'Authorization header
  */
 @Configuration
 @EnableWebFluxSecurity
@@ -28,7 +29,8 @@ public class SecurityConfig {
         log.info("========================================");
         log.info("🔐 Configuring Gateway Security");
         log.info("========================================");
-        log.info("✅ All requests are permitted (security delegated to microservices)");
+        log.info("✅ All requests are permitted");
+        log.info("✅ JWT validation delegated to microservices");
         log.info("========================================");
 
         return http
@@ -36,7 +38,7 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
 
                 // ✅ CRITIQUE : Autoriser TOUTES les requêtes
-                // La sécurité OAuth2/Keycloak est gérée par les microservices
+                // Chaque microservice fera sa propre validation JWT
                 .authorizeExchange(exchanges -> exchanges
                         .anyExchange().permitAll()
                 )

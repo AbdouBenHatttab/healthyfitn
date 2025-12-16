@@ -13,7 +13,7 @@ spring:
   # 🔐 CONFIGURATION KEYCLOAK
   security:
     oauth2:
-      # Configuration Resource Server (pour valider les tokens)
+      # ✅ Resource Server : Valider les tokens entrants (pour les endpoints protégés)
       resourceserver:
         jwt:
           # URL publique pour obtenir les clés publiques de Keycloak
@@ -21,17 +21,18 @@ spring:
           # Issuer du token (doit correspondre au claim 'iss' dans le JWT)
           issuer-uri: http://localhost:8080/realms/health-app-realm
 
-      # Configuration Client (pour communiquer avec Keycloak Admin)
+      # ✅ OAuth2 Client : Pour demander des tokens à Keycloak (login/register)
       client:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: j1xrKbw5T06KqF2ZRWUygjL9xdnqgY6W  # À récupérer depuis Keycloak
+            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv  # À récupérer depuis Keycloak
             authorization-grant-type: client_credentials
             scope: openid, profile, email
         provider:
           keycloak:
             issuer-uri: http://localhost:8080/realms/health-app-realm
+            token-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/token
             user-name-attribute: preferred_username
 
 server:
@@ -60,7 +61,7 @@ keycloak:
   # 🔑 CREDENTIALS ADMIN (Option 1 - Admin Master)
   admin:
     realm: master                    # ← AJOUTEZ CECI
-    username: aya                  # ← AJOUTEZ CECI
+    username: amine                  # ← AJOUTEZ CECI
     password: Password123                  # ← AJOUTEZ CECI (ou votre mot de passe admin)
     client-id: admin-cli            # ← CHANGEZ CECI
 

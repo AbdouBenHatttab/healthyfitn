@@ -36,20 +36,6 @@ spring:
           jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
           issuer-uri: http://localhost:8080/realms/health-app-realm
 
-      # Configuration Client (pour communiquer avec Keycloak Admin)
-      client:
-        registration:
-          keycloak:
-            client-id: health-backend-services
-            client-secret: j1xrKbw5T06KqF2ZRWUygjL9xdnqgY6W
-
-            authorization-grant-type: client_credentials
-            scope: openid, profile, email
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8080/realms/health-app-realm
-            user-name-attribute: preferred_username
-
 # Configuration des notifications
 notification:
   admin-email: healthapp.healthyfittn@gmail.com
@@ -107,7 +93,7 @@ keycloak:
   # Credentials admin pour créer les utilisateurs
   admin:
     realm: master
-    username: aya
+    username: amine
     password: Password123
     client-id: admin-cli
 

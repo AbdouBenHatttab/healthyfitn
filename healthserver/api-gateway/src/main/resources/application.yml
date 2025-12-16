@@ -53,9 +53,10 @@ spring:
 server:
   port: 8888
 
-app:
-  jwt:
-    secret: ${JWT_SECRET:e3122928953516752200dd6346b870e53585fb28542d9b7ebeb04835586184f0}
+# ❌ SUPPRIMER app.jwt.secret (plus nécessaire avec Keycloak)
+# app:
+#   jwt:
+#     secret: ...
 
 eureka:
   client:

@@ -34,6 +34,7 @@ public class SecurityHelper {
 
             // Sinon, créer depuis JWT
             Jwt jwt = jwtAuth.getToken();
+            // ✅ Tous ces claims viennent d'OIDC
             String keycloakId = jwt.getSubject();  // ✅ Utiliser keycloakId
             String emailInJwt = jwt.getClaim("email");
 
