@@ -25,10 +25,8 @@ spring:
     openfeign:
       circuitbreaker:
         enabled: true
-        alphanumeric-ids:
-          enabled: true
 
-  # 🔐 CONFIGURATION KEYCLOAK COMPLÈTE
+  # 🔐 CONFIGURATION KEYCLOAK - RESOURCE SERVER SEULEMENT
   security:
     oauth2:
       # ✅ Resource Server : Valider les tokens JWT entrants
@@ -37,20 +35,8 @@ spring:
           jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
           issuer-uri: http://localhost:8080/realms/health-app-realm
 
-      # ✅ Client : Nécessaire pour l'auto-configuration Spring Security
-      # Cette configuration est requise même si le user-service ne demande pas de tokens
-      # Elle permet à Spring Boot de configurer correctement le JwtDecoder bean
-      client:
-        registration:
-          keycloak:
-            client-id: health-backend-services
-            client-secret: j1xrKbw5T06KqF2ZRWUygjL9xdnqgY6W
-            authorization-grant-type: client_credentials
-            scope: openid, profile, email
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8080/realms/health-app-realm
-            user-name-attribute: preferred_username
+      # ❌ PAS DE SECTION CLIENT ICI !
+      # Le user-service ne demande JAMAIS de tokens, il les valide seulement
 
 server:
   port: 8085
@@ -88,27 +74,21 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
         register-health-indicator: true
-        slow-call-rate-threshold: 100
-        slow-call-duration-threshold: 60s
 
     instances:
-      # ✅ Circuit Breaker pour Doctor Service Client
-      # Utilisez le même nom que votre FeignClient (name = "doctor-activation-service")
-      doctor-activation-service:
+      # Circuit Breaker pour Doctor Service Client
+      doctorServiceClient:
         base-config: default
         failure-rate-threshold: 60
         wait-duration-in-open-state: 15s
-        minimum-number-of-calls: 3
 
   timelimiter:
     configs:
       default:
         timeout-duration: 5s
-        cancel-running-future: true
     instances:
-      doctor-activation-service:
+      doctorServiceClient:
         base-config: default
-        timeout-duration: 3s
 
 # ✅ CONFIGURATION FEIGN
 feign:
@@ -118,15 +98,9 @@ feign:
         connectTimeout: 5000
         readTimeout: 5000
         loggerLevel: full
-        retryer: feign.Retryer.NEVER_RETRY
       doctor-activation-service:
-        connectTimeout: 2000
-        readTimeout: 3000
-        loggerLevel: full
-  circuitbreaker:
-    enabled: true
-    alphanumeric-ids:
-      enabled: true
+        connectTimeout: 5000
+        readTimeout: 10000
 
 management:
   endpoints:
@@ -137,11 +111,11 @@ management:
     health:
       show-details: always
     prometheus:
-      enabled: true
+      enabled: true  # ✅ Active Prometheus
   metrics:
     export:
       prometheus:
-        enabled: true
+        enabled: true  # ✅ Active l'export Prometheus
   health:
     circuitbreakers:
       enabled: true
@@ -155,7 +129,6 @@ logging:
     org.keycloak: DEBUG
     io.github.resilience4j: DEBUG
     com.healthapp.user.client: DEBUG
-    feign: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

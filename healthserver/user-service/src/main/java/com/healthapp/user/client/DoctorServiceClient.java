@@ -1,6 +1,7 @@
 package com.healthapp.user.client;
 
 import com.healthapp.user.dto.response.CancelAppointmentRequest;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,12 +11,14 @@ import java.util.Map;
 /**
  * Feign Client for Doctor Service
  * Communicates with doctor-activation-service endpoints
+ *
+ * ✅ CORRECTION: Ajout de fallbackFactory pour une meilleure gestion d'erreurs
  */
 @FeignClient(
         name = "doctor-activation-service",
         url = "http://localhost:8083",
         configuration = com.healthapp.user.config.FeignClientConfig.class,
-        fallback = DoctorServiceClientFallback.class
+        fallbackFactory = DoctorServiceClientFallback.class  // ✅ Changé de fallback à fallbackFactory
 )
 public interface DoctorServiceClient {
 
@@ -26,25 +29,23 @@ public interface DoctorServiceClient {
     List<Map<String, Object>> getPatientAppointments(@PathVariable String patientId);
 
     /**
-        * Cancel an appointment for a patient
-        */
+     * Cancel an appointment for a patient
+     */
     @PostMapping("/api/public/doctors/appointments/{appointmentId}/cancel")
     Map<String, String> cancelAppointment(
             @PathVariable("appointmentId") String appointmentId,
             @RequestBody CancelAppointmentRequest request
     );
 
-
     @GetMapping("/api/doctors/available")
     List<Map<String, Object>> getActivatedDoctors();
 
-    // ✅ CORRECTION : Envoyer un Map au lieu d'un String
     @PutMapping("/api/public/doctors/appointments/{oldEmail}")
     Map<String, String> updateAppointmentsPatientEmail(
             @PathVariable("oldEmail") String oldEmail,
-            @RequestBody Map<String, String> body  // ✅ body contient {"newEmail": "..."}
+            @RequestBody Map<String, String> body
     );
-    // ✅ NOUVELLE MÉTHODE : Supprimer tous les rendez-vous d'un patient
+
     @DeleteMapping("/api/doctors/appointments/patient/{patientId}")
     Map<String, Object> deletePatientAppointments(
             @PathVariable("patientId") String patientId,
