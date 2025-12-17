@@ -1,0 +1,148 @@
+# ========================================
+# API GATEWAY - CONFIGURATION CENTRALISÉE
+# Fichier: config-service/config-repo/api-gateway.yml
+# ========================================
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: false
+
+      # ✅ ROUTES AVEC NOM DE SERVICE DANS L'URL
+      routes:
+        # Route pour Auth Service
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - RewritePath=/auth-service/(?<segment>.*), /$\{segment}
+            - name: CircuitBreaker
+              args:
+                name: authServiceCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+
+        # Route pour User Service
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user-service/**
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/user
+
+        # Route pour Doctor Service
+        - id: doctor-service
+          uri: lb://doctor-activation-service
+          predicates:
+            - Path=/doctor-activation-service/**
+          filters:
+            - RewritePath=/doctor-activation-service/(?<segment>.*), /$\{segment}
+            - name: CircuitBreaker
+              args:
+                name: doctorServiceCircuitBreaker
+                fallbackUri: forward:/fallback/doctor
+
+        # Route pour Notification Service (à ajouter si nécessaire)
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/notification-service/**
+          filters:
+            - RewritePath=/notification-service/(?<segment>.*), /$\{segment}
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+# ⚠️ ATTENTION: Port différent du Config Service!
+server:
+  port: ${API_GATEWAY_PORT:9000}  # Changé de 8888 à 9000 pour éviter conflit
+
+# Configuration Eureka
+eureka:
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# ✅ CONFIGURATION RESILIENCE4J CIRCUIT BREAKER
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+
+    instances:
+      authServiceCircuitBreaker:
+        base-config: default
+      userServiceCircuitBreaker:
+        base-config: default
+      doctorServiceCircuitBreaker:
+        base-config: default
+      notificationServiceCircuitBreaker:
+        base-config: default
+
+  # ✅ CONFIGURATION DES TIMEOUTS
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+    instances:
+      authServiceCircuitBreaker:
+        base-config: default
+      userServiceCircuitBreaker:
+        base-config: default
+      doctorServiceCircuitBreaker:
+        base-config: default
+      notificationServiceCircuitBreaker:
+        base-config: default
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: ${GATEWAY_LOG_LEVEL:DEBUG}
+    com.healthapp.gateway: ${APP_LOG_LEVEL:DEBUG}
+    io.github.resilience4j: ${RESILIENCE4J_LOG_LEVEL:DEBUG}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 📊 ACTUATOR CONFIGURATION
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    circuitbreakers:
+      enabled: true

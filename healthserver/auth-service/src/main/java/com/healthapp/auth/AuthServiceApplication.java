@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableMongoAuditing
+@EnableMongoAuditing(modifyOnCreate = false)
 public class AuthServiceApplication {
     
     public static void main(String[] args) {

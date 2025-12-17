@@ -24,20 +24,20 @@ import java.util.*;
 @Slf4j
 public class KeycloakAdminService {
 
-    @Value("${keycloak.server-url}")
+    @Value("${keycloak.server-url:${KEYCLOAK_URL:http://localhost:8080}}")
     private String serverUrl;
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.realm:health-app-realm}")
     private String realm;
 
     // Propriétés pour l'authentification admin (Option 1: Master Admin)
     @Value("${keycloak.admin.realm:master}")
     private String adminRealm;
 
-    @Value("${keycloak.admin.username:amine}")
+    @Value("${keycloak.admin.username:rayen.benzid}")
     private String adminUsername;
 
-    @Value("${keycloak.admin.password:Password123!}")
+    @Value("${keycloak.admin.password:Rayen123!}")
     private String adminPassword;
 
     @Value("${keycloak.admin.client-id:admin-cli}")
