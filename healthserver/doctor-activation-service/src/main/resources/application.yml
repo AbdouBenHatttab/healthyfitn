@@ -35,6 +35,17 @@ spring:
         jwt:
           jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
           issuer-uri: http://localhost:8080/realms/health-app-realm
+      client:
+        registration:
+          keycloak:
+            client-id: health-backend-services
+            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv
+            authorization-grant-type: password
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/health-app-realm
+            token-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/token
 
 # Configuration des notifications
 notification:

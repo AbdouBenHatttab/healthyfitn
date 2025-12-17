@@ -35,20 +35,17 @@ spring:
         jwt:
           jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
           issuer-uri: http://localhost:8080/realms/health-app-realm
-
-      # Configuration Client (pour communiquer avec Keycloak Admin)
       client:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: j1xrKbw5T06KqF2ZRWUygjL9xdnqgY6W
-
-            authorization-grant-type: client_credentials
-            scope: openid, profile, email
+            client-secret: exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv
+            authorization-grant-type: password
+            scope: openid,profile,email
         provider:
           keycloak:
             issuer-uri: http://localhost:8080/realms/health-app-realm
-            user-name-attribute: preferred_username
+            token-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/token
 
 # Configuration des notifications
 notification:
@@ -107,7 +104,7 @@ keycloak:
   # Credentials admin pour créer les utilisateurs
   admin:
     realm: master
-    username: aya
+    username: amine
     password: Password123
     client-id: admin-cli
 
@@ -129,10 +126,17 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,circuitbreakers
+        include: health,info,metrics,circuitbreakers,prometheus
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true  # ✅ Active Prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true  # ✅ Active l'export Prometheus
+
 
 # Logging Configuration
 logging:
