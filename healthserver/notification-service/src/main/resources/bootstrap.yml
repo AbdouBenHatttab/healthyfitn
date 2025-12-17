@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: notification-service
+  main:
+    allow-bean-definition-overriding: true
+
+  cloud:
+    config:
+      uri: http://localhost:8888
+
+server:
+  port: 8084

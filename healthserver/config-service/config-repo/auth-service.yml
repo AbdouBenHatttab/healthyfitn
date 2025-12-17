@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: auth-service
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017}/health_auth_db
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/health-app-realm/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/health-app-realm
+
+      client:
+        registration:
+          keycloak:
+            client-id: health-backend-services
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:iMeoAcmu6sVppVs5X523cmfBCsJmdWbA}
+            authorization-grant-type: client_credentials
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: ${keycloak.serverUrl:http://localhost:8080}/realms/health-app-realm
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+    hostname: localhost
+
+keycloak:
+  server-url: ${KEYCLOAK_URL:http://localhost:8080}
+  serverUrl: ${KEYCLOAK_URL:http://localhost:8080}
+  realm: health-app-realm
+  realm-name: health-app-realm              # ← AJOUTE ÇA au cas où
+  admin-realm: master
+  admin:
+    realm: master
+    username: ${KEYCLOAK_ADMIN_USER:rayen.benzid}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:Rayen123!}
+    client-id: admin-cli
+  roles:
+    user: USER
+    doctor: DOCTOR
+    admin: ADMIN
+
+logging:
+  level:
+    com.healthapp.auth: ${APP_LOG_LEVEL:DEBUG}
+    org.springframework.security: DEBUG
+    org.keycloak: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    mongo:
+      enabled: true

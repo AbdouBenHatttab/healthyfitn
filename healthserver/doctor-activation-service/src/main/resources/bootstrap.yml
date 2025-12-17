@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: doctor-activation-service   # Doit correspondre au nom du fichier dans config-repo
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    config:
+      uri: http://localhost:8888

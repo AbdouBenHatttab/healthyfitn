@@ -1,0 +1,126 @@
+# Configuration du Doctor Activation Service avec Keycloak
+spring:
+  application:
+    name: doctor-activation-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/health_doctor_db
+  main:
+    allow-bean-definition-overriding: true
+  # Configuration Web/MVC
+  web:
+    resources:
+      add-mappings: true
+      static-locations: classpath:/static/,classpath:/public/
+  mvc:
+    static-path-pattern: /static/**
+    throw-exception-if-no-handler-found: true
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  # 🔐 CONFIGURATION KEYCLOAK
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: health-backend-services
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:iMeoAcmu6sVppVs5X523cmfBCsJmdWbA}
+            authorization-grant-type: client_credentials
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: ${keycloak.serverUrl:http://localhost:8080}/realms/health-app-realm
+      # Configuration Resource Server (pour valider les tokens)
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/realms/health-app-realm/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/health-app-realm
+# Configuration des notifications
+notification:
+  admin-email: healthapp.healthyfittn@gmail.com
+  service:
+    url: http://localhost:8084
+# Configuration du serveur
+server:
+  port: 8083
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+# Feign Client Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+  circuitbreaker:
+    enabled: true
+# Resilience4j Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      auth-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+      notification-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+# ⚠️ CONFIGURATION KEYCLOAK ADMIN CLIENT
+keycloak:
+  server-url: http://localhost:8080
+  realm: health-app-realm
+  # Credentials admin pour créer les utilisateurs
+  admin:
+    realm: master
+    username: rayen.benzid
+    password: Rayen123!
+    client-id: admin-cli
+  # Configuration des rôles
+  roles:
+    user: USER
+    doctor: DOCTOR
+    admin: ADMIN
+# WebRTC Configuration avec Metered.ca
+webrtc:
+  metered:
+    domain: web_rtc.metered.live
+    secret-key: 4a562d19fd3a2762f0135ec749763bde501d
+    credential-ttl: 86400 # 24 heures
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true # ✅ Active Prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true # ✅ Active l'export Prometheus
+# Logging Configuration
+logging:
+  level:
+    com.healthapp.doctor: DEBUG
+    org.springframework.security: DEBUG
+    org.keycloak: DEBUG
+    org.springframework.web.servlet.mvc: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

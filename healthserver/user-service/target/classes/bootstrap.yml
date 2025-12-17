@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: user-service                 # Doit correspondre exactement au nom du fichier dans config-repo
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    config:
+      uri: http://localhost:8888
+server:
+  port: 8085

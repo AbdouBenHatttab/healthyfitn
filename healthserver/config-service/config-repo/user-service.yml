@@ -1,0 +1,142 @@
+spring:
+  application:
+    name: user-service
+  main:
+    allow-bean-definition-overriding: true
+  web:
+    resources:
+      add-mappings: false
+  mvc:
+    throw-exception-if-no-handler-found: true
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/health_auth_db}
+      database: health_auth_db
+      auto-index-creation: true
+  # Circuit Breaker pour OpenFeign
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+  # 🔐 CONFIGURATION KEYCLOAK - RESOURCE SERVER
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/health-app-realm/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/health-app-realm
+      client:
+        registration:
+          keycloak:
+            client-id: health-backend-services
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:iMeoAcmu6sVppVs5X523cmfBCsJmdWbA}
+            authorization-grant-type: client_credentials
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: ${keycloak.serverUrl:http://localhost:8080}/realms/health-app-realm
+
+server:
+  port: 8085
+  error:
+    include-message: always
+    include-binding-errors: always
+
+notification:
+  service:
+    url: ${NOTIFICATION_SERVICE_URL}
+
+# ✅ KEYCLOAK ADMIN CLIENT
+keycloak:
+  server-url: ${KEYCLOAK_URL:http://localhost:8080}
+  realm: health-app-realm
+  admin:
+    realm: master
+    username: ${KEYCLOAK_ADMIN_USER}
+    password: ${KEYCLOAK_ADMIN_PASSWORD}
+    client-id: admin-cli
+  roles:
+    user: USER
+    doctor: DOCTOR
+    admin: ADMIN
+
+# ✅ RESILIENCE4J CONFIGURATION
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+    instances:
+      doctorServiceClient:
+        base-config: default
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 15s
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 5s
+    instances:
+      doctorServiceClient:
+        base-config: default
+
+# ✅ FEIGN CONFIGURATION
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+      doctor-activation-service:
+        connectTimeout: 5000
+        readTimeout: 10000
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents,prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    com.healthapp.user: ${APP_LOG_LEVEL:DEBUG}
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.keycloak: DEBUG
+    io.github.resilience4j: ${RESILIENCE4J_LOG_LEVEL:DEBUG}
+    com.healthapp.user.client: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Eureka
+eureka:
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}

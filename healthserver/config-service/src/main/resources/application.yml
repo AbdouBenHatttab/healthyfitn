@@ -1,14 +1,18 @@
 spring:
   application:
     name: config-service
-  
+
+  profiles:
+    active: native  # Active explicitement le profil native (recommandé pour forcer le mode local)
+
   cloud:
     config:
       server:
-        git:
-          uri: file://${user.dir}/config-service/config-repo
-          default-label: main
-          
+        native:
+          search-locations: file:${user.dir}/config-service/config-repo
+      discovery:
+        enabled: true
+
 server:
   port: 8888
 
@@ -16,3 +20,22 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.springframework.cloud.config.server: DEBUG
+    org.springframework.boot.context.config: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Exposer tous les endpoints pour debug
+  endpoint:
+    health:
+      show-details: always
