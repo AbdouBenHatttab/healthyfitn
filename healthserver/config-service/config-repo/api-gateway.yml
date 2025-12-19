@@ -1,6 +1,5 @@
 # ========================================
 # API GATEWAY - CONFIGURATION CENTRALISÉE
-# Fichier: config-service/config-repo/api-gateway.yml
 # ========================================
 
 spring:
@@ -8,12 +7,11 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
-          lower-case-service-id: false
+          enabled: false                # ← Désactivé pour éviter les conflits
+          # lower-case-service-id: false  # supprimé car locator désactivé
 
-      # ✅ ROUTES AVEC NOM DE SERVICE DANS L'URL
       routes:
-        # Route pour Auth Service
+        # Auth Service
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
@@ -25,9 +23,9 @@ spring:
                 name: authServiceCircuitBreaker
                 fallbackUri: forward:/fallback/auth
 
-        # Route pour User Service
+        # User Service
         - id: user-service
-          uri: lb://user-service
+          uri: lb://USER-SERVICE          # ← Majuscules pour matcher Eureka
           predicates:
             - Path=/user-service/**
           filters:
@@ -37,9 +35,9 @@ spring:
                 name: userServiceCircuitBreaker
                 fallbackUri: forward:/fallback/user
 
-        # Route pour Doctor Service
+        # Doctor Activation Service
         - id: doctor-service
-          uri: lb://doctor-activation-service
+          uri: lb://DOCTOR-ACTIVATION-SERVICE   # ← Majuscules
           predicates:
             - Path=/doctor-activation-service/**
           filters:
@@ -49,9 +47,9 @@ spring:
                 name: doctorServiceCircuitBreaker
                 fallbackUri: forward:/fallback/doctor
 
-        # Route pour Notification Service (à ajouter si nécessaire)
+        # Notification Service
         - id: notification-service
-          uri: lb://notification-service
+          uri: lb://NOTIFICATION-SERVICE       # ← Majuscules
           predicates:
             - Path=/notification-service/**
           filters:
@@ -61,12 +59,55 @@ spring:
                 name: notificationServiceCircuitBreaker
                 fallbackUri: forward:/fallback/notification
 
+        # Health Server (nouveau)
+        - id: health-server
+          uri: lb://HEALTH-SERVER               # ← À adapter selon le nom exact dans Eureka
+          predicates:
+            - Path=/health-server/**
+          filters:
+            - RewritePath=/health-server/(?<segment>.*), /$\{segment}
+            - name: CircuitBreaker
+              args:
+                name: healthServerCircuitBreaker
+                fallbackUri: forward:/fallback/health
+
+        # Nouvelle route pour Model AI Service
+        - id: model-ai-service
+          uri: lb://MODEL-AI-SERVICE
+          predicates:
+            - Path=/model-ai-service/**
+          filters:
+            - RewritePath=/model-ai-service/(?<segment>.*), /$\{segment}
+            - name: CircuitBreaker
+              args:
+                name: modelAiServiceCircuitBreaker
+                fallbackUri: forward:/fallback/model-ai
+
+        # Optionnel : route pour Health Assistant si tu en as besoin
+        - id: health-assistant-service
+          uri: lb://HEALTH-ASSISTANT-SERVICE
+          predicates:
+            - Path=/health-assistant-service/**
+          filters:
+            - RewritePath=/health-assistant-service/(?<segment>.*), /$\{segment}
+
+        # Route pour Nutrition Service
+        - id: nutrition-service
+          uri: lb://NUTRITION-SERVICE               # Nom exact tel qu'enregistré dans Eureka
+          predicates:
+            - Path=/nutrition-service/**
+          filters:
+            - RewritePath=/nutrition-service/(?<segment>.*), /$\{segment}
+            - name: CircuitBreaker
+              args:
+                name: nutritionServiceCircuitBreaker
+                fallbackUri: forward:/fallback/nutrition
+
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
-# ⚠️ ATTENTION: Port différent du Config Service!
 server:
-  port: ${API_GATEWAY_PORT:9000}  # Changé de 8888 à 9000 pour éviter conflit
+  port: ${API_GATEWAY_PORT:8888}
 
 # Configuration Eureka
 eureka:

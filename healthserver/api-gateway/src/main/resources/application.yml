@@ -3,4 +3,4 @@ spring:
     name: api-gateway
 
 server:
-  port: 9000  # ⚠️ Changé de 8888 à 9000
+  port: 8888  # ⚠️ Changé de 8888 à 9000

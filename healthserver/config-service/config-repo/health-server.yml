@@ -3,7 +3,7 @@ spring:
     name: health-server               # Doit correspondre exactement au nom du fichier dans config-repo
   cloud:
     config:
-      uri: http://localhost:8888      # Remplace par l'URL réelle de ton Config Server (port par défaut 8888)
+      uri: http://localhost:8880      # Remplace par l'URL réelle de ton Config Server (port par défaut 8888)
       # fail-fast: true               # Optionnel : arrête le service si le Config Server est indisponible
       # retry:
       #   max-attempts: 6             # Optionnel : configuration des retries

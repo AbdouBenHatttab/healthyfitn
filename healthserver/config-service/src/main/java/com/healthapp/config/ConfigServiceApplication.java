@@ -13,7 +13,7 @@ public class ConfigServiceApplication {
             
             ========================================
             ⚙️  Config Service démarré!
-            📍 Port: 8888
+            📍 Port: 8880
             ========================================
             """);
     }
