@@ -1,4 +1,6 @@
-
+PyJWT==2.8.0
+cryptography==41.0.7
+python-keycloak==3.7.0
 # DEPENDANCES FLASK & UTILITAIRES
 
 Flask==3.1.2
