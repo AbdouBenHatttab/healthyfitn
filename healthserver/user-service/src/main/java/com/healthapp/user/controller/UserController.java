@@ -57,10 +57,10 @@ public class UserController {
     private final UserKeycloakSyncService keycloakSyncService;
     private final DoctorServiceClient doctorServiceClient;
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.realm:health-app-realm}")
     private String keycloakRealm;
 
-    @Value("${keycloak.server-url}")
+    @Value("${keycloak.serverUrl:http://localhost:8080}")
     private String keycloakServerUrl;
 
     @PostConstruct

@@ -49,10 +49,10 @@ public class DoctorController {
     private final DoctorKeycloakSyncService keycloakSyncService;
 
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.realm:health-app-realm}")
     private String keycloakRealm;
 
-    @Value("${keycloak.server-url}")
+    @Value("${keycloak.serverUrl:http://localhost:8080}")
     private String keycloakServerUrl;
 
     @PostConstruct

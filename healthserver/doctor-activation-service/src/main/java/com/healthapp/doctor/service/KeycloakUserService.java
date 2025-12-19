@@ -44,10 +44,10 @@ public class KeycloakUserService {
     private final RestTemplateBuilder restTemplateBuilder; // ✅ AJOUTEZ CECI
     private RestTemplate restTemplate;
 
-    @Value("${keycloak.server-url}")
+    @Value("${keycloak.serverUrl:http://localhost:8080}")
     private String keycloakServerUrl;
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.realm:health-app-realm}")
     private String realm;
 
     @Value("${spring.security.oauth2.client.registration.keycloak.client-id}")

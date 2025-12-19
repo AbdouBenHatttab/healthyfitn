@@ -17,7 +17,7 @@ public class DoctorKeycloakSyncService {
 
     private final Keycloak keycloak;
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.realm:health-app-realm}")
     private String realm;
 
     public void updateDoctorInKeycloak(String keycloakUserId, UpdateDoctorProfileRequest request) {

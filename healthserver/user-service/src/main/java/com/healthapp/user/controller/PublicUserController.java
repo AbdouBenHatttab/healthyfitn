@@ -22,10 +22,10 @@ public class PublicUserController {
 
     private final PasswordResetService passwordResetService;
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.realm:health-app-realm}")
     private String keycloakRealm;
 
-    @Value("${keycloak.server-url}")
+    @Value("${keycloak.serverUrl:http://localhost:8080}")
     private String keycloakServerUrl;
 
     /**

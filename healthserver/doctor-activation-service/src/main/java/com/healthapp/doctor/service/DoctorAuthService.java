@@ -37,7 +37,7 @@ public class DoctorAuthService {
     private final NotificationClient notificationClient;
     private final KeycloakUserService keycloakUserService;
 
-    @Value("${notification.admin-email}")
+    @Value("${notification.admin-email:healthapp.healthyfittn@gmail.com}")
     private String adminEmail;
 
     /**

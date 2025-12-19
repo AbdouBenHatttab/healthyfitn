@@ -30,10 +30,10 @@ public class DoctorPasswordResetService {
     private final DoctorRepository doctorRepository;
     private final Keycloak keycloak;
 
-    @Value("${keycloak.realm}")
+    @Value("${keycloak.realm:health-app-realm}")
     private String realm;
 
-    @Value("${keycloak.server-url}")
+    @Value("${keycloak.serverUrl:http://localhost:8080}")
     private String keycloakServerUrl;
 
     /**
