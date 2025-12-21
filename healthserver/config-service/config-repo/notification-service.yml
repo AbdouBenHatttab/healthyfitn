@@ -14,7 +14,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: ${MAIL_USERNAME:healthapp.healthyfittn@gmail.com}
-    password: ${MAIL_PASSWORD:hpfk_vmdf_ptif_kuod}
+    password: ${MAIL_PASSWORD:hpfkvmdfptifkuod}
     properties:
       mail:
         smtp:
