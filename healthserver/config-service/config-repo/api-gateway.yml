@@ -148,7 +148,7 @@ resilience4j:
   timelimiter:
     configs:
       default:
-        timeout-duration: 3s
+        timeout-duration: 13s
     instances:
       authServiceCircuitBreaker:
         base-config: default
