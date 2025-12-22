@@ -3,13 +3,18 @@ spring:
     name: config-service
 
   profiles:
-    active: native  # Active explicitement le profil native (recommandé pour forcer le mode local)
+    active: git
 
   cloud:
     config:
       server:
-        native:
-          search-locations: file:${user.dir}/config-service/config-repo
+        git:
+          uri: https://github.com/AbdouBenHatttab/healthyfitn.git
+          search-paths: healthserver/config-service/config-repo
+          default-label: main
+          clone-on-start: true
+          timeout: 10
+
       discovery:
         enabled: true
 
@@ -35,7 +40,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"  # Exposer tous les endpoints pour debug
+        include: "*"
   endpoint:
     health:
       show-details: always
