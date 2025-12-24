@@ -34,10 +34,10 @@ public class KeycloakAdminService {
     @Value("${keycloak.admin.realm:master}")
     private String adminRealm;
 
-    @Value("${keycloak.admin.username:rayen.benzid}")
+    @Value("${keycloak.admin.username:amine}")
     private String adminUsername;
 
-    @Value("${keycloak.admin.password:Rayen123!}")
+    @Value("${keycloak.admin.password:Password123}")
     private String adminPassword;
 
     @Value("${keycloak.admin.client-id:admin-cli}")

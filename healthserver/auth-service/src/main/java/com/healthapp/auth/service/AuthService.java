@@ -53,7 +53,7 @@ public class AuthService {
     @Value("${spring.security.oauth2.client.registration.keycloak.client-id:health-backend-services}")
     private String clientId;
 
-    @Value("${spring.security.oauth2.client.registration.keycloak.client-secret:${KEYCLOAK_CLIENT_SECRET:iMeoAcmu6sVppVs5X523cmfBCsJmdWbA}}")
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-secret:${KEYCLOAK_CLIENT_SECRET:exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv}}")
     private String clientSecret;
 
     @PostConstruct
