@@ -11,7 +11,7 @@ spring:
         git:
           uri: https://github.com/AbdouBenHatttab/healthyfitn.git
           search-paths: healthserver/config-service/config-repo
-          default-label: main
+          default-label: Amine
           clone-on-start: true
           timeout: 10
 

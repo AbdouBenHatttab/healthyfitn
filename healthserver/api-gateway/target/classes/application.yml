@@ -1,6 +1,0 @@
-spring:
-  application:
-    name: api-gateway
-
-server:
-  port: 8888  # ⚠️ Changé de 8888 à 9000

@@ -24,7 +24,7 @@ spring:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: ${KEYCLOAK_CLIENT_SECRET:iMeoAcmu6sVppVs5X523cmfBCsJmdWbA}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv}
             authorization-grant-type: client_credentials
             scope: openid,profile,email
         provider:
@@ -86,8 +86,8 @@ keycloak:
   # Credentials admin pour créer les utilisateurs
   admin:
     realm: master
-    username: rayen.benzid
-    password: Rayen123!
+    username: amine
+    password: Password123
     client-id: admin-cli
   # Configuration des rôles
   roles:

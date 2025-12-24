@@ -29,7 +29,7 @@ spring:
         registration:
           keycloak:
             client-id: health-backend-services
-            client-secret: ${KEYCLOAK_CLIENT_SECRET:iMeoAcmu6sVppVs5X523cmfBCsJmdWbA}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:exiAx1R2ILZtwX1jWM6YanRRCNyw9ltv}
             authorization-grant-type: client_credentials
             scope: openid,profile,email
         provider:
@@ -52,8 +52,8 @@ keycloak:
   realm: health-app-realm
   admin:
     realm: master
-    username: ${KEYCLOAK_ADMIN_USER:rayen.benzid}
-    password: ${KEYCLOAK_ADMIN_PASSWORD:Rayen123!}
+    username: ${KEYCLOAK_ADMIN_USER:amine}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:Password123}
     client-id: admin-cli
   roles:
     user: USER
